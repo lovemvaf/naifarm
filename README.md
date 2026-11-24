@@ -1,20 +1,10 @@
-# NaiFarm — Chợ OCOP Thanh niên · Thành phố Đồng Nai (Frontend Prototype)
+# NaiFarm — Chợ OCOP Thanh niên · Thành phố Đồng Nai 
 
 **Thông điệp thương hiệu:** *Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị.*
 
-Dự án **NaiFarm** thuộc bài thi **Nhóm 8 (Group 8)** tại **Hackathon Thành phố Đồng Nai năm 2026** — nguyên mẫu giao diện độ trung thực cao (**Frontend-Only High-Fidelity Prototype**) kết hợp toàn bộ **12 màn hình xuất từ Google Stitch (`12256474506032242478`)** và hệ thống **6 không gian vai trò (`W01`–`W06`)** theo tài liệu *NaiFarm Master Blueprint V3* & *Stitch Playbook Đề 3*.
-
 ---
 
-## 1. Giới hạn phạm vi & Tính trung thực
-
-- **100% Frontend-Only**: Không sử dụng cơ sở dữ liệu thật, không máy chủ backend, không thư mục `src/app/api/*`, không Server Actions nghiệp vụ, không cổng thanh toán thật và không yêu cầu API key runtime để khởi chạy.
-- **Trạng thái dùng chung trên trình duyệt (`DemoStoreContext` + `localStorage`)**: Thao tác đặt hàng tại `W01` đồng bộ sang `W02`, đăng bán nông sản ở `W02` xuất hiện ngay ngoài Chợ công khai, và quy trình kiểm chứng 2 lớp giờ công thanh niên (`W03` → `W02` xác nhận bàn giao → `W04` duyệt giờ) vận hành liên hoàn.
-- **Minh bạch nhãn dữ liệu**: Mọi dữ liệu bán hàng, truy xuất mã lô (`NF-DEMO-001`, `NF-TT-2026-01`, `NF-XL-2026-03`), AI gợi ý và thanh toán (`COD Demo`) đều hiển thị rõ trạng thái demo/tự khai, tách bạch giữa *Nhà vườn tự khai* và *Hồ sơ đã đối chiếu (Demo)* — không giả mạo chứng nhận pháp lý OCOP.
-
----
-
-## 2. Cấu trúc Không gian & Đường dẫn chính
+## 1. Cấu trúc Không gian & Đường dẫn chính
 
 | Nhóm / Vai trò | Đường dẫn (Routes) | Chức năng trọng tâm |
 |---|---|---|
@@ -29,7 +19,7 @@ Dự án **NaiFarm** thuộc bài thi **Nhóm 8 (Group 8)** tại **Hackathon Th
 
 ---
 
-## 3. Công nghệ sử dụng
+## 2. Công nghệ sử dụng
 
 - **Framework**: Next.js `16.4.6` (App Router, Turbopack), React `19.3.0`, TypeScript `^5`
 - **Styling & Typography**: Tailwind CSS `4.3.3`, Google Fonts (`Be Vietnam Pro` + `Lora`), token màu chuẩn `DESIGN.md` (`#245B3D`, `#F5F3E9`, `#6C9C5B`, `#D7A34D`, `#25352B`)
@@ -37,7 +27,7 @@ Dự án **NaiFarm** thuộc bài thi **Nhóm 8 (Group 8)** tại **Hackathon Th
 
 ---
 
-## 4. Hướng dẫn cài đặt, chạy thử & kiểm tra
+## 3. Hướng dẫn cài đặt, chạy thử & kiểm tra
 
 Thực hiện trong thư mục `E:\04_Projects\Group 8 - Hackathon Dong Nai\naifarm`:
 
@@ -66,7 +56,7 @@ python tests/e2e-verify.py
 
 ---
 
-## 5. Tài liệu tham chiếu nội bộ
+## 4. Tài liệu tham chiếu nội bộ
 
 - [Báo cáo kiểm thử (`docs/TEST_REPORT.md`)](docs/TEST_REPORT.md)
 - [Tài liệu bàn giao Giám khảo (`docs/FINAL_HANDOVER.md`)](docs/FINAL_HANDOVER.md)
