@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -29,22 +29,28 @@ const WORKSPACE_OPTIONS: {
 }[] = [
   { id: "W01", code: "W01", label: "Cá nhân & Khách mua", role: "Ngọc Linh", href: "/account" },
   { id: "W02", code: "W02", label: "Nhà nông", role: "Chú Ba Tư / Ba Minh", href: "/farmer" },
-  { id: "W03", code: "W03", label: "Thanh niên & Học tập", role: "Minh Anh / Văn An", href: "/volunteer" },
+  { id: "W03", code: "W03", label: "Thanh niên Tình nguyện", role: "Minh Anh / Văn An", href: "/volunteer" },
   { id: "W04", code: "W04", label: "Điều phối cộng đồng", role: "Thu Hà (Đoàn phường)", href: "/coordinator" },
   { id: "W05", code: "W05", label: "Tổ chức & Đối tác", role: "HTX / DN / Trường", href: "/organization" },
   { id: "W06", code: "W06", label: "Quản trị nền tảng", role: "Admin Demo", href: "/admin" },
 ];
 
-function inferWorkspaceFromPath(pathname: string, fallback: WorkspaceId): WorkspaceId {
+function inferPathScopedWorkspace(pathname: string): WorkspaceId | null {
   if (pathname.startsWith("/farmer")) return "W02";
   if (pathname.startsWith("/volunteer") || pathname.startsWith("/learn")) return "W03";
   if (pathname.startsWith("/coordinator")) return "W04";
   if (pathname.startsWith("/organization")) return "W05";
   if (pathname.startsWith("/admin")) return "W06";
-  if (pathname.startsWith("/account") || pathname === "/" || pathname.startsWith("/marketplace")) {
+  if (
+    pathname.startsWith("/account") ||
+    pathname.startsWith("/cart") ||
+    pathname.startsWith("/checkout") ||
+    pathname === "/" ||
+    pathname.startsWith("/marketplace")
+  ) {
     return "W01";
   }
-  return fallback;
+  return null;
 }
 
 export function AppHeader() {
@@ -53,7 +59,15 @@ export function AppHeader() {
   const { activeWorkspace, setActiveWorkspace, cart, resetDemoState } = useDemoStore();
   const [switcherOpen, setSwitcherOpen] = useState(false);
 
-  const effectiveWorkspace = inferWorkspaceFromPath(pathname, activeWorkspace);
+  const pathWorkspace = inferPathScopedWorkspace(pathname);
+  const effectiveWorkspace = pathWorkspace ?? activeWorkspace;
+
+  useEffect(() => {
+    if (pathWorkspace && pathWorkspace !== activeWorkspace) {
+      setActiveWorkspace(pathWorkspace);
+    }
+  }, [pathWorkspace, activeWorkspace, setActiveWorkspace]);
+
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const currentWs = WORKSPACE_OPTIONS.find((w) => w.id === effectiveWorkspace) ?? WORKSPACE_OPTIONS[0];
 
@@ -177,7 +191,9 @@ export function AppHeader() {
                           onClick={() => {
                             setActiveWorkspace(ws.id);
                             setSwitcherOpen(false);
-                            router.push(ws.href);
+                            if (pathname !== "/live") {
+                              router.push(ws.href);
+                            }
                           }}
                           className={cn(
                             "flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-sm cursor-pointer",

@@ -18,11 +18,25 @@ import { useDemoStore } from "@/context/DemoStoreContext";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const { cart } = useDemoStore();
+  const { cart, activeWorkspace } = useDemoStore();
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
 
-  const isFarmerRoute = pathname.startsWith("/farmer");
-  const isYouthRoute = pathname.startsWith("/volunteer") || pathname.startsWith("/learn");
+  const effectiveWs = pathname.startsWith("/farmer")
+    ? "W02"
+    : pathname.startsWith("/volunteer") || pathname.startsWith("/learn")
+      ? "W03"
+      : pathname.startsWith("/coordinator")
+        ? "W04"
+        : pathname.startsWith("/organization")
+          ? "W05"
+          : pathname.startsWith("/admin")
+            ? "W06"
+            : pathname.startsWith("/account") || pathname.startsWith("/cart") || pathname.startsWith("/checkout") || pathname === "/" || pathname.startsWith("/marketplace")
+              ? "W01"
+              : activeWorkspace;
+
+  const isFarmerRoute = effectiveWs === "W02";
+  const isYouthRoute = effectiveWs === "W03";
 
   const items = isFarmerRoute
     ? [

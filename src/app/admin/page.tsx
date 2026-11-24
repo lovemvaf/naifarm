@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { History, KeyRound, Lock, ShieldCheck } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
-import { Badge, Button, Card, DemoBanner } from "@/components/ui/Primitives";
+import { Badge, Button, Card } from "@/components/ui/Primitives";
 
 export default function AdminWorkspacePage() {
   const {
@@ -65,11 +65,6 @@ export default function AdminWorkspacePage() {
       ]}
     >
       <div className="space-y-6">
-        <DemoBanner
-          title="Cảnh báo minh bạch Quản trị viên (W06)"
-          detail="Đây là giao diện mô phỏng nguyên tắc quản trị phân quyền theo phạm vi đơn vị (Scoped Capability Grants). Việc bật/tắt quyền chỉ lưu trong state trình diễn và ghi Audit Log minh họa, không sử dụng máy chủ xác thực thật."
-        />
-
         {/* Scoped Capability Grants Matrix (S66-S68) */}
         <section id="grants" className="space-y-4">
           <div className="flex items-center justify-between gap-2">

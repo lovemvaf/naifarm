@@ -1,6 +1,14 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useEffect, useState, useSyncExternalStore } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { INITIAL_FARMS } from "@/data/demo/farms";
 import { INITIAL_PRODUCTS } from "@/data/demo/products";
 import { INITIAL_BATCHES } from "@/data/demo/batches";
@@ -143,6 +151,7 @@ const DemoStoreContext = createContext<DemoStoreContextValue | undefined>(undefi
 export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<DemoState>(getInitialState);
   const [storageReady, setStorageReady] = useState(false);
+  const workspaceTouchedRef = useRef(false);
   const hydrated = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -158,6 +167,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           setState((prev) => ({
             ...prev,
             ...parsed,
+            activeWorkspace: workspaceTouchedRef.current
+              ? prev.activeWorkspace
+              : parsed.activeWorkspace ?? prev.activeWorkspace,
             hideAiChatOnSubflow: false,
           }));
         }
@@ -180,6 +192,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   }, [state, storageReady]);
 
   const setActiveWorkspace = useCallback((ws: WorkspaceId) => {
+    workspaceTouchedRef.current = true;
     setState((prev) => (prev.activeWorkspace === ws ? prev : { ...prev, activeWorkspace: ws }));
   }, []);
 

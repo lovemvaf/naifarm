@@ -7,12 +7,12 @@ import { toast } from "sonner";
 import {
   Camera,
   CheckCircle2,
-  ClipboardList,
   FilePlus2,
   HandHelping,
   MapPin,
   PackageCheck,
   QrCode,
+  Radio,
   ShieldCheck,
   UserCheck,
   XCircle,
@@ -91,7 +91,6 @@ export default function FarmerWorkspacePage() {
     : orders.filter((o) => o.farmId === activeFarm.id || o.id === "NF-ORD-DEMO-01");
   const farmMissions = missions.filter((m) => m.farmId === activeFarm.id || m.status === "submitted");
   const pendingConfirmMissions = farmMissions.filter((m) => m.status === "submitted");
-  const farmBatches = batches.filter((b) => b.farmId === activeFarm.id);
 
   const handleConfirmDeliverable = (missionId: string, title: string) => {
     confirmMissionByFarmer(missionId);
@@ -206,6 +205,11 @@ export default function FarmerWorkspacePage() {
           onClick: () => setActiveTab("pass"),
           icon: <QrCode className="h-5 w-5" aria-hidden="true" />,
         },
+        {
+          label: "Livestream tại vườn",
+          href: "/live",
+          icon: <Radio className="h-5 w-5" aria-hidden="true" />,
+        },
       ]}
     >
       <div className="space-y-6 text-[17px] leading-[1.6]">
@@ -259,83 +263,21 @@ export default function FarmerWorkspacePage() {
                 <span>Chụp ảnh & Nói để bán</span>
               </Link>
               <Link
-                href={`/farms/${activeFarm.slug}`}
+                href="/live"
                 className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[12px] border border-[#245B3D] bg-white px-5 text-base font-semibold text-[#245B3D] hover:bg-[#EAF0E5]"
+              >
+                <Radio className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <span>Mở Livestream tại vườn</span>
+              </Link>
+              <Link
+                href={`/farms/${activeFarm.slug}`}
+                className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[12px] border border-[#D6DED2] bg-white px-5 text-base font-semibold text-[#25352B] hover:bg-[#EAF0E5]"
               >
                 <span>Xem trang vườn ngoài Chợ</span>
               </Link>
             </div>
           </div>
         </Card>
-
-        {/* 4 Large U50+ Navigation Cards */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            {
-              id: "orders" as const,
-              title: "Đơn hàng của vườn",
-              count: `${visibleOrders.length} đơn`,
-              desc: "Xác nhận & báo giao",
-              icon: PackageCheck,
-            },
-            {
-              id: "support" as const,
-              title: "Thanh niên hỗ trợ",
-              count:
-                pendingConfirmMissions.length > 0
-                  ? `${pendingConfirmMissions.length} việc chờ bác xác nhận`
-                  : `${supportRequests.length} yêu cầu`,
-              desc: "Xác nhận xong việc & gọi thêm",
-              icon: HandHelping,
-            },
-            {
-              id: "diary" as const,
-              title: "Nhật ký mùa vụ",
-              count: `${farmBatches.length} mã lô`,
-              desc: "Ghi thêm ngày thu hái",
-              icon: ClipboardList,
-            },
-            {
-              id: "pass" as const,
-              title: "Thẻ vườn & Mặt hàng",
-              count: `${farmProducts.length} sản phẩm`,
-              desc: "Xem mã QR & hàng đang bán",
-              icon: QrCode,
-            },
-          ].map((tile) => {
-            const Icon = tile.icon;
-            const active = activeTab === tile.id;
-            return (
-              <button
-                key={tile.id}
-                type="button"
-                onClick={() => setActiveTab(tile.id)}
-                className={`flex min-h-[104px] flex-col justify-between rounded-[16px] border-2 p-4 text-left transition cursor-pointer ${
-                  active
-                    ? "border-[#245B3D] bg-[#245B3D] text-white shadow-[0_4px_12px_rgba(36,91,61,0.2)]"
-                    : "border-[#D6DED2] bg-white text-[#25352B] hover:border-[#6C9C5B]"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <Icon className="h-6 w-6 shrink-0" aria-hidden="true" />
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                      active ? "bg-white/20 text-white" : "bg-[#EAF0E5] text-[#245B3D]"
-                    }`}
-                  >
-                    {tile.count}
-                  </span>
-                </div>
-                <div className="mt-2">
-                  <p className="text-[18px] font-bold leading-snug">{tile.title}</p>
-                  <p className={`text-sm ${active ? "text-[#EAF0E5]" : "text-[#52645A]"}`}>
-                    {tile.desc}
-                  </p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
 
         {/* Highlight Banner if Youth Deliverable is awaiting Farm confirmation */}
         {pendingConfirmMissions.length > 0 && activeTab !== "support" ? (

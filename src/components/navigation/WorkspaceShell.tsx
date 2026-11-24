@@ -3,7 +3,6 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/format";
 import type { WorkspaceId } from "@/types/naifarm";
 
@@ -18,15 +17,13 @@ export interface WorkspaceNavItem {
 export function WorkspaceShell({
   workspaceId,
   title,
-  subtitle,
-  scopeBadge,
   navItems,
   children,
 }: {
   workspaceId: WorkspaceId;
   title: string;
-  subtitle: string;
-  scopeBadge: string;
+  subtitle?: string;
+  scopeBadge?: string;
   navItems: WorkspaceNavItem[];
   children: React.ReactNode;
 }) {
@@ -34,21 +31,7 @@ export function WorkspaceShell({
 
   return (
     <div className="mx-auto max-w-[1280px] px-4 py-6 lg:px-8">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-[#D6DED2] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(37,53,43,0.04)]">
-        <div className="flex items-center gap-3">
-          <span className="rounded-lg bg-[#245B3D] px-2.5 py-1 text-xs font-bold text-white">
-            {workspaceId}
-          </span>
-          <div>
-            <h1 className="text-xl font-bold text-[#25352B] md:text-2xl">{title}</h1>
-            <p className="text-sm text-[#52645A]">{subtitle}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 rounded-full border border-[#D6DED2] bg-[#EAF0E5] px-3 py-1.5 text-xs font-semibold text-[#245B3D]">
-          <ShieldAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          <span>{scopeBadge}</span>
-        </div>
-      </div>
+      <h1 className="sr-only">{title}</h1>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
         <aside aria-label={`Menu ${workspaceId}`} className="hidden lg:block">

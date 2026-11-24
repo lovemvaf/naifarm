@@ -42,7 +42,7 @@ export function AppFooter() {
             <h2 className="text-sm font-bold text-[#25352B]">Không gian Hệ sinh thái</h2>
             <ul className="mt-3 space-y-2 text-sm text-[#52645A]">
               <li><Link href="/farmer" className="hover:text-[#245B3D]">W02 · Nhà nông & Đăng bán 3 bước</Link></li>
-              <li><Link href="/volunteer" className="hover:text-[#245B3D]">W03 · Thanh niên & Youth Pass</Link></li>
+              <li><Link href="/volunteer" className="hover:text-[#245B3D]">W03 · Thanh niên Tình nguyện</Link></li>
               <li><Link href="/learn" className="hover:text-[#245B3D]">Học tập Hạt điều & Thư viện 3D</Link></li>
               <li><Link href="/coordinator" className="hover:text-[#245B3D]">W04 · Điều phối cộng đồng</Link></li>
               <li><Link href="/demo" className="font-semibold text-[#245B3D] hover:underline">Trung tâm Trình diễn BGK</Link></li>

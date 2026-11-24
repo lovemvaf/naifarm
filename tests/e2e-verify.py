@@ -230,6 +230,8 @@ def main():
 
         page.goto(f"{BASE_URL}/farmer", wait_until="domcontentloaded")
         page.wait_for_timeout(400)
+        assert page.get_by_text("Dữ liệu mô phỏng — Tự quản nhà vườn").count() == 0, "Workspace top banner must be removed"
+        assert page.get_by_text("Xác nhận & báo giao").count() == 0, "4-card tile grid on W02 /farmer must be removed"
         page.get_by_role("button", name="Kiểm tra & Xác nhận ngay").click()
         page.wait_for_timeout(250)
         page.get_by_role("button", name="Xác nhận tôi đã nhận đủ kết quả này").first.click()
@@ -239,23 +241,52 @@ def main():
         page.wait_for_timeout(400)
         page.get_by_role("button", name="Duyệt cộng 2 giờ").first.click()
         page.wait_for_timeout(300)
+        page.get_by_role("button", name="S24d · Thống kê Demo trực tiếp").click()
+        page.wait_for_timeout(250)
+        assert page.get_by_text("Thống kê trình diễn tổng hợp từ dữ liệu trạng thái thực tế").count() == 0, "Removed W04 analytics banner must not render"
 
         page.goto(f"{BASE_URL}/volunteer", wait_until="domcontentloaded")
         page.wait_for_timeout(400)
+        assert page.get_by_text("W03 · Thanh niên Tình nguyện").first.is_visible(), "Header must show W03 · Thanh niên Tình nguyện"
         assert page.get_by_text("5 giờ").first.is_visible(), "Approved hours should sum 3 + 2 = 5 giờ"
-        flow_results.append("Flow D (2-layer W02->W04 hours gating & Youth Pass 5h sync) PASS")
+        assert page.get_by_text("Nhiệm vụ chưa tham gia (1)").first.is_visible()
+        assert page.get_by_text("Nhiệm vụ đã tham gia / Đã làm (2)").first.is_visible()
+        page.get_by_role("button", name="Nhiệm vụ chưa tham gia (1)").click()
+        page.wait_for_timeout(200)
+        assert page.get_by_text("NF-MIS-03").first.is_visible()
+        page.get_by_role("button", name="Tất cả (3)").click()
+        flow_results.append("Flow D (2-layer W02->W04 hours gating & W03 mission split + naming) PASS")
 
-        # Flow E/F/G/H: Explore booking, Live tab, Learn Quiz, Org modes, Admin grant & Reset
+        # Flow E/F/G/H: Explore booking, Role-specific Live (W01 vs W02), Learn, Org, Admin & Reset
         page.goto(f"{BASE_URL}/explore", wait_until="domcontentloaded")
         page.wait_for_timeout(350)
         page.get_by_role("button", name="Gửi yêu cầu đặt lịch").click()
         page.wait_for_timeout(300)
         assert page.get_by_text("Đã ghi nhận yêu cầu").first.is_visible()
 
+        # Role W01 Live check (no create form/button, Buyer can click Mua)
+        page.goto(f"{BASE_URL}/", wait_until="domcontentloaded")
+        page.wait_for_timeout(300)
         page.goto(f"{BASE_URL}/live", wait_until="domcontentloaded")
         page.wait_for_timeout(350)
+        assert page.get_by_text("Tạo phiên Livestream tại vườn").count() == 0
+        assert page.get_by_text("Tạo lịch").count() == 0, "W01 buyer must not see Live schedule creation button"
         page.get_by_role("button", name="Mua").first.click()
         page.wait_for_timeout(250)
+
+        # Role W02 Live check (stays W02 in Header & UI, shows farmer Live creation)
+        page.goto(f"{BASE_URL}/farmer", wait_until="domcontentloaded")
+        page.wait_for_timeout(400)
+        page.get_by_role("link", name="Mở Livestream tại vườn").click()
+        page.wait_for_timeout(500)
+        assert page.get_by_text("W02 · Nhà nông").first.is_visible(), "Opening /live from W02 must stay in W02"
+        page.get_by_role("button", name="Tạo phiên Livestream tại vườn").click()
+        page.wait_for_timeout(200)
+        page.locator("#live-title").fill("Cắt bưởi sáng sớm cùng chú Ba Tư (E2E W02)")
+        page.get_by_role("button", name="Lưu lịch Livestream (Demo)").click()
+        page.wait_for_timeout(300)
+        assert page.get_by_text("Cắt bưởi sáng sớm cùng chú Ba Tư (E2E W02)").first.is_visible()
+        assert page.get_by_text("W02 · Nhà nông").first.is_visible()
 
         page.goto(f"{BASE_URL}/learn", wait_until="domcontentloaded")
         page.wait_for_timeout(350)
@@ -269,6 +300,7 @@ def main():
 
         page.goto(f"{BASE_URL}/admin", wait_until="domcontentloaded")
         page.wait_for_timeout(350)
+        assert page.get_by_text("Cảnh báo minh bạch Quản trị viên (W06)").count() == 0, "Removed W06 banner must not render"
         page.get_by_role("button", name="Thu hồi quyền").first.click()
         page.wait_for_timeout(200)
         page.get_by_role("button", name="Xác nhận & Ghi nhật ký").click()

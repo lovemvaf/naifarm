@@ -495,11 +495,6 @@ export default function CoordinatorWorkspacePage() {
         {/* Tab 4: S24d Live Demo Analytics */}
         {tab === "analytics" ? (
           <section id="analytics" className="space-y-5">
-            <DemoBanner
-              title="Thống kê trình diễn tổng hợp từ dữ liệu trạng thái thực tế"
-              detail="Toàn bộ số liệu bên dưới được đếm trực tiếp từ DemoStoreContext hiện tại của trình duyệt (không dùng KPI phóng đại)."
-            />
-
             <Card className="p-6 space-y-5">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-lg font-bold text-[#25352B]">
