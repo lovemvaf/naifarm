@@ -1,0 +1,21 @@
+{
+  "stitchExportSlug": "gi_h_ng_thanh_to_n_naifarm",
+  "id": "ST-04",
+  "blueprintIds": [
+    "S05",
+    "S06",
+    "R4"
+  ],
+  "name": "Giỏ hàng & Thanh toán NaiFarm",
+  "observedHeading": "Giỏ hàng &amp; Xác nhận đặt hàng nông sản",
+  "workspace": "W01",
+  "targetRoute": "/cart",
+  "verificationStatus": "verified-local-export",
+  "remoteStitchScreenId": null,
+  "assetsCount": 3,
+  "localAssets": [
+    "/images/stitch/stitch-01.jpg",
+    "/images/stitch/stitch-33.jpg",
+    "/images/stitch/stitch-34.jpg"
+  ]
+}

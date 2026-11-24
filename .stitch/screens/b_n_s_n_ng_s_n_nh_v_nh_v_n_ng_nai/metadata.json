@@ -1,0 +1,23 @@
+{
+  "stitchExportSlug": "b_n_s_n_ng_s_n_nh_v_nh_v_n_ng_nai",
+  "id": "ST-06",
+  "blueprintIds": [
+    "S17",
+    "S23",
+    "B2"
+  ],
+  "name": "Bản đồ số Nông sản & Khám phá Nhà vườn Đồng Nai",
+  "observedHeading": "Bản đồ số Nông sản & Trải nghiệm sinh thái miệt vườn",
+  "workspace": "Public",
+  "targetRoute": "/explore",
+  "verificationStatus": "verified-local-export",
+  "remoteStitchScreenId": null,
+  "assetsCount": 5,
+  "localAssets": [
+    "/images/stitch/stitch-37.jpg",
+    "/images/stitch/stitch-38.jpg",
+    "/images/stitch/stitch-39.jpg",
+    "/images/stitch/stitch-40.jpg",
+    "/images/stitch/stitch-41.jpg"
+  ]
+}

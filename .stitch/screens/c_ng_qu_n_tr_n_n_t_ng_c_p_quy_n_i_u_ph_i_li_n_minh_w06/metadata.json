@@ -1,0 +1,19 @@
+{
+  "stitchExportSlug": "c_ng_qu_n_tr_n_n_t_ng_c_p_quy_n_i_u_ph_i_li_n_minh_w06",
+  "id": "ST-11",
+  "blueprintIds": [
+    "S66",
+    "S67",
+    "S68"
+  ],
+  "name": "Cổng Quản trị Nền tảng & Cấp quyền Điều phối Liên minh (W06)",
+  "observedHeading": "Quản trị Nền tảng NaiFarm &amp; Cấp quyền Điều phối Toàn tỉnh",
+  "workspace": "W06",
+  "targetRoute": "/admin",
+  "verificationStatus": "verified-local-export",
+  "remoteStitchScreenId": null,
+  "assetsCount": 1,
+  "localAssets": [
+    "/images/stitch/stitch-62.jpg"
+  ]
+}

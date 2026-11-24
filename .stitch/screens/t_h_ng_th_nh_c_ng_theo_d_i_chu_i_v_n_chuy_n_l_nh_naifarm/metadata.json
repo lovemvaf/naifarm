@@ -1,0 +1,19 @@
+{
+  "stitchExportSlug": "t_h_ng_th_nh_c_ng_theo_d_i_chu_i_v_n_chuy_n_l_nh_naifarm",
+  "id": "ST-05",
+  "blueprintIds": [
+    "S07"
+  ],
+  "name": "Đặt hàng thành công & Theo dõi chuỗi vận chuyển lạnh",
+  "observedHeading": "Cảm ơn bạn đã đồng hành cùng nhà nông &amp; Trí thức trẻ Đồng Nai!",
+  "workspace": "W01",
+  "targetRoute": "/account/orders",
+  "verificationStatus": "verified-local-export",
+  "remoteStitchScreenId": null,
+  "assetsCount": 3,
+  "localAssets": [
+    "/images/stitch/stitch-01.jpg",
+    "/images/stitch/stitch-35.jpg",
+    "/images/stitch/stitch-36.jpg"
+  ]
+}

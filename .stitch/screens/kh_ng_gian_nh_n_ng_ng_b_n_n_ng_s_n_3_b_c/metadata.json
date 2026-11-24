@@ -1,0 +1,24 @@
+{
+  "stitchExportSlug": "kh_ng_gian_nh_n_ng_ng_b_n_n_ng_s_n_3_b_c",
+  "id": "ST-08",
+  "blueprintIds": [
+    "S08",
+    "S09",
+    "S10",
+    "R2",
+    "B1"
+  ],
+  "name": "Không gian Nhà nông — Đăng bán nông sản 3 bước (Ảnh, Giọng nói & AI nháp)",
+  "observedHeading": "Chào Chú Ba Minh! Chú chỉ cần chụp ảnh và bấm nói, NaiAI sẽ soạn bài giúp Chú.",
+  "workspace": "W02",
+  "targetRoute": "/farmer/publish",
+  "verificationStatus": "verified-local-export",
+  "remoteStitchScreenId": null,
+  "assetsCount": 4,
+  "localAssets": [
+    "/images/stitch/stitch-01.jpg",
+    "/images/stitch/stitch-53.jpg",
+    "/images/stitch/stitch-54.jpg",
+    "/images/stitch/stitch-55.jpg"
+  ]
+}

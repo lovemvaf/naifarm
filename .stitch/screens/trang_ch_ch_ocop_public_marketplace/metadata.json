@@ -1,0 +1,28 @@
+{
+  "stitchExportSlug": "trang_ch_ch_ocop_public_marketplace",
+  "id": "ST-01",
+  "blueprintIds": [
+    "S01",
+    "S26"
+  ],
+  "name": "Trang chủ Chợ OCOP Thanh niên",
+  "observedHeading": "Nông sản Đồng Nai – Minh bạch từ vườn đến bàn ăn",
+  "workspace": "Public",
+  "targetRoute": "/",
+  "verificationStatus": "verified-local-export",
+  "remoteStitchScreenId": null,
+  "assetsCount": 11,
+  "localAssets": [
+    "/images/stitch/stitch-01.jpg",
+    "/images/stitch/stitch-02.jpg",
+    "/images/stitch/stitch-03.jpg",
+    "/images/stitch/stitch-04.jpg",
+    "/images/stitch/stitch-05.jpg",
+    "/images/stitch/stitch-06.jpg",
+    "/images/stitch/stitch-07.jpg",
+    "/images/stitch/stitch-08.jpg",
+    "/images/stitch/stitch-09.jpg",
+    "/images/stitch/stitch-10.jpg",
+    "/images/stitch/stitch-11.jpg"
+  ]
+}

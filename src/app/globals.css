@@ -1,26 +1,120 @@
+/* Hallmark: Modern Agricultural Editorial | Warm Rice + Forest Green, Restrained Craft */
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-rice: #F5F3E9;
+  --surface: #FFFFFF;
+  --surface-soft: #EAF0E5;
+  --surface-warm: #EFECE0;
+  --primary: #245B3D;
+  --primary-hover: #19472E;
+  --primary-foreground: #FFFFFF;
+  --leaf: #6C9C5B;
+  --accent-gold: #D7A34D;
+  --on-accent: #25352B;
+  --ink: #25352B;
+  --muted: #52645A;
+  --border: #D6DED2;
+  --input-border: #788A7B;
+  --focus: #245B3D;
+  --success: #24603B;
+  --success-bg: #E6F3E9;
+  --warning: #80520C;
+  --warning-bg: #FFF2D8;
+  --danger: #A32D2D;
+  --danger-bg: #FDECEC;
+  --info: #245B78;
+  --info-bg: #E8F2F8;
+
+  --shadow-card: 0 2px 8px rgba(37, 53, 43, 0.06);
+  --shadow-raised: 0 8px 24px rgba(37, 53, 43, 0.12);
+  --shadow-overlay: 0 16px 48px rgba(37, 53, 43, 0.18);
+
+  --motion-press: 120ms;
+  --motion-transition: 200ms;
+  --motion-panel: 280ms;
+  --motion-reveal: 400ms;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg-rice);
+  --color-foreground: var(--ink);
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-leaf: var(--leaf);
+  --color-accent: var(--accent-gold);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --font-sans: var(--font-be-vietnam-pro), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-lora), Georgia, Cambria, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  overflow-x: clip;
+  scrollbar-color: var(--leaf) var(--bg-rice);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  overflow-x: clip;
+  background-color: var(--bg-rice);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+:where(a, button):active {
+  transform: scale(0.985);
+}
+
+.font-editorial {
+  font-family: var(--font-serif);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Instant accessible focus ring on every interactive surface */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  transition: none;
+}
+
+/* Prevent horizontal grid blowout on image-bearing cards */
+.grid-safe > * {
+  min-width: 0;
+}
+
+/* Editorial display wrapping safety */
+h1,
+h2,
+h3 {
+  overflow-wrap: break-word;
+  text-wrap: balance;
+  min-width: 0;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

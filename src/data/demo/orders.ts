@@ -1,0 +1,68 @@
+import type { DemoOrder } from "@/types/naifarm";
+
+export const INITIAL_ORDERS: DemoOrder[] = [
+  {
+    id: "NF-ORD-DEMO-01",
+    customerName: "Ngọc Linh",
+    customerPhoneDemo: "090x xxx 128 (Demo)",
+    farmId: "farm-ba-tu-demo",
+    farmName: "Nhà vườn Ba Tư",
+    items: [
+      {
+        productId: "P01",
+        productName: "Chôm chôm Java Long Khánh",
+        unitLabel: "kg",
+        quantity: 2,
+        unitPriceVnd: 35000,
+        image: "/images/stitch/stitch-07.jpg",
+      },
+    ],
+    deliveryMethod: "delivery",
+    deliveryAddress: "Quận Bình Thạnh, TP. Hồ Chí Minh (Địa chỉ minh họa)",
+    subtotalVnd: 70000,
+    shippingFeeVnd: 20000,
+    totalVnd: 90000,
+    paymentLabel: "COD Demo (Thanh toán mô phỏng khi nhận hàng)",
+    status: "pending_confirm",
+    createdAtLabel: "24/11/2026 · 09:15",
+    timeline: [
+      { step: "Khách đặt đơn COD (Demo)", time: "09:15 24/11", done: true },
+      { step: "Nhà vườn Ba Tư xác nhận đơn", time: "Đang chờ", done: false },
+      { step: "Hái tại vườn & đóng giỏ rơm", time: "Chưa thực hiện", done: false },
+      { step: "Chuyến xe mát giao TP.HCM", time: "Chưa thực hiện", done: false },
+    ],
+    isDemo: true,
+  },
+  {
+    id: "NF-ORD-DEMO-02",
+    customerName: "Ngọc Linh",
+    customerPhoneDemo: "090x xxx 128 (Demo)",
+    farmId: "farm-ba-minh-tan-trieu",
+    farmName: "Vườn Bưởi Chú Ba Minh",
+    items: [
+      {
+        productId: "P06",
+        productName: "Bưởi da xanh Tân Triều",
+        unitLabel: "kg",
+        quantity: 5,
+        unitPriceVnd: 45000,
+        image: "/images/stitch/stitch-03.jpg",
+      },
+    ],
+    deliveryMethod: "delivery",
+    deliveryAddress: "Số 45/2 Nguyễn Ái Quốc, TP. Biên Hòa, Đồng Nai (Địa chỉ minh họa)",
+    subtotalVnd: 225000,
+    shippingFeeVnd: 20000,
+    totalVnd: 245000,
+    paymentLabel: "COD Demo (Thanh toán mô phỏng khi nhận hàng)",
+    status: "shipping",
+    createdAtLabel: "23/11/2026 · 16:40",
+    timeline: [
+      { step: "Khách đặt đơn COD (Demo)", time: "16:40 23/11", done: true },
+      { step: "Chú Ba Minh xác nhận đơn", time: "17:05 23/11", done: true },
+      { step: "Đóng thùng rơm & dán QR NF-TT-2026-01", time: "07:30 24/11", done: true },
+      { step: "Đang trên chuyến xe mát HTX (Dự kiến giao chiều nay)", time: "09:45 24/11", done: false },
+    ],
+    isDemo: true,
+  },
+];

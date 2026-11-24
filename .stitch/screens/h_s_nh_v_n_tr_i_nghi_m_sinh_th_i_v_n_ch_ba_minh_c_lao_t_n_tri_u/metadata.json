@@ -1,0 +1,31 @@
+{
+  "stitchExportSlug": "h_s_nh_v_n_tr_i_nghi_m_sinh_th_i_v_n_ch_ba_minh_c_lao_t_n_tri_u",
+  "id": "ST-02",
+  "blueprintIds": [
+    "S02",
+    "S23",
+    "R1"
+  ],
+  "name": "Hồ sơ Nhà vườn & Trải nghiệm Sinh thái Cù lao Tân Triều",
+  "observedHeading": "Vườn Bưởi Chú Ba Minh",
+  "workspace": "Public",
+  "targetRoute": "/farms/vuon-buoi-chu-ba-minh",
+  "verificationStatus": "verified-local-export",
+  "remoteStitchScreenId": null,
+  "assetsCount": 13,
+  "localAssets": [
+    "/images/stitch/stitch-01.jpg",
+    "/images/stitch/stitch-12.jpg",
+    "/images/stitch/stitch-13.jpg",
+    "/images/stitch/stitch-14.jpg",
+    "/images/stitch/stitch-15.jpg",
+    "/images/stitch/stitch-16.jpg",
+    "/images/stitch/stitch-17.jpg",
+    "/images/stitch/stitch-18.jpg",
+    "/images/stitch/stitch-19.jpg",
+    "/images/stitch/stitch-20.jpg",
+    "/images/stitch/stitch-21.jpg",
+    "/images/stitch/stitch-22.jpg",
+    "/images/stitch/stitch-23.png"
+  ]
+}

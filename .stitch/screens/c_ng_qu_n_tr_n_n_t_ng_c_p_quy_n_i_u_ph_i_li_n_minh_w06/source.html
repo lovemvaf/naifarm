@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=Lora:ital,wght@0,500;0,600;1,400&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-fixed":"#032100","inverse-primary":"#9ad3ad","on-secondary-container":"#426f34","surface-tint":"#32694a","on-secondary-fixed-variant":"#245019","secondary":"#3c692e","inverse-surface":"#24342a","on-tertiary":"#ffffff","on-error-container":"#93000a","secondary-fixed-dim":"#a1d48d","error":"#ba1a1a","secondary-fixed":"#bcf1a7","outline-variant":"#c0c9c0","primary-fixed-dim":"#9ad3ad","warning-bg":"#FFF2D8","success":"#24603B","background-rice":"#F5F3E9","info-bg":"#E8F2F8","on-primary-fixed":"#002110","warning":"#80520C","tertiary-fixed":"#ffdeae","text-muted":"#52645A","surface":"#ebfeef","surface-dim":"#ccdfd0","on-primary-fixed-variant":"#185033","tertiary-fixed-dim":"#f4bd64","danger-bg":"#FDECEC","background":"#ebfeef","on-secondary":"#ffffff","tertiary-container":"#6e4a00","surface-variant":"#d4e7d8","border-subtle":"#D6DED2","surface-container-highest":"#d4e7d8","primary-hover":"#19472E","primary-container":"#245b3d","surface-white":"#FFFFFF","success-bg":"#E6F3E9","primary-fixed":"#b5f0c8","surface-soft":"#EAF0E5","surface-container":"#e0f3e4","on-surface":"#0f1f16","surface-bright":"#ebfeef","surface-container-lowest":"#ffffff","border-input":"#788A7B","danger":"#A32D2D","on-surface-variant":"#404942","on-primary":"#ffffff","primary":"#054327","secondary-container":"#bcf1a7","surface-container-high":"#daedde","inverse-on-surface":"#e2f6e6","surface-container-low":"#e5f8e9","info":"#245B78","on-error":"#ffffff","tertiary":"#503500","outline":"#717972","on-primary-container":"#97d1ab","on-tertiary-fixed-variant":"#604100","on-tertiary-fixed":"#281800","on-tertiary-container":"#f2bb62","error-container":"#ffdad6","on-background":"#0f1f16"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"gutter-mobile":"1rem","space-xl":"2rem",margin:"2rem","space-md":"1rem",gutter:"1.5rem","space-sm":"0.5rem","space-xs":"0.25rem","space-lg":"1.5rem","margin-mobile":"1rem"},fontFamily:{label:["Be Vietnam Pro"],body:["Be Vietnam Pro"],price:["Be Vietnam Pro"],"headline-md":["Be Vietnam Pro"],"headline-lg-mobile":["Be Vietnam Pro"],"headline-lg":["Be Vietnam Pro"],"headline-sm":["Be Vietnam Pro"],"body-farmer":["Be Vietnam Pro"],"display-mobile":["Lora"],caption:["Be Vietnam Pro"],display:["Lora"]},fontSize:{label:["14px",{lineHeight:"20px",fontWeight:"600"}],body:["16px",{lineHeight:"26px",fontWeight:"400"}],price:["20px",{lineHeight:"28px",fontWeight:"700"}],"headline-md":["24px",{lineHeight:"34px",fontWeight:"650"}],"headline-lg-mobile":["26px",{lineHeight:"34px",fontWeight:"700"}],"headline-lg":["32px",{lineHeight:"42px",fontWeight:"700"}],"headline-sm":["20px",{lineHeight:"28px",fontWeight:"600"}],"body-farmer":["18px",{lineHeight:"28px",fontWeight:"400"}],"display-mobile":["34px",{lineHeight:"42px",fontWeight:"600"}],caption:["13px",{lineHeight:"18px",fontWeight:"400"}],display:["56px",{lineHeight:"64px",fontWeight:"600"}]}}}};</script></head><body class="bg-background-rice font-body text-body text-on-surface antialiased min-h-screen"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-white z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-20 flex items-center px-6 gap-3"><div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-sm"><span class="material-symbols-outlined text-[24px]">agriculture</span></div><div class="flex flex-col"><span class="font-display text-headline-sm font-semibold tracking-tight text-primary leading-tight">NaiFarm</span><span class="font-caption text-caption text-text-muted">Chợ OCOP Thanh Niên</span></div></div><div class="px-4 mb-4"><div class="p-3 rounded-xl bg-surface-soft flex flex-col gap-1"><span class="font-caption text-caption uppercase text-text-muted tracking-wider">Khu vực quản lý</span><div class="flex items-center justify-between"><span class="font-label text-label text-on-surface truncate">HTX NN Xuân Lộc</span><span class="material-symbols-outlined text-[18px] text-primary">unfold_more</span></div><span class="font-caption text-caption text-secondary font-medium">Đồng Nai • Vùng số 04</span></div></div><nav class="flex flex-col gap-1 px-3" data-active-classes="bg-primary-container text-on-primary font-semibold"><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="tong-quan-dieu-phoi" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="font-label text-label">Tổng quan điều phối</span></a><a class="flex items-center justify-between px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="dieu-phoi-don-hang" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[20px]">local_shipping</span><span class="font-label text-label">Đơn hàng nông sản</span></div><span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-caption text-caption">28</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="quan-ly-nha-vuon" href="#"><span class="material-symbols-outlined text-[20px]">nature_people</span><span class="font-label text-label">Hộ xã viên &amp; Nhà vườn</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="lo-hang-ocop-truy-xuat" href="#"><span class="material-symbols-outlined text-[20px]">qr_code_2</span><span class="font-label text-label">Lô OCOP &amp; Truy xuất</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="doi-tinh-nguyen-vien" href="#"><span class="material-symbols-outlined text-[20px]">diversity_1</span><span class="font-label text-label">Đội Thanh niên hỗ trợ</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="bao-cao-san-luong" href="#"><span class="material-symbols-outlined text-[20px]">analytics</span><span class="font-label text-label">Sản lượng &amp; Doanh số</span></a></nav></div><div class="p-4 flex flex-col gap-3"><div class="p-3 rounded-xl bg-warning-bg flex items-start gap-2"><span class="material-symbols-outlined text-warning text-[20px] shrink-0 mt-0.5">priority_high</span><div class="flex flex-col"><span class="font-label text-label text-warning">Phiên bản Thử nghiệm</span><span class="font-caption text-caption text-text-muted">Dữ liệu mô phỏng Sandbox HTX Nông nghiệp Đồng Nai</span></div></div><div class="flex items-center justify-between pt-2"><span class="font-caption text-caption text-text-muted">Mã HTX: XL-DN-2024</span><span class="font-caption text-caption text-success font-semibold">Trực tuyến</span></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-20 bg-surface-white/95 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-gutter flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-lg flex-1"><div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-soft"><span class="material-symbols-outlined text-primary text-[18px]">store</span><span class="font-label text-label text-on-surface">HTX Nông nghiệp Xuân Lộc</span><span class="font-caption text-caption text-text-muted">• Đồng Nai</span><span class="material-symbols-outlined text-on-surface-variant text-[16px]">expand_more</span></div><div class="relative flex-1 max-w-md"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">search</span><input class="w-full h-11 pl-10 pr-4 rounded-xl bg-background-rice text-on-surface placeholder:text-text-muted font-body text-body outline-none focus:bg-surface-white" placeholder="Tìm mã đơn, nông sản OCOP, xã viên..." type="text"/></div></div><div class="flex items-center gap-gutter"><div class="hidden xl:flex items-center gap-gutter px-4 py-1.5 rounded-xl bg-surface-soft"><div class="flex flex-col"><span class="font-caption text-caption text-text-muted">Hôm nay thu gom</span><span class="font-headline-sm text-headline-sm text-primary">3.850 kg</span></div><div class="w-px h-8 bg-border-subtle"></div><div class="flex flex-col"><span class="font-caption text-caption text-text-muted">Chờ điều phối</span><span class="font-headline-sm text-headline-sm text-warning">14 đơn</span></div></div><div class="flex items-center gap-space-sm"><button class="relative w-10 h-10 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-error"></span></button><button class="w-10 h-10 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">help</span></button></div><div class="flex items-center gap-3 pl-3"><div class="flex flex-col items-end"><span class="font-label text-label text-on-surface">Lê Hồng Phong</span><span class="font-caption text-caption text-text-muted">Cán bộ Điều phối OCOP</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-background-rice min-h-[calc(100vh-80px)]"><div class="flex flex-col w-full">
+<!-- Top Governance Header & Badges -->
+<div class="px-gutter pt-space-lg pb-space-md">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex flex-col gap-1.5">
+<!-- Breadcrumb & Authority Marks -->
+<div class="flex flex-wrap items-center gap-2">
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-white shadow-sm text-text-muted font-caption text-caption">
+<span class="material-symbols-outlined text-[16px] text-primary">policy</span>
+<span class="font-medium text-on-surface">Cổng Giám sát Liên minh</span>
+<span class="text-text-muted">/</span>
+<span class="font-semibold text-primary">Phân hệ Quản trị Tỉnh W06</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high text-primary font-caption text-caption font-medium">
+<span class="w-2 h-2 rounded-full bg-success"></span>
+<span>Đoàn TNCS HCM Tỉnh Đồng Nai × Sở Nông nghiệp &amp; PTNT Đồng Nai</span>
+</div>
+<span class="px-2.5 py-0.5 rounded-full bg-warning-bg text-warning font-caption text-caption font-semibold">
+            Dữ liệu minh họa (Demo HTX Tỉnh)
+          </span>
+</div>
+<div class="flex items-baseline gap-3 mt-1">
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">
+            Quản trị Nền tảng NaiFarm &amp; Cấp quyền Điều phối Toàn tỉnh
+          </h1>
+<span class="hidden md:inline-block font-caption text-caption px-2 py-0.5 rounded bg-surface-white text-text-muted shadow-sm">
+            Kỳ giám sát: Quý II/2025
+          </span>
+</div>
+<p class="font-body text-body text-text-muted max-w-4xl">
+          Trung tâm điều phối quyền hạn thực địa, cấp mã số lô OCOP cấp tỉnh, và thẩm tra đối soát giờ hoạt động Đội hình Trí thức trẻ tình nguyện chuyển đổi số nông thôn Đồng Nai.
+        </p>
+</div>
+<!-- Quick Strategic Actions -->
+<div class="flex flex-wrap items-center gap-space-sm shrink-0">
+<button class="h-12 px-4 rounded-xl bg-surface-white hover:bg-surface-container text-primary font-label text-label flex items-center gap-2 shadow-sm transition-all" id="btn-rbac-modal">
+<span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+<span>Ma trận Phân quyền RBAC</span>
+</button>
+<button class="h-12 px-5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-label text-label flex items-center gap-2 shadow-md transition-all" onclick="triggerExportNotice()">
+<span class="material-symbols-outlined text-[20px]">download</span>
+<span>Xuất Báo cáo Sở NN&amp;PTNT</span>
+</button>
+</div>
+</div>
+<!-- Administrative Scope Filter Bar -->
+<div class="mt-space-lg p-space-md rounded-2xl bg-surface-white shadow-sm flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-space-md">
+<div class="flex flex-wrap items-center gap-space-sm">
+<div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-soft text-text-muted font-caption text-caption">
+<span class="material-symbols-outlined text-[18px] text-primary">filter_alt</span>
+<span class="font-medium text-on-surface">Phạm vi lãnh thổ:</span>
+</div>
+<div class="inline-flex rounded-xl bg-surface-soft p-1">
+<button class="px-3.5 py-1.5 rounded-lg text-caption font-label bg-primary text-on-primary shadow-sm transition-all">Toàn tỉnh Đồng Nai</button>
+<button class="px-3.5 py-1.5 rounded-lg text-caption font-label text-text-muted hover:text-on-surface transition-all">TP. Biên Hòa</button>
+<button class="px-3.5 py-1.5 rounded-lg text-caption font-label text-text-muted hover:text-on-surface transition-all">TP. Long Khánh</button>
+<button class="px-3.5 py-1.5 rounded-lg text-caption font-label text-text-muted hover:text-on-surface transition-all">H. Vĩnh Cửu</button>
+<button class="px-3.5 py-1.5 rounded-lg text-caption font-label text-text-muted hover:text-on-surface transition-all">H. Cẩm Mỹ</button>
+<button class="px-3.5 py-1.5 rounded-lg text-caption font-label text-text-muted hover:text-on-surface transition-all">H. Xuân Lộc</button>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-soft font-caption text-caption">
+<span class="text-text-muted font-medium">Trạng thái cấp phép:</span>
+<select class="bg-transparent font-label text-caption text-on-surface outline-none cursor-pointer">
+<option>Tất cả tổ chức (24)</option>
+<option>Đang hoạt động hợp thức (21)</option>
+<option>Chờ thẩm định thực địa (2)</option>
+<option>Tạm đình chỉ mã QR (1)</option>
+</select>
+</div>
+<div class="relative flex-1 sm:w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-text-muted">search</span>
+<input class="w-full h-10 pl-9 pr-3 rounded-xl bg-surface-soft text-on-surface placeholder:text-text-muted font-body text-caption outline-none focus:bg-surface-white" placeholder="Tìm HTX, cán bộ phụ trách..." type="text"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Macro KPIs: Audited Real Regional Metrics -->
+<div class="px-gutter pb-space-lg">
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-md">
+<!-- Card 1 -->
+<div class="p-space-md rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-all">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-caption text-caption text-text-muted uppercase tracking-wider">Hợp tác xã &amp; THT Liên kết</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-headline-lg text-headline-lg text-primary">24</span>
+<span class="font-label text-caption text-success font-semibold">100% chuẩn hóa</span>
+</div>
+</div>
+<div class="w-11 h-11 rounded-xl bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">corporate_fare</span>
+</div>
+</div>
+<div class="mt-4 pt-3 bg-surface-soft/60 rounded-xl px-3 py-2 flex items-center justify-between text-caption font-caption">
+<span class="text-text-muted">18 HTX OCOP Tỉnh</span>
+<span class="w-1.5 h-1.5 rounded-full bg-border-subtle"></span>
+<span class="text-primary font-medium">6 Chi hội TN Khởi nghiệp</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="p-space-md rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-all">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-caption text-caption text-text-muted uppercase tracking-wider">Nhà vườn &amp; Điểm số hóa</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-headline-lg text-headline-lg text-primary">142</span>
+<span class="font-label text-caption text-info font-semibold">+18 vườn mới</span>
+</div>
+</div>
+<div class="w-11 h-11 rounded-xl bg-info-bg flex items-center justify-center text-info">
+<span class="material-symbols-outlined text-[24px]">qr_code_scanner</span>
+</div>
+</div>
+<div class="mt-4 pt-3 bg-surface-soft/60 rounded-xl px-3 py-2 flex items-center justify-between text-caption font-caption">
+<span class="text-text-muted">Định danh QR thực địa:</span>
+<span class="font-medium text-success">142/142 hộ đạt VietGAP/OCOP</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="p-space-md rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-all">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-caption text-caption text-text-muted uppercase tracking-wider">Lực lượng Trí thức trẻ</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-headline-lg text-headline-lg text-primary">380</span>
+<span class="font-label text-caption text-secondary font-semibold">TNV Tỉnh Đoàn</span>
+</div>
+</div>
+<div class="w-11 h-11 rounded-xl bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-[24px]">volunteer_activism</span>
+</div>
+</div>
+<div class="mt-4 pt-3 bg-surface-soft/60 rounded-xl px-3 py-2 flex items-center justify-between text-caption font-caption">
+<span class="text-text-muted">Đã đối soát cống hiến:</span>
+<span class="font-price text-caption text-primary">4.250 giờ công tác</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="p-space-md rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-all">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-caption text-caption text-text-muted uppercase tracking-wider">Sản lượng Chuỗi lạnh OCOP</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-headline-lg text-headline-lg text-primary">68.5</span>
+<span class="text-caption font-headline-sm text-text-muted">tấn (T5/2025)</span>
+</div>
+</div>
+<div class="w-11 h-11 rounded-xl bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">ac_unit</span>
+</div>
+</div>
+<div class="mt-4 pt-3 bg-surface-soft/60 rounded-xl px-3 py-2 flex items-center justify-between text-caption font-caption">
+<span class="text-text-muted">Tỷ lệ tươi nguyên kiện:</span>
+<span class="font-label text-caption text-success font-bold">99.2% (Đạt kiểm định)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Content Mosaic: Permission Matrix & Integrity Audit -->
+<div class="px-gutter pb-space-xl grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
+<!-- Left Column: Organization Permission Matrix (8 cols) -->
+<div class="xl:col-span-8 flex flex-col gap-space-md">
+<!-- Table Container -->
+<div class="rounded-2xl bg-surface-white shadow-sm overflow-hidden flex flex-col">
+<div class="px-space-md py-4 bg-surface-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-xl bg-primary-container text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">verified_user</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-primary">Ma trận Cấp phép &amp; Đầu mối Vùng sản xuất</h2>
+<p class="font-caption text-caption text-text-muted">Xác nhận tư cách điều phối viên W04/W05 và đầu mối thanh niên cơ sở</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="h-9 px-3 rounded-lg bg-surface-soft hover:bg-surface-container text-on-surface font-label text-caption flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[16px]">add_moderator</span>
+<span>Cấp quyền đơn vị mới</span>
+</button>
+</div>
+</div>
+<!-- Table View -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-soft text-text-muted font-caption text-caption uppercase tracking-wider">
+<th class="py-3 px-4">Tổ chức HTX &amp; Vùng nguyên liệu</th>
+<th class="py-3 px-4">Phân quyền Cán bộ Điều phối</th>
+<th class="py-3 px-4">Thời hạn ủy quyền</th>
+<th class="py-3 px-4">Trạng thái Cấp phép</th>
+<th class="py-3 px-4 text-right">Thao tác Quản trị</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-subtle/50 text-body font-body text-[14px]">
+<!-- Row 1: HTX Tan Binh -->
+<tr class="hover:bg-surface-soft/40 transition-colors">
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-label text-label text-primary">HTX Nông nghiệp Tân Bình</span>
+<span class="font-caption text-caption text-text-muted mt-0.5">Huyện Vĩnh Cửu • Vùng bưởi Tân Triều OCOP 4 sao</span>
+<div class="flex items-center gap-2 mt-2">
+<span class="px-2 py-0.5 rounded bg-surface-soft text-on-surface-variant font-caption text-[11px] font-medium">32 Nhà vườn liên kết</span>
+<span class="px-2 py-0.5 rounded bg-surface-soft text-on-surface-variant font-caption text-[11px] font-medium">Mã vùng: VN-75-VC-01</span>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-primary">elderly</span>
+<span class="font-medium text-on-surface">Bác Võ Văn Minh</span>
+<span class="font-caption text-[11px] text-text-muted">(Chủ tịch HĐQT)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">person_check</span>
+<span class="font-medium text-on-surface">Trịnh Hoàng Nam</span>
+<span class="font-caption text-[11px] text-text-muted">(Cán bộ W04/W05)</span>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface">31/12/2025</span>
+<span class="font-caption text-caption text-success">Còn 214 ngày</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-bg text-success font-caption text-caption font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+<span>Đã xác thực thực địa</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="w-8 h-8 rounded-lg bg-surface-soft hover:bg-surface-container flex items-center justify-center text-primary transition-colors" title="Kiểm toán hoạt động">
+<span class="material-symbols-outlined text-[18px]">history_edu</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-soft hover:bg-surface-container flex items-center justify-center text-text-muted hover:text-on-surface transition-colors" title="Cấu hình quyền">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-soft hover:bg-danger-bg flex items-center justify-center text-text-muted hover:text-danger transition-colors" title="Tạm dừng cấp phép">
+<span class="material-symbols-outlined text-[18px]">pause_circle</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: HTX Xuan Loc -->
+<tr class="hover:bg-surface-soft/40 transition-colors">
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-label text-label text-primary">HTX Nông nghiệp Bền vững Xuân Lộc</span>
+<span class="font-caption text-caption text-text-muted mt-0.5">Huyện Xuân Lộc • Hạt điều rang củi &amp; Tiêu OCOP 3-4 sao</span>
+<div class="flex items-center gap-2 mt-2">
+<span class="px-2 py-0.5 rounded bg-surface-soft text-on-surface-variant font-caption text-[11px] font-medium">45 Nhà vườn liên kết</span>
+<span class="px-2 py-0.5 rounded bg-info-bg text-info font-caption text-[11px] font-medium">4 chuyến xe lạnh/ngày</span>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-primary">assignment_ind</span>
+<span class="font-medium text-on-surface">Lê Hồng Phong</span>
+<span class="font-caption text-[11px] text-text-muted">(Phụ trách chuỗi lạnh)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">support_agent</span>
+<span class="font-medium text-on-surface">Nguyễn Thu Thảo</span>
+<span class="font-caption text-[11px] text-text-muted">(Thủ kho nông sản)</span>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface">30/06/2026</span>
+<span class="font-caption text-caption text-success">Còn 395 ngày</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-bg text-success font-caption text-caption font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+<span>Đang hoạt động chuỗi</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="w-8 h-8 rounded-lg bg-surface-soft hover:bg-surface-container flex items-center justify-center text-primary transition-colors" title="Kiểm toán hoạt động">
+<span class="material-symbols-outlined text-[18px]">history_edu</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-soft hover:bg-surface-container flex items-center justify-center text-text-muted hover:text-on-surface transition-colors" title="Cấu hình quyền">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-soft hover:bg-danger-bg flex items-center justify-center text-text-muted hover:text-danger transition-colors" title="Tạm dừng cấp phép">
+<span class="material-symbols-outlined text-[18px]">pause_circle</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Doan Truong DH Dong Nai -->
+<tr class="hover:bg-surface-soft/40 transition-colors">
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-label text-label text-primary">Đoàn Trường Đại học Đồng Nai</span>
+<span class="font-caption text-caption text-text-muted mt-0.5">Khối Trường Đại học • Đầu mối Đội hình TNV số hóa W03</span>
+<div class="flex items-center gap-2 mt-2">
+<span class="px-2 py-0.5 rounded bg-secondary-container text-on-secondary-container font-caption text-[11px] font-medium">120 Sinh viên kỹ thuật</span>
+<span class="px-2 py-0.5 rounded bg-surface-soft text-on-surface-variant font-caption text-[11px] font-medium">Cấp OCOP Youth Pass</span>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-primary">school</span>
+<span class="font-medium text-on-surface">Đ/c Phan Thành Đạt</span>
+<span class="font-caption text-[11px] text-text-muted">(Bí thư Đoàn Trường)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">groups</span>
+<span class="font-medium text-on-surface">Trần Minh Quân</span>
+<span class="font-caption text-[11px] text-text-muted">(Đội trưởng thực địa)</span>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface">31/08/2025</span>
+<span class="font-caption text-caption text-success">Chiến dịch Mùa hè xanh</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-caption text-caption font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>Quyền Cấp Youth Pass</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="w-8 h-8 rounded-lg bg-surface-soft hover:bg-surface-container flex items-center justify-center text-primary transition-colors" title="Kiểm toán hoạt động">
+<span class="material-symbols-outlined text-[18px]">history_edu</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-soft hover:bg-surface-container flex items-center justify-center text-text-muted hover:text-on-surface transition-colors" title="Cấu hình quyền">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-soft hover:bg-danger-bg flex items-center justify-center text-text-muted hover:text-danger transition-colors" title="Tạm dừng cấp phép">
+<span class="material-symbols-outlined text-[18px]">pause_circle</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4: HTX Sau Rieng Cam My -->
+<tr class="hover:bg-surface-soft/40 transition-colors">
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-label text-label text-primary">HTX Sầu riêng Sinh thái Cẩm Mỹ</span>
+<span class="font-caption text-caption text-text-muted mt-0.5">Huyện Cẩm Mỹ • Sầu riêng Ri6 &amp; Dona xuất khẩu OCOP 4 sao</span>
+<div class="flex items-center gap-2 mt-2">
+<span class="px-2 py-0.5 rounded bg-warning-bg text-warning font-caption text-[11px] font-medium">Bổ sung mã vùng xuất khẩu</span>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-text-muted">pending_actions</span>
+<span class="font-medium text-on-surface">Đặng Văn Tiết</span>
+<span class="font-caption text-[11px] text-text-muted">(Đại diện hồ sơ)</span>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-medium text-warning">Đang thẩm định</span>
+<span class="font-caption text-caption text-text-muted">Nộp ngày 14/05/2025</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning-bg text-warning font-caption text-caption font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
+<span>Chờ xét duyệt Sở NN</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="h-8 px-2.5 rounded-lg bg-primary hover:bg-primary-hover text-on-primary font-caption text-[12px] font-medium transition-colors">
+                      Thẩm định hồ sơ
+                    </button>
+<button class="w-8 h-8 rounded-lg bg-surface-soft hover:bg-danger-bg flex items-center justify-center text-text-muted hover:text-danger transition-colors" title="Từ chối cấp phép">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination & Federation Notice -->
+<div class="p-space-md bg-surface-soft/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+<span class="font-caption text-caption text-text-muted">
+            Hiển thị 4 trong tổng số 24 tổ chức thành viên liên minh Đồng Nai
+          </span>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-lg bg-surface-white text-text-muted hover:text-on-surface flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+</button>
+<span class="px-3 py-1 rounded-lg bg-primary text-on-primary font-caption text-caption font-medium">1</span>
+<button class="w-8 h-8 rounded-lg bg-surface-white text-text-muted hover:text-on-surface flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Regional Logistics & Cold-Chain Governance Section -->
+<div class="p-space-md rounded-2xl bg-surface-white shadow-sm flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-xl bg-info-bg text-info flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">local_shipping</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-primary">Giám sát Luồng Vận chuyển &amp; Tuyến Xe lạnh Liên Huyện</h3>
+<p class="font-caption text-caption text-text-muted">Quản trị lộ trình thu gom bảo toàn độ tươi cho sản phẩm OCOP đạt sao</p>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-success-bg text-success font-caption text-caption font-medium">
+            Tất cả 4 tuyến hoạt động
+          </span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+<div class="p-3 rounded-xl bg-surface-soft flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="font-label text-caption text-on-surface">Tuyến 01: Vĩnh Cửu - Biên Hòa</span>
+<span class="font-caption text-[11px] font-semibold text-success">Đang vận hành</span>
+</div>
+<div class="flex items-center gap-2 text-caption text-text-muted">
+<span class="material-symbols-outlined text-[16px] text-info">thermostat</span>
+<span>Nhiệt độ thùng: 4.8°C (Chuẩn bưởi)</span>
+</div>
+<div class="w-full bg-border-subtle h-1.5 rounded-full overflow-hidden mt-1">
+<div class="bg-primary h-full rounded-full" style="width: 78%"></div>
+</div>
+<span class="font-caption text-[11px] text-text-muted">Đã thu gom 3.4/4.2 tấn chỉ tiêu ngày</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-soft flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="font-label text-caption text-on-surface">Tuyến 02: Long Khánh - Xuân Lộc</span>
+<span class="font-caption text-[11px] font-semibold text-success">Đang vận hành</span>
+</div>
+<div class="flex items-center gap-2 text-caption text-text-muted">
+<span class="material-symbols-outlined text-[16px] text-info">thermostat</span>
+<span>Nhiệt độ thùng: 18.2°C (Hạt khô)</span>
+</div>
+<div class="w-full bg-border-subtle h-1.5 rounded-full overflow-hidden mt-1">
+<div class="bg-primary h-full rounded-full" style="width: 92%"></div>
+</div>
+<span class="font-caption text-[11px] text-text-muted">Đã thu gom 8.1/8.8 tấn chỉ tiêu ngày</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-soft flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="font-label text-caption text-on-surface">Tuyến 03: Cẩm Mỹ - Định Quán</span>
+<span class="font-caption text-[11px] font-semibold text-warning">Dự kiến xuất bến 13:30</span>
+</div>
+<div class="flex items-center gap-2 text-caption text-text-muted">
+<span class="material-symbols-outlined text-[16px] text-info">thermostat</span>
+<span>Chờ kiểm soát mã QR vùng trồng</span>
+</div>
+<div class="w-full bg-border-subtle h-1.5 rounded-full overflow-hidden mt-1">
+<div class="bg-warning h-full rounded-full" style="width: 35%"></div>
+</div>
+<span class="font-caption text-[11px] text-text-muted">Đang tập kết hàng tại Kho OCOP Cẩm Mỹ</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Audit Log & Youth Governance & Security Guard (4 cols) -->
+<div class="xl:col-span-4 flex flex-col gap-space-md">
+<!-- Youth Pass & Volunteer Audit Widget -->
+<div class="p-space-md rounded-2xl bg-surface-white shadow-sm flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<h3 class="font-label text-label text-primary">Hộ chiếu OCOP Youth Pass</h3>
+</div>
+<span class="font-caption text-caption text-text-muted">Tháng 5/2025</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-soft flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption text-text-muted">Số TNV hoàn thành xuất sắc:</span>
+<span class="font-label text-caption text-primary">128 sinh viên</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption text-text-muted">Số giờ công tác chờ duyệt:</span>
+<span class="font-label text-caption text-warning">140 giờ</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-caption text-caption text-text-muted">Chứng nhận chuyển giao số:</span>
+<span class="font-label text-caption text-success">Đã cấp 312 bản điện tử</span>
+</div>
+</div>
+<button class="w-full h-10 rounded-xl bg-surface-soft hover:bg-surface-container text-primary font-label text-caption flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">fact_check</span>
+<span>Duyệt bảng đối soát giờ tình nguyện viên</span>
+</button>
+</div>
+<!-- Real-time Integrity & Audit Log -->
+<div class="p-space-md rounded-2xl bg-surface-white shadow-sm flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+</div>
+<h3 class="font-label text-label text-primary">Nhật ký Giám sát Thực địa</h3>
+</div>
+<span class="w-2 h-2 rounded-full bg-success"></span>
+</div>
+<!-- Event Timeline -->
+<div class="flex flex-col gap-3 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-border-subtle">
+<!-- Event 1 -->
+<div class="flex items-start gap-3 relative pl-6">
+<span class="w-2.5 h-2.5 rounded-full bg-success absolute left-[7px] top-1.5 ring-4 ring-surface-white"></span>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-label text-caption text-on-surface">10:30 AM</span>
+<span class="font-caption text-[11px] px-1.5 py-0.2 rounded bg-surface-soft text-text-muted">Tỉnh Đoàn</span>
+</div>
+<p class="font-body text-caption text-on-surface-variant mt-0.5">
+                Cán bộ Tỉnh Đoàn phê duyệt bổ sung <span class="font-semibold text-primary">48 giờ tình nguyện</span> cho Đội số hóa cù lao Tân Triều.
+              </p>
+</div>
+</div>
+<!-- Event 2 -->
+<div class="flex items-start gap-3 relative pl-6">
+<span class="w-2.5 h-2.5 rounded-full bg-primary absolute left-[7px] top-1.5 ring-4 ring-surface-white"></span>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-label text-caption text-on-surface">09:15 AM</span>
+<span class="font-caption text-[11px] px-1.5 py-0.2 rounded bg-surface-soft text-text-muted">HTX Tân Bình</span>
+</div>
+<p class="font-body text-caption text-on-surface-variant mt-0.5">
+                HTX cập nhật mã lô tem truy xuất QR lô Bưởi đường lá cam <span class="font-semibold text-primary">#BT-2025-05</span> (500 thùng).
+              </p>
+</div>
+</div>
+<!-- Event 3 -->
+<div class="flex items-start gap-3 relative pl-6">
+<span class="w-2.5 h-2.5 rounded-full bg-info absolute left-[7px] top-1.5 ring-4 ring-surface-white"></span>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-label text-caption text-on-surface">08:00 AM</span>
+<span class="font-caption text-[11px] px-1.5 py-0.2 rounded bg-surface-soft text-text-muted">Điều hành xe</span>
+</div>
+<p class="font-body text-caption text-on-surface-variant mt-0.5">
+                Hệ thống kích hoạt tuyến xe lạnh số 01 (Biên Hòa - Vĩnh Cửu), nhiệt độ cảm biến chuẩn <span class="font-semibold text-info">4.5°C</span>.
+              </p>
+</div>
+</div>
+<!-- Event 4 -->
+<div class="flex items-start gap-3 relative pl-6">
+<span class="w-2.5 h-2.5 rounded-full bg-border-subtle absolute left-[7px] top-1.5 ring-4 ring-surface-white"></span>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-label text-caption text-on-surface">Hôm qua 16:45</span>
+<span class="font-caption text-[11px] px-1.5 py-0.2 rounded bg-surface-soft text-text-muted">Sở NN &amp; PTNT</span>
+</div>
+<p class="font-body text-caption text-on-surface-variant mt-0.5">
+                Đối soát hồ sơ cấp lại tiêu chuẩn an toàn nông sản VietGAP vùng Cẩm Mỹ.
+              </p>
+</div>
+</div>
+</div>
+<a class="font-label text-caption text-primary hover:text-primary-hover flex items-center justify-center gap-1 pt-1 transition-colors" href="#">
+<span>Xem toàn bộ 142 sự kiện kiểm toán</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+<!-- Security & Farmer Safety Card -->
+<div class="p-space-md rounded-2xl bg-surface-white shadow-sm flex flex-col gap-3">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-surface-soft text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">health_and_safety</span>
+</div>
+<h3 class="font-label text-label text-primary">An toàn Dữ liệu &amp; Nông hộ U50+</h3>
+</div>
+<div class="flex flex-col gap-2 font-caption text-caption text-text-muted">
+<div class="p-2.5 rounded-xl bg-success-bg/70 text-on-surface flex items-start gap-2">
+<span class="material-symbols-outlined text-success text-[18px] shrink-0 mt-0.5">gpp_good</span>
+<span><strong>0 vi phạm quy chuẩn:</strong> Tất cả sản phẩm xuất xưởng đều có mã định danh vùng trồng rõ ràng.</span>
+</div>
+<div class="p-2.5 rounded-xl bg-surface-soft text-on-surface flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">shield_person</span>
+<span><strong>100% tài khoản nông hộ cao tuổi</strong> được hỗ trợ bảo mật hai lớp thông qua Đoàn viên thanh niên phụ trách ấp/xã.</span>
+</div>
+</div>
+<div class="pt-2 flex items-center justify-between font-caption text-caption text-text-muted">
+<span>Khóa chữ ký số Tỉnh Đoàn:</span>
+<span class="font-mono text-primary font-semibold">SHA-256 VALID</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Regional Visual Storytelling: Field Digitization In Action -->
+<div class="px-gutter pb-space-xl">
+<div class="p-space-lg rounded-2xl bg-surface-white shadow-sm flex flex-col lg:flex-row items-center gap-space-lg">
+<div class="w-full lg:w-1/3 h-52 rounded-xl overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="A candid documentary photograph of young Vietnamese university agricultural volunteers wearing green youth union polo shirts, assisting an elderly farmer in a sunlit Tan Trieu pomelo orchard in Dong Nai, carefully scanning a fruit QR code tag using a modern tablet, warm morning sunlight, natural organic colors, photorealistic style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCj4XgoY5RKwGgAih8mmZPk_CaNFl7Mnk96VY-13rw8n3x_WmNYGBR6HPai7ZS6g0nTqwolw09i1pZQenU0rptD9ccrSuYRyUiNu8rCgSbo_fDvzNrXsvXBqWiSvYLWIc1Yj3gKv_7pD9OlOhC_FQ5XWALYMnDzUcFr_egAur3Thr_0MSMT4v-Yq3RZSoDmaV8SKhCaYHmyHwPlQy_sCtIsmUNGN5t_nkI5mPpCw0k-"/>
+<div class="absolute bottom-2 left-2 px-2.5 py-1 rounded bg-inverse-surface/80 text-surface-white font-caption text-[11px] backdrop-blur-sm">
+          Thực địa Cù lao Tân Triều • 05/2025
+        </div>
+</div>
+<div class="flex-1 flex flex-col gap-2">
+<div class="inline-flex items-center gap-2 text-primary font-label text-caption uppercase tracking-wider">
+<span class="material-symbols-outlined text-[18px]">nature_people</span>
+<span>Mô hình Hợp tác Liên minh Tỉnh Đồng Nai</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-primary">
+          "Thanh niên gắn kết cùng Lão nông: Số hóa từng gốc bưởi, chuẩn hóa từng lô hàng OCOP"
+        </h4>
+<p class="font-body text-body text-text-muted">
+          Quy trình quản trị W06 đảm bảo không một nông dân nào bị bỏ lại phía sau trong tiến trình chuyển đổi số. Lực lượng đoàn viên thanh niên địa phương đóng vai trò là "cầu nối tin cậy", trực tiếp hỗ trợ ghi chép nhật ký nông vụ điện tử, chụp ảnh sản phẩm đạt chuẩn thương mại điện tử, và xác thực nguồn gốc nông sản trước khi cấp phép dán tem NaiFarm.
+        </p>
+</div>
+<div class="shrink-0 flex flex-col items-center gap-2">
+<button class="h-11 px-5 rounded-xl bg-surface-soft hover:bg-surface-container text-primary font-label text-caption flex items-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Xem Quy chuẩn Cấp quyền W06</span>
+</button>
+<span class="font-caption text-[12px] text-text-muted">Ban hành theo QĐ số 412/SNN-TĐ</span>
+</div>
+</div>
+</div>
+<!-- Floating RBAC Configuration Modal (Simulated Interactive) -->
+<div class="fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-sm hidden items-center justify-center p-4" id="rbac-modal">
+<div class="bg-surface-white rounded-2xl shadow-xl max-w-2xl w-full p-space-lg flex flex-col gap-4">
+<div class="flex items-center justify-between pb-3 border-b border-border-subtle">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-container text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">admin_panel_settings</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-primary">Cấu hình Ma trận Quyền Hạn (RBAC W01 - W06)</h3>
+<p class="font-caption text-caption text-text-muted">Hệ thống phân cấp vai trò chuẩn hóa Liên minh Hợp tác xã Đồng Nai</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-lg bg-surface-soft flex items-center justify-center text-text-muted hover:text-on-surface" id="btn-close-rbac">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-3 py-2 font-caption text-caption">
+<div class="p-3 rounded-xl bg-surface-soft flex items-center justify-between">
+<div>
+<span class="font-label text-on-surface block">W01: Khách &amp; Người tiêu dùng Thành phố</span>
+<span class="text-text-muted">Tra cứu nguồn gốc, mua nông sản OCOP, xem hộ chiếu minh bạch</span>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-surface-white text-primary font-medium shadow-sm">Công khai</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-soft flex items-center justify-between">
+<div>
+<span class="font-label text-on-surface block">W02: Không gian Nhà vườn &amp; Lão nông (U50+)</span>
+<span class="text-text-muted">Giao diện phím to, ghi nhật ký bằng giọng nói, kích hoạt lô tem</span>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-success-bg text-success font-medium shadow-sm">Ủy quyền HTX</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-soft flex items-center justify-between">
+<div>
+<span class="font-label text-on-surface block">W03: Đội hình Trí thức trẻ &amp; Thanh niên hỗ trợ</span>
+<span class="text-text-muted">Xác minh hình ảnh thực địa, hỗ trợ kỹ thuật số, tích lũy giờ TNV</span>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-medium shadow-sm">Cấp bởi Tỉnh Đoàn</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-soft flex items-center justify-between">
+<div>
+<span class="font-label text-on-surface block">W04/W05: Điều phối viên Hợp tác xã &amp; Chuỗi vận chuyển</span>
+<span class="text-text-muted">Gom đơn hàng số lượng lớn, đặt xe lạnh, quản lý thành viên xã viên</span>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-medium shadow-sm">Cấp theo Quyết định HTX</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container flex items-center justify-between">
+<div>
+<span class="font-label text-primary block">W06: Quản trị Tỉnh &amp; Hội đồng Thẩm định OCOP</span>
+<span class="text-text-muted">Toàn quyền cấp mã QR, khóa phân hệ, xuất báo cáo chính thức</span>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-primary text-on-primary font-medium shadow-sm">Tối cao (Super Admin)</span>
+</div>
+</div>
+<div class="flex items-center justify-end gap-3 pt-2">
+<button class="h-10 px-4 rounded-xl bg-surface-soft text-on-surface font-label text-caption" id="btn-cancel-rbac">
+          Đóng cửa sổ
+        </button>
+<button class="h-10 px-4 rounded-xl bg-primary text-on-primary font-label text-caption" onclick="alert('Cập nhật chính sách phân quyền RBAC thành công cho toàn tỉnh!')">
+          Lưu &amp; Áp dụng chính sách
+        </button>
+</div>
+</div>
+</div>
+<!-- Toast Notification System (Interactive feedback) -->
+<div class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none" id="toast-export">
+<div class="px-4 py-3 rounded-xl bg-primary text-on-primary shadow-xl flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px] text-primary-fixed">check_circle</span>
+<div class="flex flex-col">
+<span class="font-label text-caption font-semibold">Đã xuất báo cáo liên minh T5/2025</span>
+<span class="font-caption text-[11px] text-surface-container-high">Định dạng file: Báo cáo_Liên_Minh_NaiFarm_T5_2025.pdf (1.4MB)</span>
+</div>
+</div>
+</div>
+<script>
+    // Modal Interactions
+    const modal = document.getElementById('rbac-modal');
+    const btnOpen = document.getElementById('btn-rbac-modal');
+    const btnClose = document.getElementById('btn-close-rbac');
+    const btnCancel = document.getElementById('btn-cancel-rbac');
+
+    if (btnOpen && modal) {
+      btnOpen.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      });
+    }
+
+    const hideModal = () => {
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    };
+
+    if (btnClose) btnClose.addEventListener('click', hideModal);
+    if (btnCancel) btnCancel.addEventListener('click', hideModal);
+
+    // Export Feedback Simulation
+    function triggerExportNotice() {
+      const toast = document.getElementById('toast-export');
+      if (toast) {
+        toast.classList.remove('translate-y-20', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        setTimeout(() => {
+          toast.classList.add('translate-y-20', 'opacity-0');
+          toast.classList.remove('translate-y-0', 'opacity-100');
+        }, 3500);
+      }
+    }
+  </script>
+</div></main><footer class="w-full bg-surface-white py-6 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="w-full px-gutter flex flex-col md:flex-row items-center justify-between gap-4"><div class="flex items-center gap-3"><span class="font-display text-label text-primary font-semibold">NaiFarm</span><span class="font-caption text-caption text-text-muted">© 2024 Bản quyền thuộc Liên minh Hợp tác xã Tỉnh Đồng Nai &amp; Đoàn Thanh niên</span></div><div class="flex items-center gap-6"><span class="font-caption text-caption px-2.5 py-1 rounded-full bg-warning-bg text-warning font-medium">Hệ thống thử nghiệm điều phối W04/W05</span><a class="font-caption text-caption text-text-muted hover:text-primary transition-colors" href="#">Quy chuẩn OCOP Tỉnh</a><a class="font-caption text-caption text-text-muted hover:text-primary transition-colors" href="#">Hỗ trợ kỹ thuật HTX</a><a class="font-caption text-caption text-text-muted hover:text-primary transition-colors" href="#">Chính sách bảo mật dữ liệu nông vụ</a></div></div></footer></div></body></html>

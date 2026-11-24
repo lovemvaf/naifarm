@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><title>NaiFarm - Chợ OCOP Thanh niên Đồng Nai</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,500;0,600;0,700;1,400&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100..900&family=Lora:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"on-primary-container":"#97d1ab","on-tertiary-container":"#f2bb62","tertiary-fixed-dim":"#f4bd64","background-rice":"#F5F3E9","surface-soft":"#EAF0E5","surface-container-high":"#daedde","secondary-container":"#bcf1a7","on-surface-variant":"#404942","success":"#24603B","outline":"#717972","surface-tint":"#32694a","primary":"#054327","danger":"#A32D2D","on-tertiary":"#ffffff","surface-variant":"#d4e7d8","on-tertiary-fixed":"#281800","tertiary":"#503500","surface-container-lowest":"#ffffff","surface-container-low":"#e5f8e9","surface-white":"#FFFFFF","text-muted":"#52645A","border-subtle":"#D6DED2","on-error":"#ffffff","on-surface":"#0f1f16","tertiary-fixed":"#ffdeae","on-error-container":"#93000a","secondary-fixed":"#bcf1a7","surface-container":"#e0f3e4","secondary":"#3c692e","primary-container":"#245b3d","surface":"#ebfeef","on-secondary-fixed-variant":"#245019","info":"#245B78","danger-bg":"#FDECEC","on-secondary-container":"#426f34","info-bg":"#E8F2F8","background":"#ebfeef","surface-bright":"#ebfeef","tertiary-container":"#6e4a00","warning-bg":"#FFF2D8","error":"#ba1a1a","on-primary":"#ffffff","on-secondary":"#ffffff","on-primary-fixed":"#002110","outline-variant":"#c0c9c0","surface-container-highest":"#d4e7d8","inverse-on-surface":"#e2f6e6","on-secondary-fixed":"#032100","surface-dim":"#ccdfd0","success-bg":"#E6F3E9","secondary-fixed-dim":"#a1d48d","primary-fixed":"#b5f0c8","border-input":"#788A7B","error-container":"#ffdad6","on-background":"#0f1f16","inverse-primary":"#9ad3ad","primary-hover":"#19472E","warning":"#80520C","inverse-surface":"#24342a","on-primary-fixed-variant":"#185033","on-tertiary-fixed-variant":"#604100","primary-fixed-dim":"#9ad3ad"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"gutter":"1.5rem","margin":"2rem","space-xl":"2rem","space-sm":"0.5rem","space-lg":"1.5rem","gutter-mobile":"1rem","space-md":"1rem","space-xs":"0.25rem","margin-mobile":"1rem"},"fontFamily":{"label":["Be Vietnam Pro"],"headline-md":["Be Vietnam Pro"],"display":["Lora"],"body":["Be Vietnam Pro"],"headline-sm":["Be Vietnam Pro"],"headline-lg":["Be Vietnam Pro"],"caption":["Be Vietnam Pro"],"body-farmer":["Be Vietnam Pro"],"price":["Be Vietnam Pro"],"display-mobile":["Lora"],"headline-lg-mobile":["Be Vietnam Pro"]},"fontSize":{"label":["14px",{"lineHeight":"20px","fontWeight":"600"}],"headline-md":["24px",{"lineHeight":"34px","fontWeight":"650"}],"display":["56px",{"lineHeight":"64px","fontWeight":"600"}],"body":["16px",{"lineHeight":"26px","fontWeight":"400"}],"headline-sm":["20px",{"lineHeight":"28px","fontWeight":"600"}],"headline-lg":["32px",{"lineHeight":"42px","fontWeight":"700"}],"caption":["13px",{"lineHeight":"18px","fontWeight":"400"}],"body-farmer":["18px",{"lineHeight":"28px","fontWeight":"400"}],"price":["20px",{"lineHeight":"28px","fontWeight":"700"}],"display-mobile":["34px",{"lineHeight":"42px","fontWeight":"600"}],"headline-lg-mobile":["26px",{"lineHeight":"34px","fontWeight":"700"}]}}}};</script></head><body class="bg-background-rice font-body text-on-surface antialiased"><header class="fixed top-0 left-0 w-full z-50 bg-background-rice/90 backdrop-blur-xl shadow-[0_2px_8px_rgba(37,53,43,0.06)]"><div class="h-20 max-w-7xl mx-auto px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm shrink-0"><div class="w-11 h-11 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-sm"><span class="material-symbols-outlined text-[24px]">eco</span></div><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm text-primary tracking-tight font-bold">NaiFarm</span><span class="px-space-xs py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-caption text-caption font-semibold leading-none">Đồng Nai</span></div><span class="font-caption text-caption text-text-muted hidden sm:inline-block leading-tight">Chợ OCOP Thanh niên</span></div></div><div class="hidden md:flex flex-1 max-w-md mx-space-sm"><div class="relative w-full"><span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none">search</span><input class="w-full h-11 pl-10 pr-4 rounded-xl bg-surface-white font-body text-body text-on-surface placeholder:text-outline border border-border-subtle focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-[0_1px_4px_rgba(37,53,43,0.04)]" placeholder="Tìm nông sản, nhà vườn, Long Khánh, Xuân Lộc..." type="search"/></div></div><div class="flex items-center gap-space-md"><nav class="hidden lg:flex items-center gap-space-sm" data-active-classes="bg-primary-container text-on-primary font-bold rounded-lg px-space-sm py-1.5"><a class="px-space-sm py-1.5 font-label text-label text-on-surface-variant hover:text-on-surface transition-colors" data-path="cho" href="#">Chợ</a><a class="px-space-sm py-1.5 font-label text-label text-on-surface-variant hover:text-on-surface transition-colors" data-path="kham-pha" href="#">Khám phá</a><a aria-current="page" class="relative transition-colors flex items-center gap-1.5 bg-primary-container text-on-primary font-bold rounded-lg px-space-sm py-1.5" data-path="ban-do-so" href="#"><span class="inline-block w-2 h-2 rounded-full bg-warning animate-pulse"></span>Bản đồ số</a><a class="px-space-sm py-1.5 font-label text-label text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1.5" data-path="live" href="#"><span class="px-1.5 py-0.5 rounded bg-danger-bg text-danger font-caption text-caption font-bold tracking-wider">LIVE</span>OCOP Live</a></nav><div class="flex items-center gap-space-sm shrink-0"><a aria-label="Giỏ hàng" class="relative p-2.5 rounded-xl bg-surface-white hover:bg-surface-soft text-on-surface-variant hover:text-on-surface transition-colors flex items-center justify-center border border-border-subtle shadow-[0_1px_4px_rgba(37,53,43,0.04)]" data-path="gio-hang" href="#"><span class="material-symbols-outlined text-[22px]">shopping_bag</span><span class="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-primary text-on-primary font-caption text-caption font-bold flex items-center justify-center leading-none">2</span></a><a aria-label="Hồ sơ người dùng" class="flex items-center gap-space-xs p-1 rounded-full hover:bg-surface-soft transition-colors" data-path="tai-khoan" href="#"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></a></div></div></div></header><main class="w-full pt-20 bg-background-rice"><div class="flex flex-col w-full">
+<!-- Top Hero & Context Strip -->
+<section class="w-full bg-surface-white border-b border-border-subtle">
+<div class="max-w-7xl mx-auto px-margin py-space-md">
+<!-- Civic Collaboration Pill -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm mb-space-xs">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-soft text-primary font-caption text-caption font-semibold">
+<span class="w-2 h-2 rounded-full bg-success animate-ping"></span>
+<span>BẢN ĐỒ SỐ NÔNG SẢN ĐỒNG NAI · PHIÊN BẢN HỢP TÁC THANH NIÊN & KHUYẾN NÔNG</span>
+</div>
+<div class="flex items-center gap-space-xs text-text-muted font-caption text-caption">
+<span class="material-symbols-outlined text-[16px] text-success">verified</span>
+<span>Dữ liệu thực địa trích xuất từ Hệ thống GS1 & GPS HTX Đồng Nai</span>
+</div>
+</div>
+<!-- Main Headline & Subtitle -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md items-end">
+<div class="lg:col-span-8 flex flex-col gap-1">
+<h1 class="font-display text-[30px] lg:text-[38px] text-primary font-semibold leading-tight tracking-tight">
+            Bản đồ số Nông sản & Trải nghiệm sinh thái miệt vườn
+          </h1>
+<p class="font-body text-body text-text-muted max-w-3xl leading-relaxed">
+            Khám phá 42 vườn OCOP, nhà vườn sinh thái liên kết, xem lịch thu hoạch tại cây và trải nghiệm hái trái cây cùng Đội Trí thức trẻ tình nguyện Đồng Nai.
+          </p>
+</div>
+<!-- Quick Action Bar -->
+<div class="lg:col-span-4 flex items-center lg:justify-end gap-space-xs">
+<button class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-soft text-primary font-label text-label hover:bg-surface-variant transition-colors border border-border-subtle" id="btn-export-gpx">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>Tải lộ trình GPX</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-on-primary font-label text-label hover:bg-primary-hover shadow-sm transition-all" id="btn-youth-share">
+<span class="material-symbols-outlined text-[18px]">share_location</span>
+<span>Chia sẻ vị trí vườn</span>
+</button>
+</div>
+</div>
+<!-- Quick Metrics Bar -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-space-sm mt-space-md pt-space-sm border-t border-border-subtle/70">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[22px]">pin_drop</span>
+</div>
+<div class="flex flex-col">
+<div class="font-price text-price text-primary">42 Nhà vườn</div>
+<div class="font-caption text-caption text-text-muted">Đã gắn tọa độ GPS & tem QR</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-secondary-container/60 flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[22px]">nature</span>
+</div>
+<div class="flex flex-col">
+<div class="font-price text-price text-secondary">06 Vùng chuyên canh</div>
+<div class="font-caption text-caption text-text-muted">Tân Triều, Long Khánh, Cẩm Mỹ...</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-warning-bg flex items-center justify-center text-warning shrink-0">
+<span class="material-symbols-outlined text-[22px]">tour</span>
+</div>
+<div class="flex flex-col">
+<div class="font-price text-price text-warning">18 Điểm đón khách</div>
+<div class="font-caption text-caption text-text-muted">Du lịch nông nghiệp trải nghiệm</div>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-success-bg flex items-center justify-center text-success shrink-0">
+<span class="material-symbols-outlined text-[22px]">energy_savings_leaf</span>
+</div>
+<div class="flex flex-col">
+<div class="font-label text-label text-primary truncate">Đang thu hoạch rộ</div>
+<div class="font-caption text-caption text-text-muted truncate">Bưởi đường, Sầu riêng Ri6, Chôm chôm</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Dual-Pane Section (40% Left Pane / 60% Map Canvas) -->
+<div class="max-w-7xl mx-auto w-full px-margin py-space-md">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- ================= LEFT PANE (40% - 5 Cols Desktop) ================= -->
+<section aria-label="Danh sách nhà vườn" class="lg:col-span-5 flex flex-col gap-space-md">
+<!-- Search & Filter Controls -->
+<div class="bg-surface-white p-space-md rounded-2xl border border-border-subtle shadow-[0_2px_8px_rgba(37,53,43,0.06)] flex flex-col gap-space-sm">
+<!-- Text Input -->
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none">travel_explore</span>
+<input class="w-full h-11 pl-10 pr-4 rounded-xl bg-background-rice/60 font-body text-body text-on-surface placeholder:text-outline border border-border-input focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" id="orchard-search-input" placeholder="Tìm theo tên vườn, chủ hộ, loại trái cây, huyện..." type="search" value="Cù lao Tân Triều"/>
+</div>
+<!-- District Filter Chips -->
+<div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-nowrap">
+<button class="district-filter-chip px-3 py-1.5 rounded-full bg-primary text-on-primary font-caption text-caption font-semibold transition-all">
+              Tất cả (42)
+            </button>
+<button class="district-filter-chip px-3 py-1.5 rounded-full bg-surface-soft text-on-surface hover:bg-surface-container font-caption text-caption font-medium border border-border-subtle transition-all">
+              Vĩnh Cửu / Tân Triều (12)
+            </button>
+<button class="district-filter-chip px-3 py-1.5 rounded-full bg-surface-soft text-on-surface hover:bg-surface-container font-caption text-caption font-medium border border-border-subtle transition-all">
+              Long Khánh (14)
+            </button>
+<button class="district-filter-chip px-3 py-1.5 rounded-full bg-surface-soft text-on-surface hover:bg-surface-container font-caption text-caption font-medium border border-border-subtle transition-all">
+              Xuân Lộc (9)
+            </button>
+<button class="district-filter-chip px-3 py-1.5 rounded-full bg-surface-soft text-on-surface hover:bg-surface-container font-caption text-caption font-medium border border-border-subtle transition-all">
+              Cẩm Mỹ & Định Quán (7)
+            </button>
+</div>
+<!-- Secondary Quick Toggles -->
+<div class="flex flex-wrap gap-1.5 pt-1">
+<label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-soft hover:bg-surface-variant cursor-pointer text-text-muted font-caption text-caption">
+<input checked="" class="accent-primary rounded" type="checkbox"/>
+<span>Đang mở cửa đón khách</span>
+</label>
+<label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-soft hover:bg-surface-variant cursor-pointer text-text-muted font-caption text-caption">
+<input checked="" class="accent-primary rounded" type="checkbox"/>
+<span>Có thu hoạch hôm nay</span>
+</label>
+<label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-soft hover:bg-surface-variant cursor-pointer text-text-muted font-caption text-caption">
+<input class="accent-primary rounded" type="checkbox"/>
+<span>OCOP 4 Sao</span>
+</label>
+<label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-soft hover:bg-surface-variant cursor-pointer text-text-muted font-caption text-caption">
+<input checked="" class="accent-primary rounded" type="checkbox"/>
+<span>Có TNV số hóa túc trực</span>
+</label>
+</div>
+</div>
+<!-- Highlighted Active Orchard Card (Vườn Chú Ba Minh) -->
+<article class="bg-surface-white rounded-2xl border-2 border-primary shadow-[0_8px_24px_rgba(37,53,43,0.12)] p-space-md relative overflow-hidden transition-all">
+<div class="absolute top-0 right-0 px-3 py-1 bg-primary text-on-primary font-caption text-caption font-bold rounded-bl-xl flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">stars</span>
+<span>Đang chọn trên bản đồ</span>
+</div>
+<!-- Badges Bar -->
+<div class="flex flex-wrap items-center gap-1.5 mb-2 pr-28">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-success-bg text-success font-caption text-caption font-bold">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+              OCOP 4 Sao Tiềm Năng
+            </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-soft text-text-muted font-caption text-caption">
+<span class="material-symbols-outlined text-[13px]">location_on</span>
+              Cù lao Tân Triều
+            </span>
+</div>
+<!-- Title & Core Media -->
+<div class="flex gap-space-sm items-start mb-space-sm">
+<div class="w-24 h-24 rounded-xl overflow-hidden shrink-0 border border-border-subtle bg-surface-soft relative">
+<img class="w-full h-full object-cover" data-alt="Close up photography of lush green Pomelo Tan Trieu orchard in Dong Nai with ripe yellow-green pomelos hanging on tree branches under warm golden sunlight, authentic Vietnamese organic fruit farm, depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9kU7BEqnHqA5Gla55IswDFpavNBUhO1DJIwN4b0_U4BXTTbbj79nec70Xy0kbWIAxCJgwI4UqJxi6MvSHivK-os4tRg6tyQQVsfLX7jOIM6FkMOrzRG0AU7hp6Qp80mET22JjwpC00Ni_kYYUkyBuAhuznwHDzVvMjohR0FB4-jaI5YZg1PPb0Wjv8Zsb0838VzarRji9C4MFadSeBcBr1fDGwGoMMprIV1hQ8s3h"/>
+<span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-on-surface/80 text-surface-white font-caption text-[10px] font-semibold">2.2 ha</span>
+</div>
+<div class="flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-primary font-bold leading-snug">
+                Vườn Bưởi Đường Lá Cam Chú Ba Minh
+              </h2>
+<p class="font-caption text-caption text-text-muted mt-0.5">
+                Ấp Vĩnh Hiệp, Xã Tân Bình, Huyện Vĩnh Cửu (Cách Biên Hòa 9.5 km)
+              </p>
+<div class="inline-flex items-center gap-1 text-[12px] font-caption text-primary mt-1 font-mono">
+<span class="material-symbols-outlined text-[14px]">my_location</span>
+<span>10.9845° N, 106.8421° E · Đã thẩm định thực địa</span>
+</div>
+</div>
+</div>
+<!-- Produce & Harvest Status Box -->
+<div class="rounded-xl bg-surface-soft p-space-sm mb-space-sm flex flex-col gap-1.5">
+<div class="flex items-center justify-between text-caption font-caption">
+<span class="font-bold text-on-surface">Giống đặc sản:</span>
+<span class="text-text-muted">Bưởi đường lá cam & Bưởi da xanh (Tuổi vườn: 18 năm)</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption">
+<span class="font-bold text-success flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-success"></span>
+                Tình trạng vụ:
+              </span>
+<span class="font-semibold text-primary">Đang thu hoạch rộ hè 2025 · 350 kg sẵn sàng</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption border-t border-border-subtle/60 pt-1.5">
+<span class="font-medium text-text-muted flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-info">volunteer_activism</span>
+                TNV số hóa trực:
+              </span>
+<span class="text-on-surface font-medium">Nguyễn Văn An (Đội số hóa xã Tân Bình)</span>
+</div>
+</div>
+<!-- Agro-Tourism Visit Notice -->
+<div class="flex items-center gap-2 p-2 rounded-lg bg-warning-bg/70 text-warning font-caption text-caption mb-space-sm border border-tertiary-fixed-dim/40">
+<span class="material-symbols-outlined text-[18px] shrink-0">door_open</span>
+<span><strong>Mở đón khách tham quan & tự hái tại vườn:</strong> 08:00 - 17:00 hằng ngày (Nên đăng ký trước để vườn chuẩn bị sào hái).</span>
+</div>
+<!-- Actions -->
+<div class="flex flex-col sm:flex-row gap-2">
+<button class="flex-1 h-11 px-3 rounded-xl bg-primary text-on-primary font-label text-label font-semibold hover:bg-primary-hover flex items-center justify-center gap-1.5 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">calendar_month</span>
+<span>Đặt lịch trải nghiệm</span>
+</button>
+<button class="flex-1 h-11 px-3 rounded-xl bg-surface-white border border-primary text-primary font-label text-label font-semibold hover:bg-surface-soft flex items-center justify-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[18px]">shopping_basket</span>
+<span>Mua bưởi tại cây (45.000đ)</span>
+</button>
+<button class="h-11 px-3 rounded-xl bg-surface-soft hover:bg-surface-variant text-on-surface font-label text-label flex items-center justify-center gap-1 border border-border-subtle" title="Mở bản đồ định vị dẫn đường">
+<span class="material-symbols-outlined text-[20px] text-info">near_me</span>
+<span class="hidden sm:inline">Chỉ đường</span>
+</button>
+</div>
+</article>
+<!-- Secondary Verified Orchards List -->
+<div class="flex flex-col gap-space-sm" id="orchard-list">
+<div class="flex items-center justify-between px-1">
+<span class="font-label text-label text-text-muted uppercase tracking-wider text-[12px]">Các nhà vườn lân cận & Điểm tập kết OCOP</span>
+<span class="font-caption text-caption text-primary font-semibold cursor-pointer hover:underline">Sắp xếp: Gần tôi nhất</span>
+</div>
+<!-- Card 2: Vườn Sầu Riêng Cô Tư -->
+<div class="orchard-card p-space-sm rounded-xl bg-surface-white border border-border-subtle hover:border-primary/50 hover:shadow-md transition-all cursor-pointer">
+<div class="flex gap-space-sm">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-surface-soft border border-border-subtle">
+<img class="w-full h-full object-cover" data-alt="Vietnamese Durian orchard in Cam My Dong Nai with Ri6 durians on majestic tall trees, warm tropical morning light, farmers inspecting fruit quality in traditional conical hats." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDI2TSUqH44JdxmD57xHpfqfz9y7PboZ3gnXeDf5BeEbkV2sCHF0ZIMD9unfwhLf5zau8xAI_v9oxJaHEfrfKJz49nRNsTYlSjpSQXqVU6sClhJOY71TQtapRh45dTbZ89hwNl_8lN3geVVJMPBskcUz0DwqY4Bwhxyd-niIZUlHC_UWI7dQlxpyVBYYLO1GYvNXWlyxxZ1i6u0yjEThmGAqUnAtSjKY6ZbGE_ufE63"/>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1">
+<span class="font-headline-sm text-[16px] font-bold text-on-surface truncate">Vườn Sầu Riêng Cô Tư Sinh Thái</span>
+<span class="px-2 py-0.5 rounded bg-success-bg text-success font-caption text-[11px] font-bold shrink-0">VietGAP Chuẩn</span>
+</div>
+<div class="font-caption text-caption text-text-muted truncate mt-0.5">Xã Xuân Đường, Huyện Cẩm Mỹ (Cách 38 km)</div>
+<div class="flex items-center gap-2 mt-1.5">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-caption text-[11px] font-medium">Sầu riêng Ri6 chín cây</span>
+<span class="text-caption font-caption text-success font-semibold">Thu hoạch đợt 2: 850kg</span>
+</div>
+<div class="flex items-center justify-between mt-2 pt-1 border-t border-border-subtle/50 text-[12px] font-caption text-text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-primary">groups</span>TNV: Trần Thị Mai</span>
+<span class="text-primary font-semibold hover:underline">Xem vị trí →</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3: HTX Xuân Lộc -->
+<div class="orchard-card p-space-sm rounded-xl bg-surface-white border border-border-subtle hover:border-primary/50 hover:shadow-md transition-all cursor-pointer">
+<div class="flex gap-space-sm">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-surface-soft border border-border-subtle">
+<img class="w-full h-full object-cover" data-alt="Traditional wood fire cashew roasting cooperative workshop in Xuan Loc Dong Nai, roasted golden brown cashews cooling in bamboo baskets, documentary style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWYI3m_WMSTloldljpwl2fD2OMnacJVW-LmcByRdgM2LtXirXcPjcY0UC1eRJLHdVCKpjk4xEHuYhMAjQAD2QcLc6UyhMMuJfU0PpyZSWVLxPtvSw2vzMQFMJ_1dNfS-ph1g7AvwVRSnxveIMdX8qhv5bs7n3a2x-7-98O19sb0cs3Oynh_qa5pGAtjUvEynjd_--gwiq8ze172OzzbhspybCbP7Pxp5HQvXAICyCc"/>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1">
+<span class="font-headline-sm text-[16px] font-bold text-on-surface truncate">HTX Nông nghiệp Bền vững Xuân Lộc</span>
+<span class="px-2 py-0.5 rounded bg-warning-bg text-warning font-caption text-[11px] font-bold shrink-0">OCOP 3 Sao</span>
+</div>
+<div class="font-caption text-caption text-text-muted truncate mt-0.5">Xã Suối Cát, Huyện Xuân Lộc (Chân núi Chứa Chan)</div>
+<div class="flex items-center gap-2 mt-1.5">
+<span class="px-2 py-0.5 rounded-full bg-surface-soft text-text-muted font-caption text-[11px]">Hạt điều rang củi & Trái cây sấy</span>
+<span class="text-caption font-caption text-info font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">ac_unit</span>Kho lạnh liên vùng
+                  </span>
+</div>
+<div class="flex items-center justify-between mt-2 pt-1 border-t border-border-subtle/50 text-[12px] font-caption text-text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-warning">local_shipping</span>Trạm gom xe lạnh số 1</span>
+<span class="text-primary font-semibold hover:underline">Xem vị trí →</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 4: Vườn Chôm Chôm Nhãn Bác Chín Hưng -->
+<div class="orchard-card p-space-sm rounded-xl bg-surface-white border border-border-subtle hover:border-primary/50 hover:shadow-md transition-all cursor-pointer">
+<div class="flex gap-space-sm">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-surface-soft border border-border-subtle">
+<img class="w-full h-full object-cover" data-alt="Vibrant red and green rambutan fruit clusters on orchard trees in Binh Loc Long Khanh, lush green leaves, ripe seasonal harvest orchard in Dong Nai Vietnam." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtZuXFj7fIBvKtifrcqgSvJKfSc4pqMT-Mx4UPJXXzRc_YSW2fVeYx0ROC6cli-cXvFw0uSwUv3GDLZxuw9yRzXZHwFdixOA7k1D-vGQIRSejjljCKAs_K_xMHvdKnd4uMbznUJ7gmik80Ty4Iwh7dLwGEY-FgIGrPAIMngMG592OsDR8sxTc0xG_Wgq0UcUvgwBopJlzgMceZlp2T6GSkcNwVcbl-ouPd79EoBj4U"/>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1">
+<span class="font-headline-sm text-[16px] font-bold text-on-surface truncate">Vườn Chôm Chôm Bác Chín Hưng</span>
+<span class="px-2 py-0.5 rounded bg-secondary-container text-on-secondary-container font-caption text-[11px] font-bold shrink-0">Du lịch sinh thái</span>
+</div>
+<div class="font-caption text-caption text-text-muted truncate mt-0.5">Xã Bình Lộc, Thành phố Long Khánh</div>
+<div class="flex items-center gap-2 mt-1.5">
+<span class="px-2 py-0.5 rounded-full bg-danger-bg text-danger font-caption text-[11px] font-semibold">Chôm chôm chín đỏ cây</span>
+<span class="text-caption font-caption text-primary font-medium">Vé vào vườn: 60.000đ/người</span>
+</div>
+<div class="flex items-center justify-between mt-2 pt-1 border-t border-border-subtle/50 text-[12px] font-caption text-text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-success">eco</span>Bao ăn no tại cây</span>
+<span class="text-primary font-semibold hover:underline">Xem vị trí →</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 5: Vườn Ca Cao Suối Tre -->
+<div class="orchard-card p-space-sm rounded-xl bg-surface-white border border-border-subtle hover:border-primary/50 hover:shadow-md transition-all cursor-pointer">
+<div class="flex gap-space-sm">
+<div class="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-surface-soft border border-border-subtle">
+<img class="w-full h-full object-cover" data-alt="Handcrafted chocolate making workshop with fresh cocoa pods cut open revealing white pulp and fermented cacao beans on wooden trays, rustic Dong Nai agro-farm workshop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBn0Y8vWkXZ_1D8bEa7CByzk0LI9l6nllJwtmG3Y7EdzefGBWDG7LORs4oUthllta_34wUbqYE0JS95ClXqbf4Vyazp_MM1cW-T3xk_8kgV0vD7efimqjSXeY9IUsymGycw-nFe56hhsfM2SYUTFEojiauV2uoqL-OWU5zkaY4S6cwoSnK19EHptpxfHkjPZYmolrMMr8-Ax2_xRAG1NhEbODSdjASrjU2DqgGIQK0h"/>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1">
+<span class="font-headline-sm text-[16px] font-bold text-on-surface truncate">Vườn Ca Cao Suối Tre</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-caption text-[11px] font-bold shrink-0">Tuần hoàn 100%</span>
+</div>
+<div class="font-caption text-caption text-text-muted truncate mt-0.5">Phường Suối Tre, TP. Long Khánh</div>
+<div class="flex items-center gap-2 mt-1.5">
+<span class="px-2 py-0.5 rounded-full bg-surface-soft text-text-muted font-caption text-[11px]">Trải nghiệm làm socola thủ công</span>
+<span class="text-caption font-caption text-text-muted">Thích hợp gia đình & trẻ em</span>
+</div>
+<div class="flex items-center justify-between mt-2 pt-1 border-t border-border-subtle/50 text-[12px] font-caption text-text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-info">school</span>Tour giáo dục nông nghiệp</span>
+<span class="text-primary font-semibold hover:underline">Xem vị trí →</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Transparent Youth & Extension Service Disclaimer -->
+<div class="p-space-sm rounded-xl bg-surface-soft text-text-muted font-caption text-[12px] border border-border-subtle leading-relaxed flex items-start gap-2">
+<span class="material-symbols-outlined text-[18px] text-success shrink-0 mt-0.5">verified_user</span>
+<p>
+            Tọa độ GPS ranh giới lô đất và thông tin sản lượng được số hóa bởi Đội Thanh niên tình nguyện số hóa xã/phường và thẩm định đối chiếu bởi Trạm Khuyến nông huyện Vĩnh Cửu, Long Khánh, Cẩm Mỹ, Xuân Lộc.
+          </p>
+</div>
+</section>
+<!-- ================= RIGHT PANE (60% - 7 Cols Desktop - Interactive Map Canvas) ================= -->
+<section aria-label="Bản đồ số GIS" class="lg:col-span-7 sticky top-24">
+<div class="relative w-full h-[760px] rounded-2xl overflow-hidden border border-border-subtle bg-[#e8eedd] shadow-[0_4px_20px_rgba(37,53,43,0.08)] flex flex-col justify-between">
+<!-- SVG Topographic & Geographic Map Simulation Layer -->
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
+<!-- Simulated GIS Satellite/Terrain Canvas with Đồng Nai Geographic Elements -->
+<svg class="w-full h-full" fill="none" viewbox="0 0 800 760" xmlns="http://www.w3.org/2000/svg">
+<!-- Background Earth/Soil Tint -->
+<rect fill="#E4EBD8" height="760" width="800"></rect>
+<!-- Forest & Orchard Zones (Vùng rừng & vườn cây ăn trái) -->
+<path d="M0 0H420C400 60 360 120 380 200C400 270 480 290 510 380C530 450 480 520 450 600C430 660 380 720 360 760H0V0Z" fill="#D9E6C9" opacity="0.6"></path>
+<path d="M460 180C520 150 620 160 720 120C770 100 800 80 800 60V380C750 400 690 420 640 450C580 480 540 540 500 580C460 520 430 360 450 260C460 210 440 190 460 180Z" fill="#CEE0B9" opacity="0.5"></path>
+<path d="M520 480C600 450 720 480 800 460V760H460C480 720 500 640 520 580C540 530 500 490 520 480Z" fill="#DDECCB" opacity="0.7"></path>
+<!-- Lake Trị An (Hồ Trị An reservoir) in North-East Dong Nai -->
+<path d="M480 20C520 40 580 30 630 65C670 95 720 90 760 125C780 145 790 190 750 210C710 230 640 200 610 230C580 260 560 290 530 280C500 270 490 230 470 200C450 160 430 110 460 60C470 40 475 25 480 20Z" fill="#A8D5E5" opacity="0.85"></path>
+<text fill="#245B78" font-family="Lora" font-size="16" font-style="italic" font-weight="600" opacity="0.9" x="590" y="140">Hồ Trị An</text>
+<text fill="#245B78" font-family="Be Vietnam Pro" font-size="11" opacity="0.8" x="575" y="158">32.000 ha mặt nước</text>
+<!-- Đồng Nai River (Sông Đồng Nai) winding through Vĩnh Cửu, Tân Triều, Biên Hòa -->
+<path d="M480 200C450 230 420 280 390 320C360 360 310 380 270 400C220 425 180 435 150 490C120 545 140 610 110 670C90 710 50 740 0 760" opacity="0.95" stroke="#87BED6" stroke-linecap="round" stroke-linejoin="round" stroke-width="26"></path>
+<path d="M480 200C450 230 420 280 390 320C360 360 310 380 270 400C220 425 180 435 150 490C120 545 140 610 110 670C90 710 50 740 0 760" stroke="#A8D5E5" stroke-linecap="round" stroke-linejoin="round" stroke-width="18"></path>
+<!-- Cù lao Tân Triều Island in the curve of Dong Nai River -->
+<ellipse cx="235" cy="425" fill="#C2DDA6" rx="38" ry="24" stroke="#87BED6" stroke-width="4"></ellipse>
+<text fill="#185033" font-family="Lora" font-size="13" font-weight="700" x="200" y="428">Cù lao Tân Triều</text>
+<text fill="#3c692e" font-family="Be Vietnam Pro" font-size="9" font-weight="600" x="210" y="442">Thủ phủ bưởi</text>
+<!-- Major Highways & Expressways (QL1A, Tuyến tránh Biên Hòa, Cao tốc Phan Thiết - Dầu Giây) -->
+<!-- QL1A -->
+<path d="M80 760L160 580L280 530L440 500L620 470L800 450" opacity="0.8" stroke="#FFFFFF" stroke-linecap="round" stroke-width="7"></path>
+<path d="M80 760L160 580L280 530L440 500L620 470L800 450" opacity="0.9" stroke="#E2A645" stroke-dasharray="8 4" stroke-width="3.5"></path>
+<text fill="#604100" font-family="Be Vietnam Pro" font-size="10" font-weight="700" x="350" y="520">Quốc lộ 1A</text>
+<!-- Cao tốc Phan Thiết - Dầu Giây -->
+<path d="M260 620L450 560L650 490L800 430" opacity="0.7" stroke="#717972" stroke-dasharray="6 6" stroke-width="4"></path>
+<text fill="#404942" font-family="Be Vietnam Pro" font-size="10" font-weight="600" x="660" y="480">Cao tốc Dầu Giây</text>
+<!-- Provincial Road DT 768 to Vĩnh Cửu -->
+<path d="M160 580L210 490L230 420L280 360L380 300L460 220" opacity="0.7" stroke="#FFFFFF" stroke-width="5"></path>
+<path d="M160 580L210 490L230 420L280 360L380 300L460 220" opacity="0.6" stroke="#52645A" stroke-width="2"></path>
+<text fill="#404942" font-family="Be Vietnam Pro" font-size="10" font-weight="600" x="290" y="340">ĐT 768 (Đường bưởi)</text>
+<!-- Cold-chain logistic route (Xuân Lộc -> Long Khánh -> Tân Triều -> Biên Hòa) -->
+<path d="M720 540C640 510 590 490 530 470C460 480 380 490 320 470C280 450 250 435 240 425" id="cold-chain-route" stroke="#245B78" stroke-dasharray="8 6" stroke-linecap="round" stroke-width="4"></path>
+<!-- Mountain symbol (Núi Chứa Chan - Xuân Lộc) -->
+<path d="M680 500L715 440L750 500Z" fill="#B9CEAA" stroke="#717972" stroke-width="1.5"></path>
+<text fill="#404942" font-family="Be Vietnam Pro" font-size="10" font-weight="700" x="685" y="515">Núi Chứa Chan (837m)</text>
+<!-- Urban footprint - TP Biên Hòa -->
+<circle cx="140" cy="620" fill="#E2E8D8" opacity="0.8" r="32" stroke="#D6DED2" stroke-width="2"></circle>
+<text fill="#0f1f16" font-family="Be Vietnam Pro" font-size="12" font-weight="700" x="105" y="625">TP. Biên Hòa</text>
+<!-- Urban footprint - TP Long Khánh -->
+<circle cx="530" cy="460" fill="#E2E8D8" opacity="0.8" r="28" stroke="#D6DED2" stroke-width="2"></circle>
+<text fill="#0f1f16" font-family="Be Vietnam Pro" font-size="12" font-weight="700" x="495" y="465">TP. Long Khánh</text>
+</svg>
+</div>
+<!-- TOP MAP OVERLAY: Control bar & Agricultural Weather Widget -->
+<div class="relative z-10 p-space-sm flex flex-wrap items-start justify-between gap-space-sm">
+<!-- Layers & View Switcher -->
+<div class="flex items-center gap-1 p-1 bg-surface-white/95 backdrop-blur-md rounded-xl border border-border-subtle shadow-sm">
+<button class="px-2.5 py-1.5 rounded-lg bg-primary text-on-primary font-caption text-caption font-semibold flex items-center gap-1 transition-all" id="layer-standard">
+<span class="material-symbols-outlined text-[16px]">map</span>
+<span>Bản đồ OCOP</span>
+</button>
+<button class="px-2.5 py-1.5 rounded-lg text-on-surface hover:bg-surface-soft font-caption text-caption font-medium flex items-center gap-1 transition-all" id="layer-satellite">
+<span class="material-symbols-outlined text-[16px]">satellite_alt</span>
+<span>Vệ tinh</span>
+</button>
+<button class="px-2.5 py-1.5 rounded-lg text-on-surface hover:bg-surface-soft font-caption text-caption font-medium flex items-center gap-1 transition-all" id="layer-terrain">
+<span class="material-symbols-outlined text-[16px]">terrain</span>
+<span>Địa hình đất đỏ</span>
+</button>
+</div>
+<!-- Agricultural Weather Card Widget -->
+<div class="bg-surface-white/95 backdrop-blur-md rounded-xl p-space-xs px-3 border border-border-subtle shadow-sm flex items-center gap-3">
+<div class="flex items-center gap-1.5 text-warning font-label text-label">
+<span class="material-symbols-outlined text-[22px]">sunny</span>
+<span class="font-bold text-on-surface">28°C</span>
+</div>
+<div class="h-6 w-[1px] bg-border-subtle"></div>
+<div class="flex flex-col text-[11px] font-caption text-text-muted leading-tight">
+<span class="text-primary font-bold">Nắng nhẹ ráo cuống · 72% ẩm</span>
+<span>Lý tưởng thu hoạch trái & đón khách</span>
+</div>
+</div>
+</div>
+<!-- MAP PINS LAYER (Absolute Interactive Coordinates) -->
+<div class="absolute inset-0 z-10 pointer-events-none">
+<!-- ================= PIN 1 (ACTIVE / HIGHLIGHTED) - Vườn Bưởi Chú Ba Minh (Tân Triều) ================= -->
+<div class="absolute left-[235px] top-[415px] -translate-x-1/2 -translate-y-full pointer-events-auto cursor-pointer group" style="filter: drop-shadow(0 6px 12px rgba(5,67,39,0.25));">
+<!-- Pulsing Radar Glow -->
+<span class="absolute left-1/2 bottom-0 -translate-x-1/2 w-8 h-8 rounded-full bg-primary/30 animate-ping"></span>
+<!-- Pop-up Info Tooltip (Active expanded preview) -->
+<div class="absolute bottom-12 -left-28 w-64 bg-surface-white rounded-xl p-2.5 border-2 border-primary shadow-xl flex flex-col gap-1.5 z-30 pointer-events-auto">
+<div class="flex items-center justify-between">
+<span class="px-1.5 py-0.5 rounded bg-success-bg text-success font-caption text-[10px] font-bold">ĐANG THU HOẠCH</span>
+<span class="flex items-center gap-0.5 text-warning font-caption text-[11px] font-bold">
+<span class="material-symbols-outlined text-[13px] fill-current">star</span>4.9 (128)
+                  </span>
+</div>
+<div class="font-label text-label text-primary font-bold leading-tight">
+                  Vườn Chú Ba Minh (Tân Triều)
+                </div>
+<div class="text-[11px] font-caption text-text-muted">
+                  350kg bưởi đường hái tại cây · TNV An trực
+                </div>
+<div class="flex items-center justify-between pt-1 border-t border-border-subtle">
+<span class="font-price text-[14px] text-primary">45.000đ/kg</span>
+<span class="px-2 py-1 rounded-md bg-primary text-on-primary font-caption text-[11px] font-semibold">Xem vườn</span>
+</div>
+</div>
+<!-- Pin Marker Icon -->
+<div class="relative w-11 h-11 rounded-full bg-primary text-on-primary flex items-center justify-center border-2 border-surface-white shadow-lg transform transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-[24px]">nutrition</span>
+<span class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-primary rotate-45"></span>
+</div>
+</div>
+<!-- ================= PIN 2 - Vườn Cô Tư Sầu Riêng (Cẩm Mỹ) ================= -->
+<div class="absolute left-[590px] top-[540px] -translate-x-1/2 -translate-y-full pointer-events-auto cursor-pointer group">
+<div class="relative w-9 h-9 rounded-full bg-secondary text-on-secondary flex items-center justify-center border-2 border-surface-white shadow-md transform transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-[20px]">agriculture</span>
+<span class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-secondary rotate-45"></span>
+</div>
+<div class="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-surface-white/95 text-on-surface text-[11px] font-caption font-bold shadow-sm whitespace-nowrap border border-border-subtle">
+                Sầu riêng Cô Tư (Cẩm Mỹ)
+              </div>
+</div>
+<!-- ================= PIN 3 - HTX Xuân Lộc & Trạm gom xe lạnh ================= -->
+<div class="absolute left-[715px] top-[530px] -translate-x-1/2 -translate-y-full pointer-events-auto cursor-pointer group">
+<div class="relative w-9 h-9 rounded-full bg-info text-surface-white flex items-center justify-center border-2 border-surface-white shadow-md transform transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-[20px]">local_shipping</span>
+<span class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-info rotate-45"></span>
+</div>
+<div class="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-surface-white/95 text-info text-[11px] font-caption font-bold shadow-sm whitespace-nowrap border border-border-subtle flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-info"></span>HTX Xuân Lộc & Kho Lạnh
+              </div>
+</div>
+<!-- ================= PIN 4 - Vườn Chôm Chôm Bình Lộc (Long Khánh) ================= -->
+<div class="absolute left-[525px] top-[430px] -translate-x-1/2 -translate-y-full pointer-events-auto cursor-pointer group">
+<div class="relative w-9 h-9 rounded-full bg-danger text-surface-white flex items-center justify-center border-2 border-surface-white shadow-md transform transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-[20px]">park</span>
+<span class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-danger rotate-45"></span>
+</div>
+<div class="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-surface-white/95 text-on-surface text-[11px] font-caption font-bold shadow-sm whitespace-nowrap border border-border-subtle">
+                Chôm chôm Bình Lộc
+              </div>
+</div>
+<!-- ================= PIN 5 - Hồ Trị An & Vườn Sinh Thái Đảo (Định Quán) ================= -->
+<div class="absolute left-[620px] top-[190px] -translate-x-1/2 -translate-y-full pointer-events-auto cursor-pointer group">
+<div class="relative w-9 h-9 rounded-full bg-[#1e6f5c] text-surface-white flex items-center justify-center border-2 border-surface-white shadow-md transform transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-[20px]">kayaking</span>
+<span class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1e6f5c] rotate-45"></span>
+</div>
+<div class="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-surface-white/95 text-on-surface text-[11px] font-caption font-bold shadow-sm whitespace-nowrap border border-border-subtle">
+                Cá Kìm Hoàng Gia & Hồ Trị An
+              </div>
+</div>
+<!-- ================= PIN 6 - Đội Tuần Tra Số Hóa Thanh Niên (Mobile Station) ================= -->
+<div class="absolute left-[360px] top-[460px] -translate-x-1/2 -translate-y-1/2 pointer-events-auto cursor-pointer">
+<div class="px-2.5 py-1 rounded-full bg-primary text-on-primary text-[11px] font-caption font-semibold flex items-center gap-1 shadow-md border border-surface-white">
+<span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse"></span>
+<span>TNV Số hóa Trảng Bom (Đang di chuyển)</span>
+</div>
+</div>
+<!-- Route Label Badge (Cold Chain route indicator) -->
+<div class="absolute left-[410px] top-[490px] pointer-events-auto bg-info-bg/90 backdrop-blur-sm border border-info/30 text-info px-2.5 py-1 rounded-lg text-[11px] font-caption font-semibold shadow-sm flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]">thermostat</span>
+<span>Tuyến xe lạnh gom sáng: Xuân Lộc → Long Khánh → Tân Triều (8 - 12°C)</span>
+</div>
+</div>
+<!-- BOTTOM MAP OVERLAY: Legend, Zoom controls, and NaiAI Assistant Shortcut -->
+<div class="relative z-10 p-space-sm flex flex-col md:flex-row md:items-end justify-between gap-space-sm pointer-events-none">
+<!-- Map Legend (Bottom-Left) -->
+<div class="bg-surface-white/95 backdrop-blur-md rounded-xl p-space-sm border border-border-subtle shadow-md pointer-events-auto max-w-xs flex flex-col gap-1.5">
+<div class="font-label text-[12px] font-bold text-primary uppercase tracking-wider mb-0.5">Chú giải lớp bản đồ OCOP</div>
+<div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] font-caption text-text-muted">
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-primary shrink-0"></span>
+<span>Vườn OCOP chuẩn</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-secondary shrink-0"></span>
+<span>Vườn sinh thái</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-danger shrink-0"></span>
+<span>Miệt vườn hái trái</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-info shrink-0"></span>
+<span>Kho lạnh & Trạm xe</span>
+</div>
+</div>
+<div class="text-[10px] font-caption text-outline border-t border-border-subtle pt-1 mt-0.5">
+                Ranh giới lô đất dựa trên cơ sở dữ liệu VILIS Sở TN&MT Đồng Nai.
+              </div>
+</div>
+<!-- Right-Hand Floating Controls & NaiAI Callout (Bottom-Right) -->
+<div class="flex flex-col items-end gap-2 pointer-events-auto">
+<!-- Zoom & GPS Navigation Buttons -->
+<div class="flex flex-col rounded-xl overflow-hidden bg-surface-white shadow-md border border-border-subtle">
+<button class="w-10 h-10 flex items-center justify-center text-on-surface hover:bg-surface-soft border-b border-border-subtle" id="map-zoom-in" title="Phóng to">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-on-surface hover:bg-surface-soft border-b border-border-subtle" id="map-zoom-out" title="Thu nhỏ">
+<span class="material-symbols-outlined text-[20px]">remove</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-primary hover:bg-surface-soft" id="map-recenter" title="Định vị vị trí của tôi">
+<span class="material-symbols-outlined text-[20px]">my_location</span>
+</button>
+</div>
+<!-- Floating NaiAI Assistant Inquiry Badge -->
+<div class="bg-surface-white/95 backdrop-blur-md rounded-2xl p-2.5 border border-primary/40 shadow-lg flex items-center gap-2.5 max-w-sm hover:border-primary transition-all cursor-pointer">
+<div class="w-9 h-9 rounded-xl bg-primary-container text-on-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">auto_awesome</span>
+</div>
+<div class="flex flex-col text-left">
+<div class="font-label text-[12px] text-primary font-bold flex items-center gap-1">
+<span>Hỏi NaiAI Trợ Lý Miệt Vườn</span>
+<span class="px-1.5 py-0.2 rounded bg-warning-bg text-warning text-[10px] font-bold">24/7</span>
+</div>
+<div class="font-caption text-[11px] text-text-muted truncate">
+                    "Gợi ý tour 1 ngày hái bưởi & ăn sầu riêng gần Biên Hòa?"
+                  </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Seasonal Harvesting Timetable & Farm Route Guide Banner -->
+<section class="w-full bg-surface-soft border-t border-border-subtle mt-space-md py-space-lg">
+<div class="max-w-7xl mx-auto px-margin">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-sm mb-space-md">
+<div>
+<span class="px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-caption text-caption font-bold">
+            MÙA NÀO THỨC NẤY · NÔNG LỊCH ĐỒNG NAI
+          </span>
+<h2 class="font-display text-[26px] text-primary font-semibold mt-1">
+            Lịch thu hoạch rộ & Mở cửa miệt vườn quý 2 - quý 3/2025
+          </h2>
+</div>
+<a class="inline-flex items-center gap-1 font-label text-label text-primary font-semibold hover:underline" href="#">
+<span>Xem cẩm nang du lịch nông nghiệp chi tiết</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
+</div>
+<!-- 4 Timetable Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-sm">
+<div class="p-space-sm rounded-xl bg-surface-white border border-border-subtle shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-caption font-caption text-text-muted mb-1">
+<span>Tháng 5 - Tháng 7</span>
+<span class="px-2 py-0.5 rounded-full bg-danger-bg text-danger font-bold text-[11px]">Cao điểm vụ</span>
+</div>
+<h3 class="font-label text-label text-primary font-bold">Chôm chôm & Sầu riêng Long Khánh</h3>
+<p class="font-caption text-caption text-text-muted mt-1">Bình Lộc, Hàng Gòn, Suối Tre. Trái chín sum suê tại vườn, dịch vụ ăn buffet trái cây tại chỗ.</p>
+</div>
+<div class="mt-3 pt-2 border-t border-border-subtle/60 flex items-center justify-between text-[12px] font-caption">
+<span class="text-secondary font-semibold">14 vườn mở cửa</span>
+<span class="text-primary font-medium hover:underline">Xem định vị</span>
+</div>
+</div>
+<div class="p-space-sm rounded-xl bg-surface-white border border-border-subtle shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-caption font-caption text-text-muted mb-1">
+<span>Quanh năm (Rộ tháng 8 - 12)</span>
+<span class="px-2 py-0.5 rounded-full bg-success-bg text-success font-bold text-[11px]">Đặc sản chỉ dẫn địa lý</span>
+</div>
+<h3 class="font-label text-label text-primary font-bold">Bưởi Tân Triều Vĩnh Cửu</h3>
+<p class="font-caption text-caption text-text-muted mt-1">Cù lao màu mỡ phù sa sông Đồng Nai. Thưởng thức rượu bưởi, gỏi bưởi và tự hái bưởi đường lá cam.</p>
+</div>
+<div class="mt-3 pt-2 border-t border-border-subtle/60 flex items-center justify-between text-[12px] font-caption">
+<span class="text-secondary font-semibold">12 vườn mở cửa</span>
+<span class="text-primary font-medium hover:underline">Xem định vị</span>
+</div>
+</div>
+<div class="p-space-sm rounded-xl bg-surface-white border border-border-subtle shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-caption font-caption text-text-muted mb-1">
+<span>Tháng 6 - Tháng 9</span>
+<span class="px-2 py-0.5 rounded-full bg-warning-bg text-warning font-bold text-[11px]">Vào vụ thu hái</span>
+</div>
+<h3 class="font-label text-label text-primary font-bold">Sầu riêng hạt lép Cẩm Mỹ</h3>
+<p class="font-caption text-caption text-text-muted mt-1">Xuân Đường, Nhân Nghĩa. Vùng đất đỏ bazan trứ danh với giống Ri6, Dona cơm vàng hạt lép ngọt bùi.</p>
+</div>
+<div class="mt-3 pt-2 border-t border-border-subtle/60 flex items-center justify-between text-[12px] font-caption">
+<span class="text-secondary font-semibold">7 vườn mở cửa</span>
+<span class="text-primary font-medium hover:underline">Xem định vị</span>
+</div>
+</div>
+<div class="p-space-sm rounded-xl bg-surface-white border border-border-subtle shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between text-caption font-caption text-text-muted mb-1">
+<span>Tháng 9 - Tháng 2 năm sau</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-soft text-text-muted font-bold text-[11px]">Sắp vào mùa</span>
+</div>
+<h3 class="font-label text-label text-primary font-bold">Ca cao & Nông sản hồ Trị An</h3>
+<p class="font-caption text-caption text-text-muted mt-1">Định Quán & Thống Nhất. Trải nghiệm cắm trại ven hồ, làm socola mộc và câu cá kìm Hoàng Gia.</p>
+</div>
+<div class="mt-3 pt-2 border-t border-border-subtle/60 flex items-center justify-between text-[12px] font-caption">
+<span class="text-secondary font-semibold">9 điểm sinh thái</span>
+<span class="text-primary font-medium hover:underline">Xem định vị</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Client-side Interactive Micro-Behaviors -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // District Chips Toggle Selection
+      const chips = document.querySelectorAll('.district-filter-chip');
+      chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          chips.forEach(c => {
+            c.classList.remove('bg-primary', 'text-on-primary', 'font-semibold');
+            c.classList.add('bg-surface-soft', 'text-on-surface', 'font-medium');
+          });
+          chip.classList.add('bg-primary', 'text-on-primary', 'font-semibold');
+          chip.classList.remove('bg-surface-soft', 'text-on-surface', 'font-medium');
+        });
+      });
+
+      // Layer buttons toggle
+      const standardBtn = document.getElementById('layer-standard');
+      const satBtn = document.getElementById('layer-satellite');
+      const terrBtn = document.getElementById('layer-terrain');
+      const layerBtns = [standardBtn, satBtn, terrBtn];
+
+      layerBtns.forEach(btn => {
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+          layerBtns.forEach(b => {
+            b.classList.remove('bg-primary', 'text-on-primary', 'font-semibold');
+            b.classList.add('text-on-surface', 'font-medium');
+          });
+          btn.classList.add('bg-primary', 'text-on-primary', 'font-semibold');
+          btn.classList.remove('text-on-surface', 'font-medium');
+        });
+      });
+
+      // Simple Search feedback
+      const searchInput = document.getElementById('orchard-search-input');
+      if (searchInput) {
+        searchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            const val = searchInput.value.trim();
+            if (val) {
+              const chipAll = chips[0];
+              if (chipAll) chipAll.innerText = `Kết quả: "${val}"`;
+            }
+          }
+        });
+      }
+
+      // Quick zoom buttons visual response
+      const zoomIn = document.getElementById('map-zoom-in');
+      const zoomOut = document.getElementById('map-zoom-out');
+      const recenter = document.getElementById('map-recenter');
+
+      if (zoomIn) {
+        zoomIn.addEventListener('click', () => {
+          zoomIn.classList.add('bg-surface-container');
+          setTimeout(() => zoomIn.classList.remove('bg-surface-container'), 150);
+        });
+      }
+      if (zoomOut) {
+        zoomOut.addEventListener('click', () => {
+          zoomOut.classList.add('bg-surface-container');
+          setTimeout(() => zoomOut.classList.remove('bg-surface-container'), 150);
+        });
+      }
+      if (recenter) {
+        recenter.addEventListener('click', () => {
+          recenter.classList.add('bg-surface-container');
+          setTimeout(() => recenter.classList.remove('bg-surface-container'), 250);
+        });
+      }
+    });
+  </script>
+</div></main><footer class="w-full bg-surface-soft text-on-surface mt-space-xl border-t border-border-subtle"><div class="max-w-7xl mx-auto px-margin py-space-xl"><div class="grid grid-cols-1 md:grid-cols-12 gap-space-lg mb-space-xl"><div class="md:col-span-5 flex flex-col gap-space-sm"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center text-on-primary"><span class="material-symbols-outlined text-[20px]">agriculture</span></div><span class="font-headline-sm text-headline-sm font-bold text-primary">NaiFarm Đồng Nai</span></div><p class="font-display text-[20px] text-tertiary italic leading-relaxed">Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị.</p><p class="font-caption text-caption text-text-muted leading-relaxed max-w-sm">Hệ sinh thái thương mại điện tử OCOP kết nối thanh niên trí thức nông thôn, liên minh HTX Đồng Nai và mạng lưới hơn 11 huyện, thành thị.</p></div><div class="md:col-span-3 flex flex-col gap-space-sm"><h3 class="font-label text-label font-bold text-primary uppercase tracking-wider">Liên kết chính sách</h3><ul class="flex flex-col gap-space-xs font-caption text-caption text-on-surface-variant"><li class="hover:text-primary cursor-pointer transition-colors">Quy chuẩn OCOP Tỉnh Đồng Nai</li><li class="hover:text-primary cursor-pointer transition-colors">Hỗ trợ kỹ thuật số Hợp tác xã</li><li class="hover:text-primary cursor-pointer transition-colors">Chính sách bảo mật dữ liệu nông vụ</li><li class="hover:text-primary cursor-pointer transition-colors">Quy chế hoạt động Tình nguyện số</li></ul></div><div class="md:col-span-4 flex flex-col gap-space-sm"><h3 class="font-label text-label font-bold text-primary uppercase tracking-wider">Vùng trồng trọng điểm</h3><div class="flex flex-wrap gap-space-xs"><span class="px-2.5 py-1 rounded-full bg-surface-white font-caption text-caption text-on-surface-variant border border-border-subtle">Long Khánh (Chôm chôm, Sầu riêng)</span><span class="px-2.5 py-1 rounded-full bg-surface-white font-caption text-caption text-on-surface-variant border border-border-subtle">Vĩnh Cửu (Bưởi Tân Triều)</span><span class="px-2.5 py-1 rounded-full bg-surface-white font-caption text-caption text-on-surface-variant border border-border-subtle">Xuân Lộc (Hồ tiêu, Trái cây)</span><span class="px-2.5 py-1 rounded-full bg-surface-white font-caption text-caption text-on-surface-variant border border-border-subtle">Định Quán (Ca cao, Chuối cấy mô)</span><span class="px-2.5 py-1 rounded-full bg-surface-white font-caption text-caption text-on-surface-variant border border-border-subtle">Biên Hòa</span></div><div class="mt-space-xs"><span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning-bg text-warning font-caption text-caption font-semibold border border-tertiary-fixed-dim/40"><span class="material-symbols-outlined text-[15px]">verified_user</span>Dữ liệu minh họa (Demo)</span></div></div></div><div class="pt-space-md border-t border-border-subtle/80 flex flex-col sm:flex-row items-center justify-between gap-space-sm font-caption text-caption text-text-muted"><div>© 2025 Liên minh Hợp tác xã Tỉnh Đồng Nai & Đoàn TNCS Hồ Chí Minh Tỉnh Đồng Nai.</div><div class="flex items-center gap-space-md"><span class="inline-flex items-center gap-1 text-success"><span class="material-symbols-outlined text-[16px]">spa</span>OCOP Đồng Nai 4.0</span><span>Bảo trợ truyền thông số</span></div></div></div></footer></body></html>

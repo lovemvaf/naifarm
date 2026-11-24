@@ -1,0 +1,30 @@
+{
+  "stitchExportSlug": "ph_ng_livestream_b_n_n_ng_s_n_t_i_v_n_ocop_live_story_room",
+  "id": "ST-07",
+  "blueprintIds": [
+    "S15",
+    "S16",
+    "R6"
+  ],
+  "name": "Phòng Livestream Bán Nông sản Tại vườn & Lịch OCOP Live",
+  "observedHeading": "Thu hoạch Bưởi đường lá cam đầu mùa &amp; Thử độ ngọt Brix tại liếp cùng Chú Ba Minh &amp; TNV Nguyễn Văn An",
+  "workspace": "Public / W03",
+  "targetRoute": "/live",
+  "verificationStatus": "verified-local-export",
+  "remoteStitchScreenId": null,
+  "assetsCount": 12,
+  "localAssets": [
+    "/images/stitch/stitch-01.jpg",
+    "/images/stitch/stitch-42.jpg",
+    "/images/stitch/stitch-43.jpg",
+    "/images/stitch/stitch-44.jpg",
+    "/images/stitch/stitch-45.jpg",
+    "/images/stitch/stitch-46.jpg",
+    "/images/stitch/stitch-47.jpg",
+    "/images/stitch/stitch-48.jpg",
+    "/images/stitch/stitch-49.jpg",
+    "/images/stitch/stitch-50.jpg",
+    "/images/stitch/stitch-51.jpg",
+    "/images/stitch/stitch-52.jpg"
+  ]
+}

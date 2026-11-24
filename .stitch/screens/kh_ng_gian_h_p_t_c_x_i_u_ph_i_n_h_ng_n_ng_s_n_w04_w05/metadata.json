@@ -1,0 +1,24 @@
+{
+  "stitchExportSlug": "kh_ng_gian_h_p_t_c_x_i_u_ph_i_n_h_ng_n_ng_s_n_w04_w05",
+  "id": "ST-10",
+  "blueprintIds": [
+    "S24a",
+    "S24b",
+    "S24c",
+    "S24d",
+    "B3"
+  ],
+  "name": "Không gian Hợp tác xã & Điều phối Đơn hàng Nông sản (W04/W05)",
+  "observedHeading": "Bảng điều hành thu mua, đóng gói &amp; điều phối đơn hàng OCOP Đồng Nai",
+  "workspace": "W04 / W05",
+  "targetRoute": "/coordinator",
+  "verificationStatus": "verified-local-export",
+  "remoteStitchScreenId": null,
+  "assetsCount": 4,
+  "localAssets": [
+    "/images/stitch/stitch-58.png",
+    "/images/stitch/stitch-59.jpg",
+    "/images/stitch/stitch-60.jpg",
+    "/images/stitch/stitch-61.jpg"
+  ]
+}

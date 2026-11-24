@@ -1,0 +1,28 @@
+{
+  "stitchExportSlug": "chi_ti_t_s_n_ph_m_truy_xu_t_qr_b_i_t_n_tri_u",
+  "id": "ST-03",
+  "blueprintIds": [
+    "S03",
+    "S04",
+    "R3"
+  ],
+  "name": "Chi tiết Sản phẩm & Truy xuất QR Bưởi Tân Triều",
+  "observedHeading": "Bưởi da xanh Tân Triều",
+  "workspace": "Public",
+  "targetRoute": "/products/buoi-da-xanh-tan-trieu",
+  "verificationStatus": "verified-local-export",
+  "remoteStitchScreenId": null,
+  "assetsCount": 10,
+  "localAssets": [
+    "/images/stitch/stitch-01.jpg",
+    "/images/stitch/stitch-24.jpg",
+    "/images/stitch/stitch-25.jpg",
+    "/images/stitch/stitch-26.jpg",
+    "/images/stitch/stitch-27.jpg",
+    "/images/stitch/stitch-28.jpg",
+    "/images/stitch/stitch-29.jpg",
+    "/images/stitch/stitch-30.jpg",
+    "/images/stitch/stitch-31.jpg",
+    "/images/stitch/stitch-32.jpg"
+  ]
+}

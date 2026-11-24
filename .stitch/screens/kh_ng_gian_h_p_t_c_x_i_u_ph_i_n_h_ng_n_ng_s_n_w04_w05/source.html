@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=Lora:ital,wght@0,500;0,600;1,400&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-fixed":"#032100","inverse-primary":"#9ad3ad","on-secondary-container":"#426f34","surface-tint":"#32694a","on-secondary-fixed-variant":"#245019","secondary":"#3c692e","inverse-surface":"#24342a","on-tertiary":"#ffffff","on-error-container":"#93000a","secondary-fixed-dim":"#a1d48d","error":"#ba1a1a","secondary-fixed":"#bcf1a7","outline-variant":"#c0c9c0","primary-fixed-dim":"#9ad3ad","warning-bg":"#FFF2D8","success":"#24603B","background-rice":"#F5F3E9","info-bg":"#E8F2F8","on-primary-fixed":"#002110","warning":"#80520C","tertiary-fixed":"#ffdeae","text-muted":"#52645A","surface":"#ebfeef","surface-dim":"#ccdfd0","on-primary-fixed-variant":"#185033","tertiary-fixed-dim":"#f4bd64","danger-bg":"#FDECEC","background":"#ebfeef","on-secondary":"#ffffff","tertiary-container":"#6e4a00","surface-variant":"#d4e7d8","border-subtle":"#D6DED2","surface-container-highest":"#d4e7d8","primary-hover":"#19472E","primary-container":"#245b3d","surface-white":"#FFFFFF","success-bg":"#E6F3E9","primary-fixed":"#b5f0c8","surface-soft":"#EAF0E5","surface-container":"#e0f3e4","on-surface":"#0f1f16","surface-bright":"#ebfeef","surface-container-lowest":"#ffffff","border-input":"#788A7B","danger":"#A32D2D","on-surface-variant":"#404942","on-primary":"#ffffff","primary":"#054327","secondary-container":"#bcf1a7","surface-container-high":"#daedde","inverse-on-surface":"#e2f6e6","surface-container-low":"#e5f8e9","info":"#245B78","on-error":"#ffffff","tertiary":"#503500","outline":"#717972","on-primary-container":"#97d1ab","on-tertiary-fixed-variant":"#604100","on-tertiary-fixed":"#281800","on-tertiary-container":"#f2bb62","error-container":"#ffdad6","on-background":"#0f1f16"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"gutter-mobile":"1rem","space-xl":"2rem",margin:"2rem","space-md":"1rem",gutter:"1.5rem","space-sm":"0.5rem","space-xs":"0.25rem","space-lg":"1.5rem","margin-mobile":"1rem"},fontFamily:{label:["Be Vietnam Pro"],body:["Be Vietnam Pro"],price:["Be Vietnam Pro"],"headline-md":["Be Vietnam Pro"],"headline-lg-mobile":["Be Vietnam Pro"],"headline-lg":["Be Vietnam Pro"],"headline-sm":["Be Vietnam Pro"],"body-farmer":["Be Vietnam Pro"],"display-mobile":["Lora"],caption:["Be Vietnam Pro"],display:["Lora"]},fontSize:{label:["14px",{lineHeight:"20px",fontWeight:"600"}],body:["16px",{lineHeight:"26px",fontWeight:"400"}],price:["20px",{lineHeight:"28px",fontWeight:"700"}],"headline-md":["24px",{lineHeight:"34px",fontWeight:"650"}],"headline-lg-mobile":["26px",{lineHeight:"34px",fontWeight:"700"}],"headline-lg":["32px",{lineHeight:"42px",fontWeight:"700"}],"headline-sm":["20px",{lineHeight:"28px",fontWeight:"600"}],"body-farmer":["18px",{lineHeight:"28px",fontWeight:"400"}],"display-mobile":["34px",{lineHeight:"42px",fontWeight:"600"}],caption:["13px",{lineHeight:"18px",fontWeight:"400"}],display:["56px",{lineHeight:"64px",fontWeight:"600"}]}}}};</script></head><body class="bg-background-rice font-body text-body text-on-surface antialiased min-h-screen"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-white z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-20 flex items-center px-6 gap-3"><div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-sm"><span class="material-symbols-outlined text-[24px]">agriculture</span></div><div class="flex flex-col"><span class="font-display text-headline-sm font-semibold tracking-tight text-primary leading-tight">NaiFarm</span><span class="font-caption text-caption text-text-muted">Chợ OCOP Thanh Niên</span></div></div><div class="px-4 mb-4"><div class="p-3 rounded-xl bg-surface-soft flex flex-col gap-1"><span class="font-caption text-caption uppercase text-text-muted tracking-wider">Khu vực quản lý</span><div class="flex items-center justify-between"><span class="font-label text-label text-on-surface truncate">HTX NN Xuân Lộc</span><span class="material-symbols-outlined text-[18px] text-primary">unfold_more</span></div><span class="font-caption text-caption text-secondary font-medium">Đồng Nai • Vùng số 04</span></div></div><nav class="flex flex-col gap-1 px-3" data-active-classes="bg-primary-container text-on-primary font-semibold"><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="tong-quan-dieu-phoi" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="font-label text-label">Tổng quan điều phối</span></a><a class="flex items-center justify-between px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="dieu-phoi-don-hang" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined text-[20px]">local_shipping</span><span class="font-label text-label">Đơn hàng nông sản</span></div><span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-caption text-caption">28</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="quan-ly-nha-vuon" href="#"><span class="material-symbols-outlined text-[20px]">nature_people</span><span class="font-label text-label">Hộ xã viên &amp; Nhà vườn</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="lo-hang-ocop-truy-xuat" href="#"><span class="material-symbols-outlined text-[20px]">qr_code_2</span><span class="font-label text-label">Lô OCOP &amp; Truy xuất</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="doi-tinh-nguyen-vien" href="#"><span class="material-symbols-outlined text-[20px]">diversity_1</span><span class="font-label text-label">Đội Thanh niên hỗ trợ</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="bao-cao-san-luong" href="#"><span class="material-symbols-outlined text-[20px]">analytics</span><span class="font-label text-label">Sản lượng &amp; Doanh số</span></a></nav></div><div class="p-4 flex flex-col gap-3"><div class="p-3 rounded-xl bg-warning-bg flex items-start gap-2"><span class="material-symbols-outlined text-warning text-[20px] shrink-0 mt-0.5">priority_high</span><div class="flex flex-col"><span class="font-label text-label text-warning">Phiên bản Thử nghiệm</span><span class="font-caption text-caption text-text-muted">Dữ liệu mô phỏng Sandbox HTX Nông nghiệp Đồng Nai</span></div></div><div class="flex items-center justify-between pt-2"><span class="font-caption text-caption text-text-muted">Mã HTX: XL-DN-2024</span><span class="font-caption text-caption text-success font-semibold">Trực tuyến</span></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-20 bg-surface-white/95 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-gutter flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-lg flex-1"><div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-soft"><span class="material-symbols-outlined text-primary text-[18px]">store</span><span class="font-label text-label text-on-surface">HTX Nông nghiệp Xuân Lộc</span><span class="font-caption text-caption text-text-muted">• Đồng Nai</span><span class="material-symbols-outlined text-on-surface-variant text-[16px]">expand_more</span></div><div class="relative flex-1 max-w-md"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">search</span><input class="w-full h-11 pl-10 pr-4 rounded-xl bg-background-rice text-on-surface placeholder:text-text-muted font-body text-body outline-none focus:bg-surface-white" placeholder="Tìm mã đơn, nông sản OCOP, xã viên..." type="text"/></div></div><div class="flex items-center gap-gutter"><div class="hidden xl:flex items-center gap-gutter px-4 py-1.5 rounded-xl bg-surface-soft"><div class="flex flex-col"><span class="font-caption text-caption text-text-muted">Hôm nay thu gom</span><span class="font-headline-sm text-headline-sm text-primary">3.850 kg</span></div><div class="w-px h-8 bg-border-subtle"></div><div class="flex flex-col"><span class="font-caption text-caption text-text-muted">Chờ điều phối</span><span class="font-headline-sm text-headline-sm text-warning">14 đơn</span></div></div><div class="flex items-center gap-space-sm"><button class="relative w-10 h-10 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-error"></span></button><button class="w-10 h-10 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">help</span></button></div><div class="flex items-center gap-3 pl-3"><div class="flex flex-col items-end"><span class="font-label text-label text-on-surface">Lê Hồng Phong</span><span class="font-caption text-caption text-text-muted">Cán bộ Điều phối OCOP</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-background-rice min-h-[calc(100vh-80px)]"><div class="flex flex-col w-full">
+<div class="p-margin flex flex-col gap-space-xl">
+<!-- Top Identity & Editorial Action Bar -->
+<div class="flex flex-col gap-space-md">
+<div class="flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex flex-wrap items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-caption text-caption uppercase tracking-wider font-semibold">
+<span class="material-symbols-outlined text-[16px] text-primary">eco</span>
+            W04/W05 · Không gian Hợp tác xã &amp; Điều phối nông sản
+          </span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-soft text-secondary font-caption text-caption font-medium">
+<span class="w-2 h-2 rounded-full bg-success"></span>
+            HTX Nông nghiệp Sinh thái Xuân Lộc (H. Xuân Lộc, Đồng Nai) • Mã: HTX-XL-2025
+          </span>
+</div>
+<div class="flex items-center gap-2 text-text-muted font-caption text-caption">
+<span class="material-symbols-outlined text-[16px] text-primary">update</span>
+          Cập nhật trực tiếp: 08:45, Hôm nay
+        </div>
+</div>
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-space-lg">
+<div class="flex flex-col gap-2 max-w-3xl">
+<h1 class="font-display text-display-mobile lg:text-headline-lg font-bold text-primary tracking-tight leading-tight">
+            Bảng điều hành thu mua, đóng gói &amp; điều phối đơn hàng OCOP Đồng Nai
+          </h1>
+<p class="font-body text-body text-text-muted">
+            Trung tâm kết nối 42 nhà vườn thành viên, giám sát đơn đặt trước, điều phối xe nông sản lạnh về TP. Biên Hòa &amp; TP.HCM, và phân công Đội Thanh niên số hóa hỗ trợ thực địa.
+          </p>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm shrink-0">
+<button class="h-12 px-4 rounded-xl bg-surface-white text-primary font-label text-label shadow-sm hover:bg-surface-soft transition-all flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-[20px]">qr_code_scanner</span>
+            Duyệt nhanh mã QR
+          </button>
+<button class="h-12 px-4 rounded-xl bg-surface-white text-primary font-label text-label shadow-sm hover:bg-surface-soft transition-all flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-[20px]">receipt_long</span>
+            Xuất phiếu hái gom
+          </button>
+<button class="h-12 px-5 rounded-xl bg-primary text-on-primary font-label text-label shadow-md hover:bg-primary-hover transition-all flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-[20px]">local_shipping</span>
+            Tạo chuyến xe mới
+          </button>
+</div>
+</div>
+</div>
+<!-- Alert / Notice Banner -->
+<div class="p-4 rounded-2xl bg-surface-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-warning-bg text-warning flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">nest_eco_leaf</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-label text-label text-on-surface">Khuyến cáo kỹ thuật thu hái hạt điều &amp; bưởi sáng sớm</span>
+<span class="px-2 py-0.5 rounded-full bg-warning-bg text-warning font-caption text-caption font-semibold">Khí tượng Xuân Lộc</span>
+</div>
+<span class="font-caption text-caption text-text-muted">Độ ẩm đêm qua 92%, các vườn cần hong ráo vỏ quả trước khi lót rơm đóng thùng nhằm giữ chuẩn OCOP 4 sao.</span>
+</div>
+</div>
+<div class="flex items-center gap-3 shrink-0">
+<span class="font-caption text-caption text-text-muted">Đường dây nóng trạm Khuyến nông: <strong class="text-on-surface">0251.3872.190</strong></span>
+<button class="px-3 py-1.5 rounded-lg bg-surface-white text-primary font-caption text-caption font-semibold shadow-sm hover:bg-surface-container" type="button">
+          Xem hướng dẫn bảo quản
+        </button>
+</div>
+</div>
+<!-- Key Performance Indicators (KPI Bento Grid) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- KPI 1 -->
+<div class="p-space-lg rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between gap-4 hover:-translate-y-0.5 transition-transform duration-200">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-caption text-caption text-text-muted uppercase tracking-wider font-semibold">Tổng đơn hôm nay</span>
+<span class="font-price text-[32px] text-primary leading-tight mt-1">68 <span class="font-label text-label text-text-muted font-normal">đơn hàng</span></span>
+</div>
+<div class="w-10 h-10 rounded-xl bg-success-bg text-success flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">shopping_bag</span>
+</div>
+</div>
+<div class="flex flex-col gap-2 pt-2">
+<div class="w-full h-2 rounded-full bg-surface-container overflow-hidden flex">
+<div class="h-full bg-primary" style="width: 62%;"></div>
+<div class="h-full bg-tertiary-fixed-dim" style="width: 26%;"></div>
+<div class="h-full bg-outline-variant" style="width: 12%;"></div>
+</div>
+<div class="flex items-center justify-between font-caption text-caption text-text-muted">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary"></span> 42 sẵn sàng</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></span> 18 chờ đóng</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-outline-variant"></span> 8 mới</span>
+</div>
+</div>
+</div>
+<!-- KPI 2 -->
+<div class="p-space-lg rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between gap-4 hover:-translate-y-0.5 transition-transform duration-200">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-caption text-caption text-text-muted uppercase tracking-wider font-semibold">Sản lượng điều phối đợt</span>
+<span class="font-price text-[32px] text-secondary leading-tight mt-1">1.850 <span class="font-label text-label text-text-muted font-normal">kg</span></span>
+</div>
+<div class="w-10 h-10 rounded-xl bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">scale</span>
+</div>
+</div>
+<div class="flex flex-col gap-1 text-text-muted font-caption text-caption">
+<div class="flex items-center justify-between">
+<span>Bưởi Tân Triều:</span>
+<span class="font-label text-label text-on-surface">620 kg</span>
+</div>
+<div class="flex items-center justify-between">
+<span>Sầu riêng Ri6:</span>
+<span class="font-label text-label text-on-surface">850 kg</span>
+</div>
+<div class="flex items-center justify-between">
+<span>Điều rang củi:</span>
+<span class="font-label text-label text-on-surface">380 hộp</span>
+</div>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="p-space-lg rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between gap-4 hover:-translate-y-0.5 transition-transform duration-200">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-caption text-caption text-text-muted uppercase tracking-wider font-semibold">Xe lạnh &amp; Điểm tập kết</span>
+<span class="font-price text-[32px] text-info leading-tight mt-1">3 <span class="font-label text-label text-text-muted font-normal">chuyến trong ngày</span></span>
+</div>
+<div class="w-10 h-10 rounded-xl bg-info-bg text-info flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">ac_unit</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between text-caption font-caption">
+<span class="text-text-muted">Chuyến X1 (10h30 Biên Hòa):</span>
+<span class="text-success font-semibold">Tải 82%</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption">
+<span class="text-text-muted">Chuyến X2 (14h00 TP.HCM):</span>
+<span class="text-warning font-semibold">Đang nạp</span>
+</div>
+<span class="text-[12px] text-text-muted italic truncate">Bảo quản ổn định ở dải nhiệt +8°C đến +12°C</span>
+</div>
+</div>
+<!-- KPI 4 -->
+<div class="p-space-lg rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between gap-4 hover:-translate-y-0.5 transition-transform duration-200">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-caption text-caption text-text-muted uppercase tracking-wider font-semibold">Lực lượng Thanh niên hỗ trợ</span>
+<span class="font-price text-[32px] text-warning leading-tight mt-1">8 <span class="font-label text-label text-text-muted font-normal">TNV số hóa</span></span>
+</div>
+<div class="w-10 h-10 rounded-xl bg-warning-bg text-warning flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">diversity_1</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between text-caption font-caption">
+<span class="text-text-muted">Vườn đối soát QR:</span>
+<span class="font-label text-label text-on-surface">5 nhà vườn</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption">
+<span class="text-text-muted">Tem OCOP xác thực:</span>
+<span class="text-success font-semibold">580 tem đã quét</span>
+</div>
+<span class="text-[12px] text-primary font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Đội thanh niên nòng cốt sẵn sàng
+          </span>
+</div>
+</div>
+</div>
+<!-- Main Dispatch Desk: Orders Table & Interactive Tools -->
+<div class="p-space-lg rounded-2xl bg-surface-white shadow-sm flex flex-col gap-space-lg">
+<!-- Table Header & Controls -->
+<div class="flex flex-col gap-space-md">
+<!-- Tab status filter -->
+<div class="flex flex-wrap items-center justify-between gap-3 border-b-0 pb-1">
+<div class="flex flex-wrap items-center gap-2 p-1 rounded-xl bg-surface-soft">
+<button class="px-3.5 py-1.5 rounded-lg bg-surface-white text-primary font-label text-label shadow-sm" type="button">
+              Tất cả đơn hàng (68)
+            </button>
+<button class="px-3.5 py-1.5 rounded-lg text-text-muted hover:text-on-surface font-label text-label transition-colors" type="button">
+              Chờ hái &amp; gom (18)
+            </button>
+<button class="px-3.5 py-1.5 rounded-lg text-text-muted hover:text-on-surface font-label text-label transition-colors" type="button">
+              Đang đóng gói rơm &amp; dán QR (24)
+            </button>
+<button class="px-3.5 py-1.5 rounded-lg text-text-muted hover:text-on-surface font-label text-label transition-colors" type="button">
+              Đang trên xe lạnh (16)
+            </button>
+<button class="px-3.5 py-1.5 rounded-lg text-text-muted hover:text-on-surface font-label text-label transition-colors" type="button">
+              Đã giao xong (10)
+            </button>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-xl bg-surface-soft text-on-surface-variant hover:bg-surface-container transition-colors" title="Làm mới dữ liệu" type="button">
+<span class="material-symbols-outlined text-[20px]">refresh</span>
+</button>
+<button class="p-2 rounded-xl bg-surface-soft text-on-surface-variant hover:bg-surface-container transition-colors" title="Xuất dữ liệu Excel" type="button">
+<span class="material-symbols-outlined text-[20px]">file_download</span>
+</button>
+</div>
+</div>
+<!-- Filter inputs -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-sm">
+<div class="md:col-span-5 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">search</span>
+<input class="w-full h-11 pl-10 pr-4 rounded-xl bg-background-rice text-on-surface placeholder:text-text-muted font-body text-body outline-none focus:bg-surface-soft" placeholder="Tìm theo mã đơn (#NF-8831), tên khách, số điện thoại..." type="text"/>
+</div>
+<div class="md:col-span-3">
+<select class="w-full h-11 px-3 rounded-xl bg-background-rice text-on-surface font-body text-body outline-none focus:bg-surface-soft">
+<option value="">Lọc theo Nhà vườn cung ứng</option>
+<option value="1">Vườn Chú Ba Minh (Cù lao Tân Triều)</option>
+<option value="2">Vườn Cô Tư Sầu Riêng (Long Khánh)</option>
+<option value="3">Xưởng Điều Rang Củi HTX Xuân Lộc</option>
+<option value="4">Hộ Bác Tám Nông (Xuân Định)</option>
+</select>
+</div>
+<div class="md:col-span-3">
+<select class="w-full h-11 px-3 rounded-xl bg-background-rice text-on-surface font-body text-body outline-none focus:bg-surface-soft">
+<option value="">Tuyến giao nhận / Điều phối</option>
+<option value="bh">Tuyến Biên Hòa (Xe X1)</option>
+<option value="hcm">Tuyến TP. Hồ Chí Minh (Xe X2)</option>
+<option value="lk">Giao nhanh nội vùng Long Khánh</option>
+<option value="vuon">Nhận trải nghiệm tại vườn</option>
+</select>
+</div>
+<div class="md:col-span-1">
+<button class="w-full h-11 rounded-xl bg-surface-container text-primary font-label text-label flex items-center justify-center hover:bg-surface-variant transition-colors" title="Bộ lọc nâng cao" type="button">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Table Content -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-soft text-text-muted font-label text-[13px] uppercase tracking-wider">
+<th class="py-3 px-4 rounded-l-xl">Mã đơn &amp; Đặt lúc</th>
+<th class="py-3 px-4">Người nhận &amp; Điểm đến</th>
+<th class="py-3 px-4">Nông sản OCOP &amp; Nhà vườn</th>
+<th class="py-3 px-4">Quy cách &amp; Tem QR</th>
+<th class="py-3 px-4">Giá trị / Thanh toán</th>
+<th class="py-3 px-4">Trạng thái điều phối</th>
+<th class="py-3 px-4 text-right rounded-r-xl">Thao tác</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface font-body text-body">
+<!-- Row 1: Don #NF-2025-8831 -->
+<tr class="hover:bg-surface-soft/60 transition-colors group">
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-label text-label text-primary font-bold">#NF-2025-8831</span>
+<span class="font-caption text-caption text-text-muted">07:20 • Hôm nay</span>
+<span class="mt-1 px-2 py-0.5 rounded bg-info-bg text-info font-caption text-[11px] font-semibold w-fit">Xe lạnh X1</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-label text-label text-on-surface font-semibold">Nguyễn Thanh Tùng</span>
+<span class="font-caption text-caption text-text-muted">0918.442.***</span>
+<span class="font-caption text-caption text-on-surface-variant mt-0.5 line-clamp-1">Phường Quyết Thắng, TP. Biên Hòa</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label text-label text-on-surface">2 thùng Bưởi da xanh (10kg)</span>
+<span class="material-symbols-outlined text-[16px] text-success" title="Đạt OCOP 4 sao">stars</span>
+</div>
+<span class="font-caption text-caption text-secondary font-medium">Vườn Chú Ba Minh (Cù lao Tân Triều)</span>
+<span class="font-caption text-[12px] text-text-muted">Lô hái: BT-04-Sáng nay</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col gap-1">
+<span class="font-caption text-caption text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-text-muted">inventory_2</span> Thùng carton lót rơm
+                  </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success-bg text-success font-caption text-[11px] font-semibold w-fit">
+<span class="material-symbols-outlined text-[12px]">qr_code_2</span> Đã dán #BT-2025-05
+                  </span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-price text-label text-primary font-bold">580.000 đ</span>
+<span class="font-caption text-caption text-success font-medium">VietQR đã thanh toán</span>
+<span class="font-caption text-[11px] text-text-muted">Ví HTX giữ cọc</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col gap-1">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-bg text-success font-label text-[12px] font-semibold w-fit">
+<span class="w-1.5 h-1.5 rounded-full bg-success"></span> Đã đóng thùng sẵn sàng
+                  </span>
+<span class="font-caption text-[12px] text-text-muted">Điểm gom: Trạm Xuân Lộc</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="px-3 py-1.5 rounded-lg bg-primary text-on-primary font-caption text-caption font-semibold shadow-sm hover:bg-primary-hover flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">local_shipping</span>
+                    Gán xe 10h30
+                  </button>
+<button class="p-1.5 rounded-lg bg-surface-soft text-on-surface-variant hover:bg-surface-container" title="Chi tiết đơn" type="button">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Don #NF-2025-8832 -->
+<tr class="hover:bg-surface-soft/60 transition-colors group">
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-label text-label text-primary font-bold">#NF-2025-8832</span>
+<span class="font-caption text-caption text-text-muted">07:45 • Hôm nay</span>
+<span class="mt-1 px-2 py-0.5 rounded bg-warning-bg text-warning font-caption text-[11px] font-semibold w-fit">Xe lạnh X2 (TP.HCM)</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-label text-label text-on-surface font-semibold">Lê Thị Hồng Hạnh</span>
+<span class="font-caption text-caption text-text-muted">0903.119.***</span>
+<span class="font-caption text-caption text-on-surface-variant mt-0.5 line-clamp-1">Khu Sala, P. An Khánh, TP. Thủ Đức (TP.HCM)</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label text-label text-on-surface">1 thùng Sầu riêng Ri6 (6kg chín cây)</span>
+<span class="material-symbols-outlined text-[16px] text-warning" title="Đặc sản OCOP tuyển chọn">verified</span>
+</div>
+<span class="font-caption text-caption text-secondary font-medium">Vườn Cô Tư Sầu Riêng (H. Cẩm Mỹ)</span>
+<span class="font-caption text-[12px] text-text-muted">Cắt cuống tươi theo đơn</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col gap-1">
+<span class="font-caption text-caption text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-text-muted">shelves</span> Thùng đục lỗ thoát khí
+                  </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning-bg text-warning font-caption text-[11px] font-semibold w-fit">
+<span class="material-symbols-outlined text-[12px]">hourglass_top</span> Chờ TNV dán tem
+                  </span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-price text-label text-primary font-bold">720.000 đ</span>
+<span class="font-caption text-caption text-secondary font-medium">Thanh toán khi nhận (COD)</span>
+<span class="font-caption text-[11px] text-text-muted">Tài xế thu tiền mặt</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col gap-1">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-warning-bg text-warning font-label text-[12px] font-semibold w-fit">
+<span class="w-1.5 h-1.5 rounded-full bg-warning"></span> Đang cắt hái sáng nay
+                  </span>
+<span class="font-caption text-[12px] text-text-muted">TNV Mai đang ở vườn hỗ trợ</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="px-3 py-1.5 rounded-lg bg-surface-white text-secondary font-caption text-caption font-semibold shadow-sm hover:bg-surface-container flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">call</span>
+                    Đôn đốc vườn &amp; TNV
+                  </button>
+<button class="p-1.5 rounded-lg bg-surface-soft text-on-surface-variant hover:bg-surface-container" title="Chi tiết đơn" type="button">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Don #NF-2025-8833 -->
+<tr class="hover:bg-surface-soft/60 transition-colors group">
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-label text-label text-primary font-bold">#NF-2025-8833</span>
+<span class="font-caption text-caption text-text-muted">08:10 • Hôm nay</span>
+<span class="mt-1 px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-caption text-[11px] font-semibold w-fit">Giao nội tỉnh</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-label text-label text-on-surface font-semibold">Trần Văn Nam</span>
+<span class="font-caption text-caption text-text-muted">0977.821.***</span>
+<span class="font-caption text-caption text-on-surface-variant mt-0.5 line-clamp-1">Phường Xuân Bình, TP. Long Khánh</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label text-label text-on-surface">4 hộp Hạt điều rang củi vỏ lụa (500g)</span>
+<span class="material-symbols-outlined text-[16px] text-success" title="OCOP 3 sao">stars</span>
+</div>
+<span class="font-caption text-caption text-secondary font-medium">Xưởng Chế biến HTX Xuân Lộc</span>
+<span class="font-caption text-[12px] text-text-muted">Hút chân không • HSD 12 tháng</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col gap-1">
+<span class="font-caption text-caption text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-text-muted">inventory</span> Hộp quà quai xách giấy kraft
+                  </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success-bg text-success font-caption text-[11px] font-semibold w-fit">
+<span class="material-symbols-outlined text-[12px]">qr_code_2</span> Đã dán #HD-XL-09
+                  </span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-price text-label text-primary font-bold">640.000 đ</span>
+<span class="font-caption text-caption text-success font-medium">VietQR HTX (Đã khớp)</span>
+<span class="font-caption text-[11px] text-text-muted">Mã GD: #VQR99214</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col gap-1">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-bg text-success font-label text-[12px] font-semibold w-fit">
+<span class="w-1.5 h-1.5 rounded-full bg-success"></span> Đã đóng gói sẵn sàng
+                  </span>
+<span class="font-caption text-[12px] text-text-muted">Đang đợi Shiper HTX nhận hàng</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="px-3 py-1.5 rounded-lg bg-surface-white text-primary font-caption text-caption font-semibold shadow-sm hover:bg-surface-container flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">print</span>
+                    In nhãn giao
+                  </button>
+<button class="p-1.5 rounded-lg bg-surface-soft text-on-surface-variant hover:bg-surface-container" title="Chi tiết đơn" type="button">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Don #NF-2025-8834 -->
+<tr class="hover:bg-surface-soft/60 transition-colors group">
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-label text-label text-primary font-bold">#NF-2025-8834</span>
+<span class="font-caption text-caption text-text-muted">08:35 • Hôm nay</span>
+<span class="mt-1 px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-caption text-[11px] font-semibold w-fit">Đoàn trải nghiệm</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-label text-label text-on-surface font-semibold">Cty TNHH Du lịch &amp; Sinh thái Đồng Nai</span>
+<span class="font-caption text-caption text-text-muted">0938.220.*** (Trưởng đoàn Tuấn)</span>
+<span class="font-caption text-caption text-secondary mt-0.5">Nhận trực tiếp tại Vườn Bưởi Chú Ba Minh</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label text-label text-on-surface">30kg Bưởi đường lá cam hái tại cành</span>
+<span class="material-symbols-outlined text-[16px] text-success" title="Chỉ dẫn địa lý Tân Triều">verified</span>
+</div>
+<span class="font-caption text-caption text-secondary font-medium">Vườn Chú Ba Minh (Cù lao Tân Triều)</span>
+<span class="font-caption text-[12px] text-text-muted">Du khách tự tay cắt kèm tem OCOP</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col gap-1">
+<span class="font-caption text-caption text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-text-muted">shopping_basket</span> Giỏ mây tre truyền thống
+                  </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success-bg text-success font-caption text-[11px] font-semibold w-fit">
+<span class="material-symbols-outlined text-[12px]">done_all</span> TNV An cấp sẵn 30 tem
+                  </span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col">
+<span class="font-price text-label text-primary font-bold">1.650.000 đ</span>
+<span class="font-caption text-caption text-warning font-medium">Đã cọc 500.000 đ</span>
+<span class="font-caption text-[11px] text-text-muted">Số dư thanh toán tại vườn</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top">
+<div class="flex flex-col gap-1">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-soft text-primary font-label text-[12px] font-semibold w-fit">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Khách đến lúc 15h30
+                  </span>
+<span class="font-caption text-[12px] text-text-muted">Xe 29 chỗ đoàn du khách</span>
+</div>
+</td>
+<td class="py-4 px-4 align-top text-right">
+<div class="flex items-center justify-end gap-1.5">
+<button class="px-3 py-1.5 rounded-lg bg-surface-white text-primary font-caption text-caption font-semibold shadow-sm hover:bg-surface-container flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">pin</span>
+                    Xem mã Check-in
+                  </button>
+<button class="p-1.5 rounded-lg bg-surface-soft text-on-surface-variant hover:bg-surface-container" title="Chi tiết đơn" type="button">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination / Footer Summary -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-2">
+<span class="font-caption text-caption text-text-muted">
+          Hiển thị <strong class="text-on-surface">4 / 68</strong> đơn hàng cần xử lý trong phiên sáng • Tổng khối lượng phiên: <strong>1.850 kg</strong>
+</span>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 rounded-lg bg-surface-soft text-text-muted font-caption text-caption hover:bg-surface-container transition-colors disabled:opacity-40" disabled="" type="button">
+            Trang trước
+          </button>
+<span class="px-3 py-1.5 rounded-lg bg-primary text-on-primary font-label text-caption">1</span>
+<button class="px-3 py-1.5 rounded-lg bg-surface-soft text-on-surface font-caption text-caption hover:bg-surface-container transition-colors" type="button">
+            2
+          </button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-soft text-on-surface font-caption text-caption hover:bg-surface-container transition-colors" type="button">
+            3
+          </button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-soft text-on-surface font-caption text-caption hover:bg-surface-container transition-colors" type="button">
+            Trang sau
+          </button>
+</div>
+</div>
+</div>
+<!-- Split Pane: Youth Volunteer Field Monitoring & Cold-Chain Logistics -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+<!-- Left Pane: Youth Volunteers Real-Time Support (7 Cols) -->
+<div class="lg:col-span-7 p-space-lg rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between gap-space-md">
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-secondary-container text-on-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+</div>
+<h2 class="font-headline-md text-headline-sm text-primary font-bold">
+                Giám sát Đội Trí thức trẻ Thanh niên số hóa tại vườn
+              </h2>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-success-bg text-success font-caption text-caption font-semibold">
+              8 Tình nguyện viên đang trực tiếp
+            </span>
+</div>
+<p class="font-caption text-caption text-text-muted">
+            Đoàn Thanh niên trực tiếp hỗ trợ hộ xã viên cao tuổi dán tem truy xuất nguồn gốc, chụp ảnh quy cách đóng rơm và ghi chép sổ nhật ký OCOP.
+          </p>
+</div>
+<!-- TNV List Cards -->
+<div class="flex flex-col gap-space-sm">
+<!-- TNV Item 1 -->
+<div class="p-4 rounded-xl bg-surface-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+<div class="flex items-start gap-3">
+<div class="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center font-display text-label font-bold shrink-0">
+                NA
+              </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-label text-label text-on-surface font-bold">Nguyễn Văn An</span>
+<span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary-container font-caption text-[11px] font-semibold">TNV Nòng Cốt</span>
+<span class="text-caption text-text-muted">• ĐH Đồng Nai</span>
+</div>
+<span class="font-caption text-caption text-secondary font-medium">
+                  Đang tại: Vườn Chú Ba Minh (Cù lao Tân Triều, Vĩnh Cửu)
+                </span>
+<span class="font-caption text-[12px] text-text-muted mt-0.5">
+                  Đã hỗ trợ: Dán <strong>300 tem QR</strong> lô bưởi da xanh • Chụp 18 ảnh minh chứng đóng rơm
+                </span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0 self-end md:self-center">
+<button class="px-3 py-1.5 rounded-lg bg-surface-white text-on-surface-variant font-caption text-caption hover:bg-surface-container transition-colors flex items-center gap-1 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">photo_camera</span>
+                Xem 18 ảnh
+              </button>
+<button class="px-3 py-1.5 rounded-lg bg-primary text-on-primary font-caption text-caption font-semibold hover:bg-primary-hover transition-colors shadow-sm" type="button">
+                Duyệt +4h công
+              </button>
+</div>
+</div>
+<!-- TNV Item 2 -->
+<div class="p-4 rounded-xl bg-surface-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+<div class="flex items-start gap-3">
+<div class="w-12 h-12 rounded-xl bg-secondary text-on-secondary flex items-center justify-center font-display text-label font-bold shrink-0">
+                TM
+              </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-label text-label text-on-surface font-bold">Trần Thị Mai</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-caption text-[11px] font-semibold">TNV Số hóa Nông vụ</span>
+<span class="text-caption text-text-muted">• Huyện Đoàn Cẩm Mỹ</span>
+</div>
+<span class="font-caption text-caption text-secondary font-medium">
+                  Đang tại: Vườn Cô Tư Sầu Riêng (Xã Xuân Đường, Cẩm Mỹ)
+                </span>
+<span class="font-caption text-[12px] text-text-muted mt-0.5">
+                  Nhiệm vụ: Cập nhật nhật ký cắt tỉa sầu riêng Ri6 &amp; cấp 50 mã tem truy xuất theo buồng
+                </span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0 self-end md:self-center">
+<button class="px-3 py-1.5 rounded-lg bg-surface-white text-secondary font-caption text-caption hover:bg-surface-container transition-colors flex items-center gap-1 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">chat</span>
+                Nhắn tin điều phối
+              </button>
+<button class="px-3 py-1.5 rounded-lg bg-surface-container text-primary font-caption text-caption font-semibold hover:bg-surface-variant transition-colors" type="button">
+                Xem nhật ký vườn
+              </button>
+</div>
+</div>
+<!-- TNV Item 3 -->
+<div class="p-4 rounded-xl bg-surface-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+<div class="flex items-start gap-3">
+<div class="w-12 h-12 rounded-xl bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-display text-label font-bold shrink-0">
+                LQ
+              </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-label text-label text-on-surface font-bold">Lê Quốc Bảo</span>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-caption text-[11px] font-semibold">TNV Kho vận</span>
+<span class="text-caption text-text-muted">• Đoàn xã Xuân Lộc</span>
+</div>
+<span class="font-caption text-caption text-secondary font-medium">
+                  Đang tại: Xưởng Điều Rang Củi &amp; Điểm tập kết Xe lạnh số 01
+                </span>
+<span class="font-caption text-[12px] text-text-muted mt-0.5">
+                  Đã hỗ trợ: Cân xếp 42 kiện hàng • Kiểm tra tem niêm phong xe tải số 60C-482.11
+                </span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0 self-end md:self-center">
+<button class="px-3 py-1.5 rounded-lg bg-primary text-on-primary font-caption text-caption font-semibold hover:bg-primary-hover transition-colors shadow-sm" type="button">
+                Xác nhận niêm phong
+              </button>
+</div>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">handshake</span>
+<span class="font-caption text-caption text-on-surface">Chương trình phối hợp Tỉnh Đoàn Đồng Nai • Khóa tình nguyện mùa thu hoạch OCOP 2025</span>
+</div>
+<a class="font-label text-caption text-primary hover:underline" href="#">Chi tiết bảng phân công →</a>
+</div>
+</div>
+<!-- Right Pane: Cold-Chain Transport Schedule & Route Map (5 Cols) -->
+<div class="lg:col-span-5 p-space-lg rounded-2xl bg-surface-white shadow-sm flex flex-col justify-between gap-space-md">
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-info-bg text-info flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">rv_hookup</span>
+</div>
+<h2 class="font-headline-md text-headline-sm text-primary font-bold">
+                Lịch trình Chuyến xe nông sản mát
+              </h2>
+</div>
+<span class="font-caption text-caption text-text-muted">Cold-chain 8-12°C</span>
+</div>
+<p class="font-caption text-caption text-text-muted">
+            Tuyến xe lạnh chuyên biệt giúp bưởi da xanh và sầu riêng giữ nguyên độ tươi từ vườn Đồng Nai tới tay người tiêu dùng đô thị trong ngày.
+          </p>
+</div>
+<!-- Schedule Items -->
+<div class="flex flex-col gap-space-sm">
+<!-- Route 1 -->
+<div class="p-4 rounded-xl bg-surface-soft flex flex-col gap-3">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<span class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-label text-label font-bold">
+                  X1
+                </span>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-label text-label text-on-surface font-bold">Xuân Lộc → TP. Biên Hòa</span>
+<span class="px-2 py-0.5 rounded-full bg-success-bg text-success font-caption text-[11px] font-semibold">Khởi hành 10:30</span>
+</div>
+<span class="font-caption text-caption text-text-muted">Tài xế: Bác Bảy Hưng • Xe 1.5 Tấn (60C-482.11)</span>
+</div>
+</div>
+<span class="font-label text-label text-success font-bold">Tải 82%</span>
+</div>
+<!-- Route visual chain -->
+<div class="flex items-center justify-between text-[11px] font-caption text-text-muted px-2 py-1.5 rounded-lg bg-surface-white">
+<span class="text-primary font-semibold">1. Điểm gom Xuân Lộc (Xong)</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+<span class="text-on-surface font-medium">2. Trạm gom Long Khánh</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+<span>3. Kho Trưng Nữ Vương (Biên Hòa)</span>
+</div>
+</div>
+<!-- Route 2 -->
+<div class="p-4 rounded-xl bg-surface-soft flex flex-col gap-3">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<span class="w-8 h-8 rounded-lg bg-info text-on-secondary flex items-center justify-center font-label text-label font-bold">
+                  X2
+                </span>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-label text-label text-on-surface font-bold">Cẩm Mỹ → TP. Hồ Chí Minh</span>
+<span class="px-2 py-0.5 rounded-full bg-warning-bg text-warning font-caption text-[11px] font-semibold">Khởi hành 14:00</span>
+</div>
+<span class="font-caption text-caption text-text-muted">Tài xế: Anh Trần Quốc • Xe đông lạnh 2.5 Tấn (60C-901.88)</span>
+</div>
+</div>
+<span class="font-label text-label text-warning font-bold">Tải 58% (Đang xếp)</span>
+</div>
+<!-- Route visual chain -->
+<div class="flex items-center justify-between text-[11px] font-caption text-text-muted px-2 py-1.5 rounded-lg bg-surface-white">
+<span class="text-warning font-semibold">1. Vườn Sầu Riêng Cô Tư</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+<span class="text-on-surface font-medium">2. Trạm Cao Tốc Long Thành</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+<span>3. Hub Q.1 &amp; Thủ Đức (TP.HCM)</span>
+</div>
+</div>
+</div>
+<!-- Simulated Map Location Block -->
+<div class="w-full h-44 rounded-xl bg-cover bg-center relative overflow-hidden flex flex-col justify-between p-3" data-location="Xuan Loc, Dong Nai, Vietnam" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDyMtcvIxQ21PRXn6Tl8MBSaA_x_WFirQrdXoljRrxbAxBRIcIHRcvLh43LD6NcbeYRrItDYyfvIdATzNMrebtpJxNRRm_33bHByVWcyYTh7167oXmF6kkPENNb6q8Wz89zhesEBBq8kc2yBMCaKr3GsrRoGoKmCa36Ia0nyArdM1FE5kbgm3cPgQUjckcWHPkV2UB-cQw4vmdI1slTm9C4MgzPxZD57VaiqvEUg_jB')">
+<div class="flex items-center justify-between">
+<span class="px-2.5 py-1 rounded-full bg-surface-white/95 backdrop-blur text-primary font-caption text-caption font-semibold shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-error">pin_drop</span> Trực quan Tuyến vận chuyển Quốc lộ 1A • ĐT 765
+            </span>
+<span class="px-2 py-0.5 rounded-md bg-inverse-surface/80 text-inverse-on-surface font-caption text-[11px]">GPS Xe X1: 32 km/h</span>
+</div>
+<div class="p-2.5 rounded-xl bg-surface-white/95 backdrop-blur shadow-sm flex items-center justify-between text-caption font-caption">
+<span class="text-text-muted">Dự kiến giao điểm đầu tiên tại Biên Hòa:</span>
+<span class="text-primary font-bold">11:45 Trưa nay</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Cooperative Member Orchard Registry & Traceability Snapshot -->
+<div class="p-space-lg rounded-2xl bg-surface-white shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+<div class="flex flex-col">
+<h2 class="font-headline-md text-headline-sm text-primary font-bold">
+            Hộ xã viên cung ứng hôm nay (42 nhà vườn liên kết)
+          </h2>
+<span class="font-caption text-caption text-text-muted">
+            Danh sách các vườn đã hoàn thành kiểm định tồn dư thuốc BVTV và được cấp quyền dán tem truy xuất nguồn gốc OCOP NaiFarm.
+          </span>
+</div>
+<button class="px-4 py-2 rounded-xl bg-surface-soft text-primary font-label text-label hover:bg-surface-container transition-colors flex items-center gap-2 self-start md:self-auto" type="button">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+          Thêm hộ xã viên mới
+        </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md pt-2">
+<!-- Farm Card 1 -->
+<div class="p-4 rounded-xl bg-surface-soft flex flex-col justify-between gap-3 hover:-translate-y-0.5 transition-transform duration-200">
+<div class="flex items-start gap-3">
+<div class="w-14 h-14 rounded-xl bg-cover bg-center shrink-0" data-alt="Chân dung lão nông chú Ba Minh nụ cười đôn hậu bên cây bưởi da xanh trĩu quả Cù lao Tân Triều Đồng Nai, ánh sáng tự nhiên ấm áp, phong cách báo chí tài liệu Việt Nam" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBsu5KIAF0UsUwm0gKwXy-EQe1OKSKJWhAEUaTOVoPxXmoZgfnvj6dlFLbiT3aNVhYcl1ueKDdv_miCwCz4hETByNY6AHw7t10kpVcJK5fGTf2g17cU0ql1MtEbnWeAcd7XKG6zuSjSVjk6oWmcAErDNNKklPTS1ZuagRxMzsMrur4LYC0MnCDw3JX-f7w-7zX5-igEWAq3Xp8JGv7ZoHdejkXEYHclyiGzhfTVgzID')"></div>
+<div class="flex flex-col">
+<span class="font-label text-label text-on-surface font-bold">Vườn Chú Ba Minh</span>
+<span class="font-caption text-caption text-secondary">Cù lao Tân Triều, H. Vĩnh Cửu</span>
+<span class="font-caption text-[12px] text-text-muted">Quy mô: 2.2 ha bưởi da xanh &amp; bưởi đường</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2 text-caption font-caption text-text-muted">
+<span>Sản lượng sáng nay: <strong class="text-on-surface">620 kg</strong></span>
+<span class="px-2 py-0.5 rounded-full bg-success-bg text-success font-semibold">OCOP 4 Sao</span>
+</div>
+</div>
+<!-- Farm Card 2 -->
+<div class="p-4 rounded-xl bg-surface-soft flex flex-col justify-between gap-3 hover:-translate-y-0.5 transition-transform duration-200">
+<div class="flex items-start gap-3">
+<div class="w-14 h-14 rounded-xl bg-cover bg-center shrink-0" data-alt="Cô Tư nông dân Cẩm Mỹ Đồng Nai đang thu hoạch trái sầu riêng Ri6 gai nhọn đều trên cây trong vườn sinh thái nắng nhẹ, góc chụp chân thực sắc nét" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBHOJZZpXWrrjnaPCSppJps1-XItdFBLY8yW7CMalXGqHClDd4Z8FYat2quFLjX6fcXif21l3xutKniORSB2rEgNEqZnUGYwoRH4YOUgShrXqi8cMUcH885nXI_3cl5YtDLg3XZK8HGuIPdaJAHNmH4pfdqmz1ekSbVbUPe0t65d8EcYH5zv0qDvc75Tz-U-1Czwnj_e4wL2s_pvRYLj_4Kh34Rr6EOpQquLCvedEGq')"></div>
+<div class="flex flex-col">
+<span class="font-label text-label text-on-surface font-bold">Vườn Cô Tư Sầu Riêng</span>
+<span class="font-caption text-caption text-secondary">Xã Xuân Đường, H. Cẩm Mỹ</span>
+<span class="font-caption text-[12px] text-text-muted">Quy mô: 3.5 ha sầu riêng VietGAP</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2 text-caption font-caption text-text-muted">
+<span>Sản lượng sáng nay: <strong class="text-on-surface">850 kg</strong></span>
+<span class="px-2 py-0.5 rounded-full bg-success-bg text-success font-semibold">VietGAP Chuẩn</span>
+</div>
+</div>
+<!-- Farm Card 3 -->
+<div class="p-4 rounded-xl bg-surface-soft flex flex-col justify-between gap-3 hover:-translate-y-0.5 transition-transform duration-200">
+<div class="flex items-start gap-3">
+<div class="w-14 h-14 rounded-xl bg-cover bg-center shrink-0" data-alt="Nghệ nhân xưởng hạt điều rang củi Xuân Lộc Đồng Nai đang sàng sảy mẻ hạt điều thơm lừng vàng ươm trong xưởng mộc mạc sạch sẽ" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCzu4KtL5mD2IVZ5YHhgDr8F0liGnqBuoaGKRQ4ktyF-DiAeYV9Iq_FsyySv2cVmx1ZxUOlyCqewQJTRNt_ggZYO7EE1UNxHSC-9BthW0jwQb6nEv8kpk5049PlqinUA4KqRx4NQ15xdi-sgs82RvoU0EtP1TsSXYFU9ulGSbceJVTDsLI52anpfWK8k1Fu-eqp9YpqpNBZHcRZvjPF825wgfxDKkuNWZoVUCECxtAT')"></div>
+<div class="flex flex-col">
+<span class="font-label text-label text-on-surface font-bold">Xưởng Hạt Điều Rang Củi HTX</span>
+<span class="font-caption text-caption text-secondary">Thị trấn Gia Ray, H. Xuân Lộc</span>
+<span class="font-caption text-[12px] text-text-muted">Công suất: 500 hộp / ngày</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2 text-caption font-caption text-text-muted">
+<span>Sản lượng sáng nay: <strong class="text-on-surface">380 hộp</strong></span>
+<span class="px-2 py-0.5 rounded-full bg-success-bg text-success font-semibold">OCOP 3 Sao</span>
+</div>
+</div>
+</div>
+</div>
+<!-- System Sandbox Notice & Quick Shortcuts -->
+<div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-surface-container text-on-surface-variant font-caption text-caption">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">info</span>
+<span>Phân hệ Điều phối Nông sản W04/W05 kết nối cơ sở dữ liệu Sở Nông nghiệp &amp; PTNT Đồng Nai và Thành Đoàn. Dữ liệu thời gian thực được sao lưu định kỳ 15 phút/lần.</span>
+</div>
+<div class="flex items-center gap-3 shrink-0">
+<button class="hover:text-primary transition-colors underline" type="button">Tải biên bản bàn giao</button>
+<span>•</span>
+<button class="hover:text-primary transition-colors underline" type="button">Báo cáo tồn kho cuối ngày</button>
+</div>
+</div>
+</div>
+</div></main><footer class="w-full bg-surface-white py-6 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="w-full px-gutter flex flex-col md:flex-row items-center justify-between gap-4"><div class="flex items-center gap-3"><span class="font-display text-label text-primary font-semibold">NaiFarm</span><span class="font-caption text-caption text-text-muted">© 2024 Bản quyền thuộc Liên minh Hợp tác xã Tỉnh Đồng Nai &amp; Đoàn Thanh niên</span></div><div class="flex items-center gap-6"><span class="font-caption text-caption px-2.5 py-1 rounded-full bg-warning-bg text-warning font-medium">Hệ thống thử nghiệm điều phối W04/W05</span><a class="font-caption text-caption text-text-muted hover:text-primary transition-colors" href="#">Quy chuẩn OCOP Tỉnh</a><a class="font-caption text-caption text-text-muted hover:text-primary transition-colors" href="#">Hỗ trợ kỹ thuật HTX</a><a class="font-caption text-caption text-text-muted hover:text-primary transition-colors" href="#">Chính sách bảo mật dữ liệu nông vụ</a></div></div></footer></div></body></html>

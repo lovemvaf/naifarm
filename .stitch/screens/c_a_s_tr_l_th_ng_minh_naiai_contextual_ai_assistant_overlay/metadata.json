@@ -1,0 +1,23 @@
+{
+  "stitchExportSlug": "c_a_s_tr_l_th_ng_minh_naiai_contextual_ai_assistant_overlay",
+  "id": "ST-12",
+  "blueprintIds": [
+    "AI01",
+    "AI02",
+    "AI03",
+    "AI04"
+  ],
+  "name": "Cửa sổ Trợ lý Thông minh NaiAI (Contextual AI Assistant Overlay)",
+  "observedHeading": "Bưởi Đường Lá Cam Tân Triều",
+  "workspace": "Cross-cutting (W01–W06)",
+  "targetRoute": "Global Floating Overlay",
+  "verificationStatus": "verified-local-export",
+  "remoteStitchScreenId": null,
+  "assetsCount": 4,
+  "localAssets": [
+    "/images/stitch/stitch-01.jpg",
+    "/images/stitch/stitch-63.jpg",
+    "/images/stitch/stitch-64.png",
+    "/images/stitch/stitch-65.jpg"
+  ]
+}

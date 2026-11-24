@@ -1,0 +1,22 @@
+{
+  "stitchExportSlug": "kh_ng_gian_thanh_ni_n_t_nh_nguy_n_w03_s_m_nh_s_h_a_gi_c_ng_hi_n",
+  "id": "ST-09",
+  "blueprintIds": [
+    "S13",
+    "S14",
+    "S18",
+    "B3"
+  ],
+  "name": "Không gian Thanh niên Tình nguyện — Sứ mệnh Số hóa & Hộ chiếu OCOP Youth Pass",
+  "observedHeading": "Trí thức trẻ đồng hành cùng nông dân số hóa chuỗi OCOP Đồng Nai",
+  "workspace": "W03",
+  "targetRoute": "/volunteer",
+  "verificationStatus": "verified-local-export",
+  "remoteStitchScreenId": null,
+  "assetsCount": 3,
+  "localAssets": [
+    "/images/stitch/stitch-01.jpg",
+    "/images/stitch/stitch-56.jpg",
+    "/images/stitch/stitch-57.jpg"
+  ]
+}
