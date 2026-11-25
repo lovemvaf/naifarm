@@ -106,6 +106,7 @@ export function QrPassportCard({
           <div className="flex h-[176px] w-[176px] items-center justify-center rounded-[12px] border border-[#D6DED2] bg-white p-2">
             {svgMarkup ? (
               <div
+                role="img"
                 aria-label={`Mã QR thật truy xuất lô ${batch.batchCode}`}
                 className="h-full w-full [&>svg]:h-full [&>svg]:w-full"
                 dangerouslySetInnerHTML={{ __html: svgMarkup }}

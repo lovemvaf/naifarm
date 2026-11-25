@@ -196,13 +196,13 @@ function OrganizationWorkspaceContent() {
         <Card className="space-y-4 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold text-[#52645A]">Loại hình tổ chức đang hoạt động (W05)</p>
+              <p className="text-xs font-semibold text-[#52645A]">Loại hình tổ chức đang hoạt động</p>
               <h2 className="text-lg font-bold text-[#25352B]">{activeOrgMeta.label}</h2>
             </div>
             <ScopeSelector compact label="Phạm vi địa bàn" />
           </div>
 
-          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Chọn loại hình tổ chức W05">
+          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Chọn loại hình tổ chức">
             {ORG_KINDS.map((kind) => {
               const active = currentOrg === kind.id;
               return (
@@ -514,10 +514,10 @@ function OrganizationWorkspaceContent() {
                   records={credentialRecords}
                   roleMode="verifier"
                   onChangeStatus={(id, next, note) => {
-                    updateCredentialLifecycle(id, next, note, "Cơ quan đối chiếu W05");
+                    updateCredentialLifecycle(id, next, note, "Ban đối chiếu HTX & Tổ chức");
                     notifySuccess(`Đã cập nhật trạng thái đối chiếu cho ${id}.`);
                   }}
-                  onRenew={(id) => renewCredentialRecord(id, "Cơ quan đối chiếu W05")}
+                  onRenew={(id) => renewCredentialRecord(id, "Ban đối chiếu HTX & Tổ chức")}
                 />
               </div>
             ) : null}
@@ -610,7 +610,7 @@ function OrganizationWorkspaceContent() {
                         onClick={() => {
                           respondInternationalInquiry(
                             inq.id,
-                            "Tổ chức W05 đã tiếp nhận RFQ và chuyển tổ kiểm định MSVT rà soát.",
+                            "Ban chủ nhiệm đã tiếp nhận RFQ và chuyển tổ kiểm định MSVT rà soát.",
                           );
                           notifySuccess(`${inq.id}: ${isEn ? "Reply recorded" : "Đã phản hồi RFQ"}`);
                         }}

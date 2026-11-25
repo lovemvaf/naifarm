@@ -1,4 +1,4 @@
-/* Hallmark: Modern Agricultural Editorial | Warm Rice + Forest Green, Restrained Craft */
+/* NaiFarm V9 Design System: Warm Rice Cream + Dong Nai Forest Green + Harvest Gold */
 @import "tailwindcss";
 
 :root {
@@ -7,10 +7,12 @@
   --surface-soft: #EAF0E5;
   --surface-warm: #EFECE0;
   --primary: #245B3D;
+  --primary-deep: #183D2A;
   --primary-hover: #19472E;
   --primary-foreground: #FFFFFF;
   --leaf: #6C9C5B;
   --accent-gold: #D7A34D;
+  --price-crimson: #A52C22;
   --on-accent: #25352B;
   --ink: #25352B;
   --muted: #52645A;
@@ -25,6 +27,9 @@
   --danger-bg: #FDECEC;
   --info: #245B78;
   --info-bg: #E8F2F8;
+
+  --container-public: 1280px;
+  --container-workspace: 1360px;
 
   --shadow-card: 0 2px 8px rgba(37, 53, 43, 0.06);
   --shadow-raised: 0 8px 24px rgba(37, 53, 43, 0.12);
@@ -47,12 +52,12 @@
   --color-accent: var(--accent-gold);
   --color-muted: var(--muted);
   --color-border: var(--border);
-  --font-sans: var(--font-be-vietnam-pro), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-serif: var(--font-lora), Georgia, Cambria, serif;
+  --font-sans: var(--font-be-vietnam-pro), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: var(--font-lora), Georgia, Cambria, "Times New Roman", serif;
 }
 
 html {
-  overflow-x: clip;
+  scroll-padding-top: 88px;
   scrollbar-gutter: stable;
   scrollbar-color: var(--leaf) var(--bg-rice);
 }
@@ -74,16 +79,29 @@ html {
 
 .vn-flag-wave {
   transform-origin: left center;
-  animation: vnFlagWave 3.4s ease-in-out infinite;
+  animation: vnFlagWave 3.2s ease-in-out 1 both;
+}
+
+@keyframes heroFadeIn {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.v9-hero-fade {
+  animation: heroFadeIn 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 body {
-  overflow-x: clip;
   background-color: var(--bg-rice);
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.6;
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -92,12 +110,14 @@ body {
   color: var(--primary-foreground);
 }
 
+/* Use individual CSS scale property so transform: translate(...) on positioned elements is never clobbered */
 :where(a, button):active {
-  transform: scale(0.985);
+  scale: 0.985;
 }
 
 .font-editorial {
   font-family: var(--font-serif);
+  letter-spacing: -0.012em;
 }
 
 .tabular-nums {
@@ -106,7 +126,7 @@ body {
 
 /* Instant accessible focus ring on every interactive surface */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid var(--focus);
+  outline: 2.5px solid var(--accent-gold);
   outline-offset: 2px;
   transition: none;
 }
@@ -116,7 +136,7 @@ body {
   min-width: 0;
 }
 
-/* Editorial display wrapping safety */
+/* Vietnamese diacritic-safe heading wrapping */
 h1,
 h2,
 h3 {
@@ -127,6 +147,13 @@ h3 {
 
 p {
   text-wrap: pretty;
+}
+
+/* Clean custom thin scrollbars for internal horizontal tables/tabs */
+.nf-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 @media (prefers-reduced-motion: reduce) {

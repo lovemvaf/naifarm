@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, ChevronRight, Pause, Play, Sparkles } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { useLocale } from "@/context/LocaleContext";
 import { formatCountdownRemaining, formatVnDate } from "@/lib/clock/vn-clock";
@@ -39,33 +39,23 @@ export function CulturalCampaignBanner() {
   const isEn = locale === "en";
   const { campaigns, activeClockIso } = useDemoStore();
   const [slideIdx, setSlideIdx] = useState(0);
-  const [paused, setPaused] = useState(false);
 
-  const evaluated = campaigns
-    .map((c) => ({
-      campaign: c,
-      runtime: resolveCampaignRuntimeState(c, activeClockIso),
-    }))
-    .filter((item) => item.runtime !== "paused_or_draft");
-
-  const activeItem = evaluated.find((e) => e.runtime === "active") ?? evaluated[1] ?? evaluated[0];
-  const upcomingItem = evaluated.find((e) => e.runtime === "upcoming");
-  const recapItem = evaluated.find((e) => e.runtime === "recap");
-
-  const slides = [activeItem, upcomingItem, recapItem].filter(
-    (s): s is NonNullable<typeof activeItem> => Boolean(s),
-  );
-
-  useEffect(() => {
-    if (slides.length <= 1 || paused) return;
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
-    }
-    const timer = window.setInterval(() => {
-      setSlideIdx((prev) => (prev + 1) % slides.length);
-    }, 6500);
-    return () => window.clearInterval(timer);
-  }, [slides.length, paused]);
+  const slides = useMemo(() => {
+    const evaluated = campaigns
+      .map((c) => ({
+        campaign: c,
+        runtime: resolveCampaignRuntimeState(c, activeClockIso),
+      }))
+      .filter((item) => item.runtime !== "paused_or_draft");
+    const order: Record<string, number> = { active: 0, upcoming: 1, recap: 2 };
+    evaluated.sort((a, b) => (order[a.runtime] ?? 9) - (order[b.runtime] ?? 9));
+    const seen = new Set<string>();
+    return evaluated.filter((item) => {
+      if (seen.has(item.campaign.id)) return false;
+      seen.add(item.campaign.id);
+      return true;
+    });
+  }, [campaigns, activeClockIso]);
 
   if (slides.length === 0) return null;
 
@@ -84,15 +74,7 @@ export function CulturalCampaignBanner() {
   const isRecap = runtime === "recap";
 
   return (
-    <section
-      aria-label={t.events.tabCampaigns}
-      aria-roledescription="carousel"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
-      className="space-y-3"
-    >
+    <section aria-label={t.events.tabCampaigns} className="space-y-3">
       <Card
         className={cn(
           "min-h-[168px] overflow-hidden border-[#D6DED2] transition-colors",
@@ -166,7 +148,7 @@ export function CulturalCampaignBanner() {
                       }
                       aria-current={i === safeIdx ? "true" : undefined}
                       className={cn(
-                        "h-2.5 rounded-full transition-all cursor-pointer",
+                        "h-2.5 rounded-full transition-[width,background-color] cursor-pointer",
                         i === safeIdx ? "w-6 bg-[#D7A34D]" : "w-2.5 bg-white/45 hover:bg-white/75",
                       )}
                     />
@@ -179,18 +161,6 @@ export function CulturalCampaignBanner() {
                   className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white hover:bg-white/25 cursor-pointer"
                 >
                   <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPaused((p) => !p)}
-                  aria-label={paused ? (isEn ? "Resume autoplay" : "Tiếp tục chuyển") : isEn ? "Pause carousel" : "Tạm dừng chuyển"}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white hover:bg-white/25 cursor-pointer"
-                >
-                  {paused ? (
-                    <Play className="h-3.5 w-3.5" aria-hidden="true" />
-                  ) : (
-                    <Pause className="h-3.5 w-3.5" aria-hidden="true" />
-                  )}
                 </button>
               </div>
             ) : null}

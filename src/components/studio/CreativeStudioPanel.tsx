@@ -618,18 +618,21 @@ export function CreativeStudioPanel({
               </span>
               <input
                 type="text"
+                aria-label={isEn ? "Storyboard beat 1" : "Ý chính kịch bản 1"}
                 value={line1}
                 onChange={(e) => setLine1(e.target.value)}
                 className="min-h-[38px] w-full rounded-xl border border-[#D6DED2] bg-white px-3 text-xs text-[#25352B]"
               />
               <input
                 type="text"
+                aria-label={isEn ? "Storyboard beat 2" : "Ý chính kịch bản 2"}
                 value={line2}
                 onChange={(e) => setLine2(e.target.value)}
                 className="min-h-[38px] w-full rounded-xl border border-[#D6DED2] bg-white px-3 text-xs text-[#25352B]"
               />
               <input
                 type="text"
+                aria-label={isEn ? "Storyboard beat 3" : "Ý chính kịch bản 3"}
                 value={line3}
                 onChange={(e) => setLine3(e.target.value)}
                 className="min-h-[38px] w-full rounded-xl border border-[#D6DED2] bg-white px-3 text-xs text-[#25352B]"

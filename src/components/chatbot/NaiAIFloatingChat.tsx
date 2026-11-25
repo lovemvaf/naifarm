@@ -3,11 +3,19 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, MessageSquare, RotateCcw, Send, Sparkles, X } from "lucide-react";
+import {
+  ArrowRight,
+  MessageSquare,
+  Minimize2,
+  RotateCcw,
+  Send,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { useLocale } from "@/context/LocaleContext";
 import { localizeProductName, localizeUnit } from "@/lib/i18n/domain-en";
-import { formatVnd } from "@/lib/format";
+import { cn, formatVnd } from "@/lib/format";
 import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
 import { runGlobalSearch } from "@/lib/search/search-engine";
 import { AI_WORKSPACE_CONFIG } from "@/data/demo/ai-scripts";
@@ -21,6 +29,10 @@ interface ChatMessage {
   linkHref?: string;
   productSlug?: string;
 }
+
+const FLOAT_DRAFT_KEY = "naiai-floating-draft-v9";
+const FLOAT_OPEN_KEY = "naiai-floating-open-v9";
+const FLOAT_MSGS_KEY = "naiai-floating-msgs-v9";
 
 function inferWorkspaceFromPath(pathname: string, fallback: WorkspaceId): WorkspaceId {
   if (pathname.startsWith("/farmer")) return "W02";
@@ -61,10 +73,53 @@ export function NaiAIFloatingChat() {
   } = useDemoStore();
 
   const [open, setOpen] = useState(false);
+  const [minimized, setMinimized] = useState(false);
   const [input, setInput] = useState("");
   const [messagesByKey, setMessagesByKey] = useState<Record<string, ChatMessage[]>>({});
   const msgSeqRef = useRef(0);
   const launcherRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    try {
+      const savedDraft = sessionStorage.getItem(FLOAT_DRAFT_KEY);
+      if (savedDraft) requestAnimationFrame(() => setInput(savedDraft));
+      const savedOpen = sessionStorage.getItem(FLOAT_OPEN_KEY);
+      if (savedOpen === "1") requestAnimationFrame(() => setOpen(true));
+      const savedMsgs = sessionStorage.getItem(FLOAT_MSGS_KEY);
+      if (savedMsgs) {
+        const parsed = JSON.parse(savedMsgs) as Record<string, ChatMessage[]>;
+        requestAnimationFrame(() => setMessagesByKey(parsed));
+      }
+    } catch {
+      // Ignore storage error
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(FLOAT_DRAFT_KEY, input);
+    } catch {
+      // Ignore
+    }
+  }, [input]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(FLOAT_OPEN_KEY, open ? "1" : "0");
+    } catch {
+      // Ignore
+    }
+  }, [open]);
+
+  useEffect(() => {
+    try {
+      if (Object.keys(messagesByKey).length > 0) {
+        sessionStorage.setItem(FLOAT_MSGS_KEY, JSON.stringify(messagesByKey));
+      }
+    } catch {
+      // Ignore
+    }
+  }, [messagesByKey]);
 
   const effectiveWs = inferWorkspaceFromPath(pathname, activeWorkspace);
   const stateKey = `${effectiveWs}:${locale}`;
@@ -77,13 +132,15 @@ export function NaiAIFloatingChat() {
   const messages: ChatMessage[] = messagesByKey[stateKey] ?? [defaultGreeting];
 
   // Auto-hide on homepage (rendered via NaiFarmHomeChat), checkout, or active recording subflows
-  const suppressedByRoute = pathname === "/" || pathname.startsWith("/checkout") || hideAiChatOnSubflow;
+  const suppressedByRoute =
+    pathname === "/" || pathname.startsWith("/checkout") || hideAiChatOnSubflow;
 
   useEffect(() => {
     if (!open || suppressedByRoute) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setOpen(false);
+        setMinimized(false);
         launcherRef.current?.focus();
       }
     };
@@ -109,7 +166,6 @@ export function NaiAIFloatingChat() {
     msgSeqRef.current += 1;
     const seq = msgSeqRef.current;
 
-    // Safeguarding rule for minor accounts or unsafe medical/official certification prompts
     const asksRestrictedAlcohol =
       q.includes("rượu") || q.includes("wine") || q.includes("bia") || q.includes("alcohol");
     const asksSensitiveSafety =
@@ -143,7 +199,6 @@ export function NaiAIFloatingChat() {
         linkHref: "/quality",
       };
     } else {
-      // 1. Check workspace prompt chips (exact VI/EN match or close topic match)
       const matchedChip = wsConfig.chips.find((c) => {
         const pVi = c.prompt.toLowerCase();
         const pEn = c.promptEn.toLowerCase();
@@ -155,12 +210,13 @@ export function NaiAIFloatingChat() {
           id: `ai-${seq}`,
           sender: "ai",
           text: isEn ? matchedChip.replyEn : matchedChip.reply,
-          linkLabel: isEn ? matchedChip.linkLabelEn ?? matchedChip.linkLabel : matchedChip.linkLabel,
+          linkLabel: isEn
+            ? matchedChip.linkLabelEn ?? matchedChip.linkLabel
+            : matchedChip.linkLabel,
           linkHref: matchedChip.linkHref,
           productSlug: matchedChip.productSlug,
         };
       } else {
-        // 2. Run real Fuse.js local search across products, farms, batches, lessons, tours, missions, campaigns
         const safeProducts = isMinorAccount ? products.filter((p) => !p.adultOnly) : products;
         const searchHits = runGlobalSearch(
           trimmed,
@@ -237,164 +293,214 @@ export function NaiAIFloatingChat() {
     setInput("");
   };
 
+  const isPdpRoute = pathname.startsWith("/products/");
+
   return (
-    <div className="fixed right-4 bottom-20 z-40 lg:right-6 lg:bottom-6">
+    <div
+      className={cn(
+        "pointer-events-none fixed right-3 z-40 sm:right-5 md:bottom-5",
+        isPdpRoute
+          ? "bottom-[calc(8.6rem+env(safe-area-inset-bottom))]"
+          : "bottom-[calc(4.6rem+env(safe-area-inset-bottom))]",
+      )}
+    >
       {!open ? (
         <button
           ref={launcherRef}
           type="button"
-          onClick={() => setOpen(true)}
+          data-naiai-launcher="floating"
+          onClick={() => {
+            setOpen(true);
+            setMinimized(false);
+          }}
           aria-label={t.ai.launcherLabel}
-          className="group flex h-14 w-14 items-center justify-center rounded-full bg-[#245B3D] text-white shadow-[0_8px_24px_rgba(37,53,43,0.22)] transition-transform duration-150 hover:scale-105 hover:bg-[#19472E] cursor-pointer"
+          className="pointer-events-auto group flex h-13 w-13 cursor-pointer items-center justify-center rounded-full bg-[#245B3D] text-white shadow-[0_8px_24px_rgba(24,61,42,0.24)] transition-transform duration-150 hover:scale-105 hover:bg-[#183D2A] md:h-14 md:w-14"
         >
-          <Sparkles className="h-6 w-6" aria-hidden="true" strokeWidth={1.75} />
+          <Sparkles className="h-5 w-5 md:h-6 md:w-6" aria-hidden="true" strokeWidth={1.75} />
         </button>
       ) : (
-        <section
-          role="dialog"
+        /* STRICTLY NON-MODAL FLOATING PANEL (role="region", NO backdrop, NO scroll lock) */
+        <aside
+          role="region"
+          data-naiai-panel="floating"
           aria-label={t.ai.panelTitle}
-          className="flex max-h-[85dvh] w-[calc(100vw-2rem)] max-w-[390px] flex-col overflow-hidden rounded-[18px] border border-[#D6DED2] bg-white shadow-[0_16px_48px_rgba(37,53,43,0.22)] lg:max-h-[540px]"
+          className={cn(
+            "pointer-events-auto flex flex-col overflow-hidden rounded-[18px] border border-[#D6DED2] bg-white shadow-[0_14px_42px_rgba(24,61,42,0.22)] transition-[height,width] duration-200",
+            minimized
+              ? "h-[52px] w-[min(276px,calc(100vw-24px))]"
+              : "max-h-[min(510px,62dvh)] w-[min(368px,calc(100vw-24px))] md:max-h-[min(530px,calc(100dvh-110px))]",
+          )}
         >
-          <header className="flex items-center justify-between gap-2 bg-[#245B3D] px-4 py-3 text-white">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15">
-                <MessageSquare className="h-5 w-5" aria-hidden="true" />
+          <header className="flex shrink-0 items-center justify-between gap-2 bg-[#183D2A] px-3.5 py-2.5 text-white">
+            <button
+              type="button"
+              onClick={() => minimized && setMinimized(false)}
+              className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
+            >
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15">
+                <MessageSquare className="h-4 w-4" aria-hidden="true" />
               </div>
               <div className="min-w-0">
-                <h2 className="truncate text-sm font-bold leading-tight">{t.ai.panelTitle}</h2>
-                <p className="truncate text-[11px] text-[#EAF0E5]">
-                  {isEn ? "Local data search · No external API" : "Tra cứu dữ liệu thật · Không gọi API ngoài"}
-                </p>
+                <h2 className="truncate text-[13px] leading-tight font-bold">{t.ai.panelTitle}</h2>
+                {!minimized ? (
+                  <p className="truncate text-[10.5px] text-[#EAF0E5]">
+                    {isEn ? "Non-blocking local search" : "Tra cứu song song · Không khóa trang"}
+                  </p>
+                ) : null}
               </div>
-            </div>
-            <div className="flex shrink-0 items-center gap-1">
+            </button>
+            <div className="flex shrink-0 items-center gap-0.5">
+              {!minimized ? (
+                <button
+                  type="button"
+                  onClick={handleClearChat}
+                  aria-label={isEn ? "Clear conversation" : "Xóa cuộc trò chuyện"}
+                  title={isEn ? "Clear chat" : "Xóa hội thoại"}
+                  className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg hover:bg-white/15"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              ) : null}
               <button
                 type="button"
-                onClick={handleClearChat}
-                aria-label={isEn ? "Clear conversation" : "Xóa cuộc trò chuyện"}
-                title={isEn ? "Clear chat" : "Xóa hội thoại"}
-                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/15 cursor-pointer"
+                onClick={() => setMinimized((m) => !m)}
+                aria-label={
+                  minimized
+                    ? isEn
+                      ? "Restore assistant"
+                      : "Mở lại trợ lý"
+                    : isEn
+                    ? "Minimize assistant"
+                    : "Thu gọn trợ lý"
+                }
+                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg hover:bg-white/15"
               >
-                <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
               <button
                 type="button"
                 onClick={() => {
                   setOpen(false);
+                  setMinimized(false);
                   launcherRef.current?.focus();
                 }}
                 aria-label={t.nav.closeButton}
-                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/15 cursor-pointer"
+                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg hover:bg-white/15"
               >
-                <X className="h-5 w-5" aria-hidden="true" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </header>
 
-          <div className="border-b border-[#D6DED2] bg-[#EAF0E5]/60 px-3 py-2 text-[11px] text-[#52645A]">
-            {isMinorAccount ? t.ai.minorRestrictedNotice : t.ai.localNotice}
-          </div>
+          {!minimized ? (
+            <>
+              <div className="border-b border-[#D6DED2] bg-[#EAF0E5]/60 px-3 py-1.5 text-[11px] text-[#52645A]">
+                {isMinorAccount ? t.ai.minorRestrictedNotice : t.ai.localNotice}
+              </div>
 
-          <div className="flex-1 space-y-3 overflow-y-auto p-3.5">
-            {messages.map((m) => {
-              const linkedProd =
-                m.productSlug && (!isMinorAccount || !products.find((p) => p.slug === m.productSlug)?.adultOnly)
-                  ? products.find((p) => p.slug === m.productSlug)
-                  : undefined;
-              return (
-                <div
-                  key={m.id}
-                  className={m.sender === "user" ? "flex justify-end" : "flex justify-start"}
-                >
-                  <div
-                    className={
-                      m.sender === "user"
-                        ? "max-w-[85%] rounded-[14px] rounded-br-xs bg-[#245B3D] px-3.5 py-2.5 text-sm text-white"
-                        : "max-w-[90%] space-y-2 rounded-[14px] rounded-bl-xs border border-[#D6DED2] bg-[#F5F3E9] px-3.5 py-2.5 text-sm text-[#25352B]"
-                    }
-                  >
-                    <p>{m.text}</p>
-                    {linkedProd ? (
-                      <Link
-                        href={buildLocalizedHref(`/products/${linkedProd.slug}`, locale)}
-                        onClick={() => setOpen(false)}
-                        className="flex items-center gap-2.5 rounded-[10px] border border-[#D6DED2] bg-white p-2 hover:bg-[#EAF0E5]"
+              <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
+                {messages.map((m) => {
+                  const linkedProd =
+                    m.productSlug &&
+                    (!isMinorAccount ||
+                      !products.find((p) => p.slug === m.productSlug)?.adultOnly)
+                      ? products.find((p) => p.slug === m.productSlug)
+                      : undefined;
+                  return (
+                    <div
+                      key={m.id}
+                      className={m.sender === "user" ? "flex justify-end" : "flex justify-start"}
+                    >
+                      <div
+                        className={
+                          m.sender === "user"
+                            ? "max-w-[85%] rounded-[14px] rounded-br-xs bg-[#245B3D] px-3 py-2 text-[13px] text-white"
+                            : "max-w-[90%] space-y-2 rounded-[14px] rounded-bl-xs border border-[#D6DED2] bg-[#F5F3E9] px-3 py-2 text-[13px] text-[#25352B]"
+                        }
                       >
-                        <img
-                          src={linkedProd.image}
-                          alt={localizeProductName(linkedProd, locale)}
-                          className="h-11 w-11 rounded-lg object-cover"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-bold text-[#25352B]">
-                            {localizeProductName(linkedProd, locale)}
-                          </p>
-                          <p className="text-xs font-semibold text-[#245B3D]">
-                            {formatVnd(linkedProd.priceVnd, locale)}/{localizeUnit(linkedProd.unitLabel, locale)}
-                          </p>
-                        </div>
-                        <ArrowRight className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
-                      </Link>
-                    ) : m.linkHref && m.linkLabel ? (
-                      <Link
-                        href={buildLocalizedHref(m.linkHref, locale)}
-                        onClick={() => setOpen(false)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#245B3D] underline"
+                        <p>{m.text}</p>
+                        {linkedProd ? (
+                          <Link
+                            href={buildLocalizedHref(`/products/${linkedProd.slug}`, locale)}
+                            className="flex items-center gap-2 rounded-[10px] border border-[#D6DED2] bg-white p-2 hover:bg-[#EAF0E5]"
+                          >
+                            <img
+                              src={linkedProd.image}
+                              alt={localizeProductName(linkedProd, locale)}
+                              className="h-10 w-10 rounded-lg object-cover"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-xs font-bold text-[#25352B]">
+                                {localizeProductName(linkedProd, locale)}
+                              </p>
+                              <p className="text-xs font-semibold text-[#A52C22]">
+                                {formatVnd(linkedProd.priceVnd, locale)}/
+                                {localizeUnit(linkedProd.unitLabel, locale)}
+                              </p>
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
+                          </Link>
+                        ) : m.linkHref && m.linkLabel ? (
+                          <Link
+                            href={buildLocalizedHref(m.linkHref, locale)}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-[#245B3D] underline"
+                          >
+                            <span>{m.linkLabel}</span>
+                            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                          </Link>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="border-t border-[#D6DED2] bg-[#F5F3E9]/70 px-3 py-2">
+                <div className="mb-1.5 flex flex-wrap gap-1.5">
+                  {wsConfig.chips.map((chip) => {
+                    const chipPrompt = isEn ? chip.promptEn : chip.prompt;
+                    return (
+                      <button
+                        key={chip.prompt}
+                        type="button"
+                        onClick={() => handleAsk(chipPrompt)}
+                        className="cursor-pointer rounded-full border border-[#D6DED2] bg-white px-2.5 py-1 text-[11px] font-medium text-[#245B3D] hover:bg-[#EAF0E5]"
                       >
-                        <span>{m.linkLabel}</span>
-                        <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                      </Link>
-                    ) : null}
-                  </div>
+                        {chipPrompt}
+                      </button>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
-
-          <div className="border-t border-[#D6DED2] bg-[#F5F3E9]/70 px-3 py-2">
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              {wsConfig.chips.map((chip) => {
-                const chipPrompt = isEn ? chip.promptEn : chip.prompt;
-                return (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleAsk(input);
+                  }}
+                  className="flex items-center gap-1.5"
+                >
+                  <label htmlFor="naiai-input" className="sr-only">
+                    {t.ai.launcherLabel}
+                  </label>
+                  <input
+                    id="naiai-input"
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder={t.ai.inputPlaceholder}
+                    className="min-h-[38px] flex-1 rounded-[10px] border border-[#788A7B] bg-white px-2.5 text-sm text-[#25352B]"
+                  />
                   <button
-                    key={chip.prompt}
-                    type="button"
-                    onClick={() => handleAsk(chipPrompt)}
-                    className="rounded-full border border-[#D6DED2] bg-white px-2.5 py-1 text-xs font-medium text-[#245B3D] hover:bg-[#EAF0E5] cursor-pointer"
+                    type="submit"
+                    aria-label={t.ai.sendBtn}
+                    className="flex h-[38px] w-[38px] shrink-0 cursor-pointer items-center justify-center rounded-[10px] bg-[#245B3D] text-white hover:bg-[#183D2A]"
                   >
-                    {chipPrompt}
+                    <Send className="h-4 w-4" aria-hidden="true" />
                   </button>
-                );
-              })}
-            </div>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleAsk(input);
-              }}
-              className="flex items-center gap-2"
-            >
-              <label htmlFor="naiai-input" className="sr-only">
-                {t.ai.launcherLabel}
-              </label>
-              <input
-                id="naiai-input"
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={t.ai.inputPlaceholder}
-                className="min-h-[42px] flex-1 rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm text-[#25352B]"
-              />
-              <button
-                type="submit"
-                aria-label={t.ai.sendBtn}
-                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[10px] bg-[#245B3D] text-white hover:bg-[#19472E] cursor-pointer"
-              >
-                <Send className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </form>
-          </div>
-        </section>
+                </form>
+              </div>
+            </>
+          ) : null}
+        </aside>
       )}
     </div>
   );

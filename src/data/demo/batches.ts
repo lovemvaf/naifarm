@@ -111,7 +111,7 @@ const GOLDEN_BATCHES: TraceBatch[] = [
         detail: "Chú Ba Minh bao trái bằng túi lưới thoáng khí tại liếp A3.",
         actorCategory: "Chủ vườn Ba Minh",
         sourceDeclaration: "Nhà vườn tự khai",
-        photo: "/images/stitch/stitch-28.jpg",
+        photo: "/images/stitch/stitch-31.jpg",
         visibility: "public",
         eventType: "care",
       },

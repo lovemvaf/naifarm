@@ -14,6 +14,15 @@ import { localizeAdminUnitName } from "@/lib/i18n/domain-en";
 import { Badge, Card, DemoBanner } from "@/components/ui/Primitives";
 import type { WorkspaceId } from "@/types/naifarm";
 
+const WORKSPACE_NAMES: Record<WorkspaceId, { vi: string; en: string }> = {
+  W01: { vi: "Khách mua", en: "Buyer" },
+  W02: { vi: "Nhà vườn & HTX", en: "Orchard" },
+  W03: { vi: "Thanh niên Tình nguyện", en: "Youth Volunteer" },
+  W04: { vi: "Điều phối cộng đồng", en: "Coordinator" },
+  W05: { vi: "Tổ chức & Đối tác", en: "Organization" },
+  W06: { vi: "Quản trị vận hành", en: "Governance" },
+};
+
 const WORKSPACE_HOME: Record<WorkspaceId, string> = {
   W01: "/account",
   W02: "/farmer",
@@ -178,8 +187,8 @@ export default function SignInPage() {
                   }
                 >
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="flex min-w-0 items-center gap-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 flex-1 items-center gap-2.5">
                         <span
                           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                           style={{ backgroundColor: acc.avatarBg }}
@@ -193,11 +202,13 @@ export default function SignInPage() {
                           </p>
                         </div>
                       </div>
-                      {!acc.canPublicSignUp ? (
-                        <Badge tone="warning">{isEn ? "Scoped role" : "Phân quyền nội bộ"}</Badge>
-                      ) : (
-                        <Badge tone="success">{isEn ? "Standard" : "Phổ thông"}</Badge>
-                      )}
+                      <span className="shrink-0">
+                        {!acc.canPublicSignUp ? (
+                          <Badge tone="warning">{isEn ? "Scoped role" : "Phân quyền nội bộ"}</Badge>
+                        ) : (
+                          <Badge tone="success">{isEn ? "Standard" : "Phổ thông"}</Badge>
+                        )}
+                      </span>
                     </div>
                     <p className="mt-2.5 text-xs leading-relaxed text-[#52645A]">
                       {isEn && acc.bioEn ? acc.bioEn : acc.bio}
@@ -351,14 +362,16 @@ export default function SignInPage() {
               >
                 <div>
                   <div className="flex items-center justify-between gap-1.5">
-                    <Badge tone={acc.isMinor ? "warning" : "neutral"}>{acc.workspaceId}</Badge>
-                    <span className="font-mono text-[11px] text-[#52645A]">
-                      {acc.bundleId ?? "role"}
+                    <Badge tone={acc.isMinor ? "warning" : "neutral"}>
+                      {isEn ? WORKSPACE_NAMES[acc.workspaceId].en : WORKSPACE_NAMES[acc.workspaceId].vi}
+                    </Badge>
+                    <span className="text-[11px] font-medium text-[#52645A]">
+                      {acc.isMinor ? (isEn ? "Supervised <18" : "Bảo vệ <18 tuổi") : localizeAdminUnitName(acc.unitName, undefined, locale)}
                     </span>
                   </div>
                   <p className="mt-1.5 font-bold text-[#25352B]">{acc.name}</p>
                   <p className="font-semibold text-[#245B3D]">
-                    {isEn && acc.roleLabelEn ? acc.roleLabelEn : acc.roleLabel}
+                    {stripWorkspaceCodePrefix(isEn && acc.roleLabelEn ? acc.roleLabelEn : acc.roleLabel)}
                   </p>
                   <p className="mt-1 text-[11px] text-[#52645A]">
                     {isEn && acc.bioEn ? acc.bioEn : acc.bio}

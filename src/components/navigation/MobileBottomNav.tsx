@@ -77,7 +77,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label={t.nav.mobileNavAria}
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-[#D6DED2] bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-[#D6DED2] bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden"
     >
       <div
         className="mx-auto grid max-w-md"
@@ -91,7 +91,7 @@ export function MobileBottomNav() {
               key={item.href}
               href={buildLocalizedHref(item.href, locale)}
               className={cn(
-                "relative flex min-h-[58px] flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-semibold whitespace-nowrap",
+                "relative flex min-h-[58px] min-w-0 flex-col items-center justify-center gap-0.5 px-0.5 text-[10px] font-semibold whitespace-nowrap min-[360px]:px-1 min-[360px]:text-[11px]",
                 active ? "text-[#245B3D]" : "text-[#52645A]",
               )}
             >
@@ -103,7 +103,7 @@ export function MobileBottomNav() {
                   </span>
                 ) : null}
               </div>
-              <span>{item.label}</span>
+              <span className="max-w-full truncate">{item.label}</span>
             </Link>
           );
         })}

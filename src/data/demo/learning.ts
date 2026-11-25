@@ -58,7 +58,7 @@ export const INITIAL_LESSONS: LearningLesson[] = [
       {
         heading: "1. Vai trò lớp cùi trắng và túi tinh dầu vỏ ngoài",
         body: "Lớp cùi xốp tự nhiên đóng vai trò giảm chấn khi vận chuyển; tinh dầu vỏ xanh giúp trái giữ tươi nhiều ngày sau cắt.",
-        image: "/images/stitch/stitch-24.jpg",
+        image: "/images/stitch/stitch-03.jpg",
       },
       {
         heading: "2. Tái chế phụ phẩm vỏ bưởi thành giá trị mới",
@@ -420,7 +420,7 @@ export const INITIAL_LESSONS: LearningLesson[] = [
     summaryEn:
       "Practice quoting clear VND unit prices, confirming weight quantities, and explaining local delivery vs orchard pickup.",
     learningObjectiveEn: "Quote exact fixture prices in English and calculate simple multi-kilogram totals.",
-    image: "/images/stitch/stitch-24.jpg",
+    image: "/images/stitch/stitch-03.jpg",
     anatomyTarget: "pomelo",
     sections: [
       {
@@ -660,7 +660,7 @@ export const INITIAL_LESSONS: LearningLesson[] = [
         headingEn: "1. Multi-Angle Preparation & QR Verification",
         body: "Kết thúc buổi giới thiệu bằng lời tri ân: 'Thank you for supporting local farmers.' và hướng dẫn xem lại giỏ hàng minh bạch.",
         bodyEn: "Keep replay vs scheduled states honest and close with 'Thank you for supporting local farmers.'",
-        image: "/images/stitch/stitch-46.jpg",
+        image: "/images/stitch/stitch-25.jpg",
       },
     ],
     quizQuestion: {
@@ -700,7 +700,7 @@ export const INITIAL_LESSONS: LearningLesson[] = [
         headingEn: "1. Respecting Verified Observances & Avoiding Greenwashing",
         body: "23/11 là Ngày Di sản văn hóa Việt Nam (QĐ 36/2005/QĐ-TTg), 24/11 là Ngày Văn hóa Việt Nam (QĐ 1111/QĐ-TTg), 05/12 là Ngày Quốc tế Tình nguyện & Ngày Đất thế giới (UN/FAO). Khi giảm thất thoát trái chín nhanh qua NaiRescue, nêu rõ khối lượng thực tế và hạn dùng.",
         bodyEn: "Use verified dates only and communicate food rescue freshness honestly without exaggerated sustainability claims.",
-        image: "/images/stitch/stitch-46.jpg",
+        image: "/images/stitch/stitch-25.jpg",
       },
     ],
     quizQuestion: {

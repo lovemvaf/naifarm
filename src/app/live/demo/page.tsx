@@ -62,43 +62,43 @@ export default function LiveStoryRoomPage() {
 
   const roleHeaderCopy = isFarmerRole
     ? {
-        badge: "W02 · Nhà nông phát sóng tại vườn",
+        badge: "Nhà nông phát sóng tại vườn",
         title: "Livestream Giới thiệu Vườn & Ghim Nông sản",
         subtitle:
           "Chú tạo lịch phát trực tiếp từ vườn, chọn sản phẩm đang có hàng và mời thanh niên hỗ trợ kỹ thuật.",
         ctaLabel: "Tạo phiên Livestream tại vườn",
-        formHeading: "Lên lịch phiên Livestream của Nhà vườn (W02)",
+        formHeading: "Lên lịch phiên Livestream của Nhà vườn",
       }
     : isYouthRole
     ? {
-        badge: "W03 · Thanh niên Tình nguyện đồng hành phát sóng",
+        badge: "Thanh niên Tình nguyện đồng hành phát sóng",
         title: "Phòng OCOP Live Story — Hỗ trợ Nhà vườn lên sóng",
         subtitle:
           "Nhận lịch phát cùng bác nông dân, kiểm tra mã QR gắn trên giỏ hàng và đồng hành quay 3 góc vườn.",
-        ctaLabel: "Tạo lịch hỗ trợ Live cho vườn (W03)",
-        formHeading: "Lên lịch phiên đồng hành Livestream (TNV W03)",
+        ctaLabel: "Tạo lịch hỗ trợ Live cho vườn",
+        formHeading: "Lên lịch phiên đồng hành Livestream (TNV)",
       }
     : activeWorkspace === "W04"
     ? {
-        badge: "W04 · Điều phối lịch phát sóng cụm vườn",
+        badge: "Điều phối lịch phát sóng cụm vườn",
         title: "Giám sát & Điều phối Lịch OCOP Live Cơ sở",
         subtitle:
           "Theo dõi lịch phát sóng tại các nhà vườn trong đơn vị phụ trách và điều phối thanh niên đồng hành.",
-        ctaLabel: "Tạo lịch Live cụm vườn (W04)",
-        formHeading: "Tạo lịch Livestream điều phối cụm (W04)",
+        ctaLabel: "Tạo lịch Live cụm vườn",
+        formHeading: "Tạo lịch Livestream điều phối cụm",
       }
     : activeWorkspace === "W05"
     ? {
-        badge: "W05 · Hợp tác xã & Đối tác OCOP Live",
+        badge: "Hợp tác xã & Đối tác OCOP Live",
         title: "Phòng Giới thiệu Nông sản HTX & Phiên Live Chuyên đề",
         subtitle:
           "Lên lịch các buổi giới thiệu lô nông sản tập trung của xã viên HTX Tân Triều & Xuân Lộc.",
-        ctaLabel: "Tạo lịch phiên HTX (W05)",
-        formHeading: "Tạo lịch giới thiệu lô hàng HTX (W05)",
+        ctaLabel: "Tạo lịch phiên HTX",
+        formHeading: "Tạo lịch giới thiệu lô hàng HTX",
       }
     : activeWorkspace === "W06"
     ? {
-        badge: "W06 · Giám sát minh bạch nội dung Live (Chỉ đọc)",
+        badge: "Giám sát minh bạch nội dung Live (Chỉ đọc)",
         title: "Giám sát Trạng thái Phát sóng & Nhãn minh bạch",
         subtitle:
           "Kiểm tra các phiên phát lại minh họa, lịch dự kiến và liên kết lô truy xuất QR (không tạo/mua hàng ở quyền quản trị).",
@@ -550,10 +550,10 @@ export default function LiveStoryRoomPage() {
         : "/admin";
     const backLabel =
       activeWorkspace === "W04"
-        ? "Về Điều phối Cơ sở (W04)"
+        ? "Về Điều phối Cơ sở"
         : activeWorkspace === "W05"
-        ? "Về Không gian Tổ chức (W05)"
-        : "Về Quản trị Phân quyền (W06)";
+        ? "Về Không gian Tổ chức"
+        : "Về Quản trị Hệ thống";
     const BackIcon =
       activeWorkspace === "W04"
         ? ClipboardCheck

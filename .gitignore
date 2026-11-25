@@ -43,8 +43,13 @@ next-env.d.ts
 
 # local QA artifacts
 /.hallmark/
+/artifacts/
+NAIFARM_*.zip
 *.wav
 /scripts/.geo-cache/
 /local-media/
 /services/video-worker/data/
 *.sqlite*
+/qa-v9*
+/qa-v91*
+/docs/final-polish/

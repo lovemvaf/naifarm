@@ -43,10 +43,20 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
     let active = true;
     loadCmsFromIdb().then((stored) => {
       if (!active) return;
-      // Merge any new default block IDs without overwriting user edits
+      // Merge new defaults & upgrade untouched legacy V5 hero defaults without overwriting user edits
       const byId = new Map(stored.blocks.map((b) => [b.id, b]));
       for (const def of DEFAULT_CMS_BLOCKS) {
-        if (!byId.has(def.id)) byId.set(def.id, def);
+        const existing = byId.get(def.id);
+        if (!existing) {
+          byId.set(def.id, def);
+        } else if (
+          def.id === "hero.main" &&
+          existing.updatedBy === "Ban biên tập NaiFarm" &&
+          (existing.publishedViTitle === "Nông sản Đồng Nai — Minh bạch từ vườn" ||
+            existing.imageUrl === "/images/stitch/stitch-02.jpg")
+        ) {
+          byId.set(def.id, def);
+        }
       }
       setBlocks(Array.from(byId.values()));
       setRevisions(stored.revisions);

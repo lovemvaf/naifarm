@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { useCms } from "@/context/CmsContext";
 import { useLocale } from "@/context/LocaleContext";
+import { useSeasonalTheme } from "@/context/SeasonalThemeContext";
+import type { SeasonalThemeId } from "@/lib/seasonal/themes";
 import { ASSET_MANIFEST } from "@/data/reference/asset-manifest";
 import { validateUploadImageFile } from "@/lib/cms/idb-storage";
 import { cn } from "@/lib/format";
@@ -32,6 +34,15 @@ interface CmsManagerPanelProps {
 export function CmsManagerPanel({ scopeMode, actorName }: CmsManagerPanelProps) {
   const { locale } = useLocale();
   const isEn = locale === "en";
+  const {
+    activeTheme,
+    allThemes,
+    override,
+    isOverrideActive,
+    setPreviewTheme,
+    setDecorationsEnabled,
+    resetSeasonalOverride,
+  } = useSeasonalTheme();
   const {
     cmsReady,
     blocks,
@@ -202,6 +213,99 @@ export function CmsManagerPanel({ scopeMode, actorName }: CmsManagerPanelProps) 
         }
       />
 
+      {/* V9 Seasonal & Festival Decoration Engine Control (11 Themes, Preview, Toggle & Auto-Expiry) */}
+      {scopeMode !== "farmer" ? (
+        <Card className="space-y-3 border-[#245B3D]/30 bg-[#FAF8F1] p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-sm font-bold text-[#25352B]">
+                {isEn
+                  ? "Seasonal & Festival Theme Engine (11 Themes · Vietnam Calendar)"
+                  : "Hệ thống Giao diện Sự kiện & Mùa vụ (11 chủ đề · Lịch Việt Nam)"}
+              </p>
+              <p className="text-xs text-[#52645A]">
+                {isEn
+                  ? `Currently active: ${activeTheme.nameEn}${isOverrideActive ? " (Manual Preview Override)" : " (Auto Calendar)"}`
+                  : `Đang hiển thị: ${activeTheme.nameVi}${isOverrideActive ? " (Xem trước thủ công)" : " (Tự động theo lịch)"}`}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#D6DED2] bg-white px-3 py-1.5 text-xs font-semibold text-[#25352B]">
+                <input
+                  type="checkbox"
+                  checked={override.decorationsEnabled}
+                  onChange={(e) => setDecorationsEnabled(e.target.checked)}
+                  className="h-3.5 w-3.5 accent-[#245B3D]"
+                />
+                <span>{isEn ? "Seasonal ornaments" : "Trang trí mùa vụ"}</span>
+              </label>
+              {isOverrideActive ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    resetSeasonalOverride();
+                    notifySuccess(
+                      isEn
+                        ? "Restored automatic seasonal calendar resolution."
+                        : "Đã quay về chế độ tự động theo lịch sự kiện Việt Nam.",
+                    );
+                  }}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{isEn ? "Auto Calendar" : "Về lịch tự động"}</span>
+                </Button>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {allThemes.map((themeItem) => {
+              const selected = activeTheme.id === themeItem.id;
+              return (
+                <button
+                  key={themeItem.id}
+                  type="button"
+                  onClick={() => {
+                    const expires24h = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+                    setPreviewTheme(themeItem.id as SeasonalThemeId, expires24h);
+                    notifySuccess(
+                      isEn
+                        ? `Previewing "${themeItem.nameEn}" (24h local override).`
+                        : `Đang xem trước "${themeItem.nameVi}" (tự hoàn tác sau 24 giờ).`,
+                    );
+                  }}
+                  className={cn(
+                    "flex cursor-pointer flex-col items-start rounded-[12px] border p-2.5 text-left text-xs transition-colors",
+                    selected
+                      ? "border-[#245B3D] bg-[#EAF0E5] text-[#183D2A]"
+                      : "border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#F5F3E9]",
+                  )}
+                >
+                  <div className="flex w-full items-center justify-between gap-1">
+                    <span className="font-bold line-clamp-1">
+                      {isEn ? themeItem.nameEn : themeItem.nameVi}
+                    </span>
+                    <span
+                      className="h-3 w-3 shrink-0 rounded-full border border-black/10"
+                      style={{ backgroundColor: themeItem.accentTokens.heroTitleColor }}
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <span className="mt-1 text-[10.5px] text-[#52645A]">
+                    {themeItem.startAt
+                      ? `${themeItem.startAt.slice(5, 10)} → ${themeItem.endAt?.slice(5, 10)}`
+                      : isEn
+                      ? "Always / Manual"
+                      : "Mặc định / Thủ công"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+      ) : null}
+
       {/* Top Status & Export/Import Strip */}
       <Card className="flex flex-wrap items-center justify-between gap-3 p-4">
         <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -298,13 +402,13 @@ export function CmsManagerPanel({ scopeMode, actorName }: CmsManagerPanelProps) 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2 rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] p-3">
                 <p className="text-xs font-bold text-[#245B3D]">Tiếng Việt (VI)</p>
-                <input
-                  type="text"
+                <textarea
+                  rows={2}
                   value={viTitle}
                   onChange={(e) => setViTitle(e.target.value)}
                   aria-label="Tiêu đề Tiếng Việt"
                   placeholder="Tiêu đề hiển thị (VI)"
-                  className="min-h-[40px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-xs font-semibold"
+                  className="min-h-[40px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 py-2 text-xs font-semibold"
                 />
                 <textarea
                   rows={3}
@@ -318,13 +422,13 @@ export function CmsManagerPanel({ scopeMode, actorName }: CmsManagerPanelProps) 
 
               <div className="space-y-2 rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] p-3">
                 <p className="text-xs font-bold text-[#245B3D]">English (EN)</p>
-                <input
-                  type="text"
+                <textarea
+                  rows={2}
                   value={enTitle}
                   onChange={(e) => setEnTitle(e.target.value)}
                   aria-label="English title"
                   placeholder="Headline (EN)"
-                  className="min-h-[40px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-xs font-semibold"
+                  className="min-h-[40px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 py-2 text-xs font-semibold"
                 />
                 <textarea
                   rows={3}
@@ -466,7 +570,7 @@ export function CmsManagerPanel({ scopeMode, actorName }: CmsManagerPanelProps) 
             <div className="flex justify-center rounded-[14px] border border-[#D6DED2] bg-[#F5F3E9] p-4">
               <div
                 className={cn(
-                  "rounded-[14px] border border-[#D6DED2] bg-white p-4 shadow-sm transition-all",
+                  "rounded-[14px] border border-[#D6DED2] bg-white p-4 shadow-sm transition-[width]",
                   previewDevice === "mobile"
                     ? "w-[320px]"
                     : previewDevice === "tablet"
@@ -482,7 +586,7 @@ export function CmsManagerPanel({ scopeMode, actorName }: CmsManagerPanelProps) 
                     className="mb-3 h-32 w-full rounded-[10px] object-cover"
                   />
                 ) : null}
-                <h4 className="font-editorial text-lg font-bold text-[#25352B]">
+                <h4 className="whitespace-pre-line font-editorial text-lg font-bold text-[#25352B]">
                   {previewLocale === "en" ? enTitle : viTitle}
                 </h4>
                 <p className="mt-1 text-xs leading-relaxed text-[#52645A]">

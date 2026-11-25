@@ -165,7 +165,7 @@ export default function FavoritesAndComparePage() {
             description={isEn ? "Tap the heart button on any product card." : "Nhấn biểu tượng tim trên thẻ sản phẩm để lưu."}
           />
         ) : (
-          <div className="grid-safe grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid-safe grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {favProducts.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
@@ -182,7 +182,7 @@ export default function FavoritesAndComparePage() {
               {isEn ? `Recently Viewed (${recentProducts.length})` : `Sản phẩm đã xem gần đây (${recentProducts.length})`}
             </span>
           </h2>
-          <div className="grid-safe grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid-safe grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {recentProducts.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

@@ -626,7 +626,7 @@ export default function AdminWorkspacePage() {
                     size="sm"
                     variant="destructive"
                     onClick={() => {
-                      const res = holdOrRecallBatch(recallTargetBatch, "recalled", recallReason, "Admin W06");
+                      const res = holdOrRecallBatch(recallTargetBatch, "recalled", recallReason, "Quản trị Hệ thống");
                       notifyInfo(res.message);
                     }}
                   >
@@ -636,7 +636,7 @@ export default function AdminWorkspacePage() {
                     size="sm"
                     variant="secondary"
                     onClick={() => {
-                      const res = holdOrRecallBatch(recallTargetBatch, "active", "Đạt kiểm tra tái lưu hành", "Admin W06");
+                      const res = holdOrRecallBatch(recallTargetBatch, "active", "Đạt kiểm tra tái lưu hành", "Quản trị Hệ thống");
                       notifySuccess(res.message);
                     }}
                   >
@@ -658,11 +658,11 @@ export default function AdminWorkspacePage() {
               records={credentialRecords}
               roleMode="admin"
               onChangeStatus={(id, nextStatus, note) => {
-                updateCredentialLifecycle(id, nextStatus, note, "Quản trị Hệ thống W06");
+                updateCredentialLifecycle(id, nextStatus, note, "Quản trị Hệ thống");
                 notifySuccess(`Đã cập nhật trạng thái hồ sơ ${id}.`);
               }}
               onRenew={(id) => {
-                const created = renewCredentialRecord(id, "Quản trị Hệ thống W06");
+                const created = renewCredentialRecord(id, "Quản trị Hệ thống");
                 if (created) notifySuccess(`Đã tạo bản ghi gia hạn ${created.id}.`);
               }}
             />
@@ -905,7 +905,7 @@ export default function AdminWorkspacePage() {
                             size="sm"
                             variant="primary"
                             onClick={() => {
-                              const res = advanceCampaignStatus(c.id, "approved", "Quản trị viên W06");
+                              const res = advanceCampaignStatus(c.id, "approved", "Quản trị viên Hệ thống");
                               if (res.ok) notifySuccess(res.message);
                               else notifyError(res.message);
                             }}
@@ -918,7 +918,7 @@ export default function AdminWorkspacePage() {
                             size="sm"
                             variant="secondary"
                             onClick={() => {
-                              const res = advanceCampaignStatus(c.id, "paused", "Quản trị viên W06");
+                              const res = advanceCampaignStatus(c.id, "paused", "Quản trị viên Hệ thống");
                               if (res.ok) notifyInfo(res.message);
                               else notifyError(res.message);
                             }}
@@ -954,7 +954,7 @@ export default function AdminWorkspacePage() {
         {tab === "permissions" && authUser && authUser.workspaceId !== "W06" ? (
           <AccessDeniedCard
             title={t.workspaces.accessDeniedTitle}
-            reason={`${t.workspaces.accessDeniedBody} (${authUser.workspaceId} -> W06)`}
+            reason={t.workspaces.accessDeniedBody}
           />
         ) : null}
       </div>

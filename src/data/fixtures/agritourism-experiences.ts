@@ -112,7 +112,7 @@ const CORE_TOURS: TourPackage[] = [
     linkedProductIds: ["P06", "P07", "P11"],
     linkedLiveIds: ["NF-LIVE-REPLAY-TT"],
     image: "/images/stitch/stitch-21.jpg",
-    gallery: ["/images/stitch/stitch-19.jpg", "/images/stitch/stitch-20.jpg", "/images/stitch/stitch-24.jpg"],
+    gallery: ["/images/stitch/stitch-19.jpg", "/images/stitch/stitch-20.jpg", "/images/stitch/stitch-03.jpg"],
     ratingFixture: 4.9,
     reviewCountFixture: 18,
   },

@@ -138,7 +138,7 @@ export default function FarmDetailPage({ params }: { params: Promise<{ slug: str
         <h2 id="farm-products-heading" className="text-2xl font-bold text-[#25352B]">
           {isEn ? `Produce from ${farm.enName ?? farm.name}` : `Nông sản từ ${farm.name}`} ({farmProducts.length})
         </h2>
-        <div className="grid-safe grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid-safe grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {farmProducts.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

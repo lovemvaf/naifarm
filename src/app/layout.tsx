@@ -4,7 +4,9 @@ import { Toaster } from "sonner";
 import { DemoStoreProvider } from "@/context/DemoStoreContext";
 import { LocaleProvider } from "@/context/LocaleContext";
 import { CmsProvider } from "@/context/CmsContext";
+import { SeasonalThemeProvider } from "@/context/SeasonalThemeContext";
 import { MotionProvider } from "@/components/motion/MotionSystem";
+import { SeasonalPageDecor } from "@/components/seasonal/SeasonalPageDecor";
 import { AppHeader } from "@/components/navigation/AppHeader";
 import { AppFooter } from "@/components/navigation/AppFooter";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
@@ -43,20 +45,23 @@ export default function RootLayout({
           <LocaleProvider>
             <DemoStoreProvider>
               <CmsProvider>
-              <a
-                href="#main-content"
-                className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-[#245B3D] focus:px-4 focus:py-2 focus:text-white"
-              >
-                Chuyển đến nội dung chính / Skip to main content
-              </a>
-              <AppHeader />
-              <main id="main-content" className="flex-1">
-                {children}
-              </main>
-              <AppFooter />
-              <MobileBottomNav />
-              <NaiAIFloatingChat />
-              <Toaster position="top-right" richColors closeButton duration={2400} visibleToasts={3} />
+                <SeasonalThemeProvider>
+                  <a
+                    href="#main-content"
+                    className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-[#245B3D] focus:px-4 focus:py-2 focus:text-white"
+                  >
+                    Chuyển đến nội dung chính / Skip to main content
+                  </a>
+                  <SeasonalPageDecor />
+                  <AppHeader />
+                  <main id="main-content" className="flex-1">
+                    {children}
+                  </main>
+                  <AppFooter />
+                  <MobileBottomNav />
+                  <NaiAIFloatingChat />
+                  <Toaster position="bottom-left" richColors closeButton duration={2200} visibleToasts={2} />
+                </SeasonalThemeProvider>
               </CmsProvider>
             </DemoStoreProvider>
           </LocaleProvider>

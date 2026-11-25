@@ -33,6 +33,99 @@ const LEVEL_OPTIONS: ("all" | AmbassadorLevel)[] = [
   "LocalAgri",
 ];
 
+type LearningAudienceId =
+  | "general"
+  | "students"
+  | "youth"
+  | "adults"
+  | "seniors"
+  | "farmers"
+  | "coops"
+  | "international"
+  | "educators";
+
+const LEARNING_AUDIENCES: {
+  id: LearningAudienceId;
+  labelVi: string;
+  labelEn: string;
+  focusVi: string;
+  focusEn: string;
+  recommendedLevels: AmbassadorLevel[];
+}[] = [
+  {
+    id: "general",
+    labelVi: "Người dùng phổ thông",
+    labelEn: "General Public",
+    focusVi: "Nhận biết nông sản Đồng Nai theo mùa, đọc tem QR và cách bảo quản trái cây tươi tại nhà.",
+    focusEn: "Discover seasonal Dong Nai produce, read QR batch labels, and store fresh orchard fruit.",
+    recommendedLevels: ["A1", "A2", "B1", "FieldLab", "LocalAgri"],
+  },
+  {
+    id: "students",
+    labelVi: "Học sinh",
+    labelEn: "Students",
+    focusVi: "Học giải phẫu nông sản 2D, từ vựng nông sản A1–A2 và hoạt động ngoại khóa an toàn (không gắn bán hàng 18+).",
+    focusEn: "Explore 2D produce anatomy, A1–A2 vocabulary, and age-safe orchard field-trip guides.",
+    recommendedLevels: ["A1", "A2", "LocalAgri"],
+  },
+  {
+    id: "youth",
+    labelVi: "Sinh viên & Thanh niên",
+    labelEn: "Students & Youth",
+    focusVi: "Rèn luyện Đại sứ Nông sản Song ngữ (A2–B1), kỹ năng chụp ảnh, gắn tem QR và dẫn tour cùng nhà vườn.",
+    focusEn: "Train as Bilingual Youth Ambassadors (A2–B1), QR digitization helpers, and orchard storytellers.",
+    recommendedLevels: ["A2", "B1", "FieldLab"],
+  },
+  {
+    id: "adults",
+    labelVi: "Người trưởng thành",
+    labelEn: "Adults",
+    focusVi: "Phân biệt chứng nhận OCOP/VietGAP hợp lệ, đối chiếu hồ sơ chất lượng và chọn đặc sản vùng miền.",
+    focusEn: "Verify active OCOP/VietGAP credentials, inspect harvest traceability logs, and pick regional specialties.",
+    recommendedLevels: ["LocalAgri", "A2", "B1"],
+  },
+  {
+    id: "seniors",
+    labelVi: "Người lớn tuổi",
+    labelEn: "Seniors",
+    focusVi: "Hướng dẫn rõ chữ, dễ đọc về cách quét mã QR, nhận biết độ chín tự nhiên và trải nghiệm vườn nhẹ nhàng.",
+    focusEn: "Clear, easy-to-follow guides on scanning QR codes, selecting ripe fruit, and gentle orchard visits.",
+    recommendedLevels: ["LocalAgri", "A1"],
+  },
+  {
+    id: "farmers",
+    labelVi: "Nhà nông",
+    labelEn: "Farmers & Growers",
+    focusVi: "Thực hành ghi nhật ký canh tác, đo Brix, đăng bán 3 bước và đón tiếp khách tham quan miệt vườn.",
+    focusEn: "Practice seasonal farm logging, Brix tracking, 3-step produce listing, and welcoming orchard visitors.",
+    recommendedLevels: ["FieldLab", "LocalAgri", "A1"],
+  },
+  {
+    id: "coops",
+    labelVi: "HTX & Doanh nghiệp",
+    labelEn: "Co-ops & Business",
+    focusVi: "Chuẩn hóa hồ sơ 26 chứng nhận, quản trị lô truy xuất phả hệ, đóng gói quà tặng OCOP và giao tiếp B2B.",
+    focusEn: "Standardize 26 quality credentials, batch genealogy, OCOP gift packs, and B2B buyer inquiries.",
+    recommendedLevels: ["B1", "FieldLab", "LocalAgri"],
+  },
+  {
+    id: "international",
+    labelVi: "Khách quốc tế",
+    labelEn: "International Guests",
+    focusVi: "Hiểu văn hóa trái cây Tân Triều – Long Khánh, mẫu câu giao tiếp vườn và đặt tour song ngữ VI/EN.",
+    focusEn: "Learn Dong Nai orchard heritage, Vietnamese-English farm phrases, and bilingual agritourism etiquette.",
+    recommendedLevels: ["A1", "A2", "B1"],
+  },
+  {
+    id: "educators",
+    labelVi: "Giáo viên & Hướng dẫn",
+    labelEn: "Teachers & Guides",
+    focusVi: "Tổ chức chuyên đề giải phẫu 2D, bộ câu hỏi trắc nghiệm và lộ trình thực hành thực địa cho nhóm học viên.",
+    focusEn: "Facilitate 2D anatomy lessons, interactive quizzes, and structured orchard field study itineraries.",
+    recommendedLevels: ["FieldLab", "B1", "LocalAgri"],
+  },
+];
+
 function OpenLearningHubInner() {
   const searchParams = useSearchParams();
   const { locale, t } = useLocale();
@@ -40,6 +133,7 @@ function OpenLearningHubInner() {
   const { lessons, learningProgress, authUser } = useDemoStore();
 
   const initialLevelParam = searchParams.get("level") as AmbassadorLevel | null;
+  const [audience, setAudience] = useState<LearningAudienceId>("general");
   const [levelFilter, setLevelFilter] = useState<"all" | AmbassadorLevel>(
     initialLevelParam && LEVEL_OPTIONS.includes(initialLevelParam)
       ? initialLevelParam
@@ -49,10 +143,24 @@ function OpenLearningHubInner() {
     "pomelo",
   );
 
+  const selectedAudience = useMemo(
+    () => LEARNING_AUDIENCES.find((a) => a.id === audience) ?? LEARNING_AUDIENCES[0],
+    [audience],
+  );
+
   const filteredLessons = useMemo(() => {
-    if (levelFilter === "all") return lessons;
-    return lessons.filter((l) => (l.ambassadorLevel ?? "LocalAgri") === levelFilter);
-  }, [lessons, levelFilter]);
+    const byLevel =
+      levelFilter === "all"
+        ? lessons
+        : lessons.filter((l) => (l.ambassadorLevel ?? "LocalAgri") === levelFilter);
+    if (audience === "general") return byLevel;
+    const preferred = new Set(selectedAudience.recommendedLevels);
+    return [...byLevel].sort((a, b) => {
+      const aHit = preferred.has(a.ambassadorLevel ?? "LocalAgri") ? 0 : 1;
+      const bHit = preferred.has(b.ambassadorLevel ?? "LocalAgri") ? 0 : 1;
+      return aHit - bHit;
+    });
+  }, [lessons, levelFilter, audience, selectedAudience]);
 
   const speakPhrase = (text: string) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -100,7 +208,7 @@ function OpenLearningHubInner() {
               href={buildLocalizedHref("/volunteer", locale)}
               className="inline-flex min-h-[38px] items-center rounded-[10px] border border-[#245B3D] bg-[#EAF0E5] px-3 text-xs font-semibold text-[#245B3D]"
             >
-              {isEn ? "Go to W03 Missions" : "Về Nhiệm vụ W03"}
+              {isEn ? "Go to Volunteer Missions" : "Về Nhiệm vụ Tình nguyện"}
             </Link>
           ) : null}
         </Card>
@@ -114,6 +222,62 @@ function OpenLearningHubInner() {
       ) : null}
 
       <DemoBanner title={t.learn.ambassadorBadge} detail={t.learn.volunteerHoursSeparateNote} />
+
+      {/* Explicit 9 Learning Audiences Selector — Strictly Decoupled from Account RBAC */}
+      <section
+        aria-label={isEn ? "Choose learner profile (9 audiences)" : "Chọn nhóm đối tượng học tập (9 nhóm)"}
+        data-learning-audiences="true"
+        className="space-y-3 rounded-[18px] border border-[#D6DED2] bg-white p-4 shadow-[0_2px_8px_rgba(37,53,43,0.04)] sm:p-5"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-base font-bold text-[#25352B]">
+              {isEn
+                ? "Choose Your Learning Path (9 Audiences · Open Access)"
+                : "Chọn lộ trình theo đối tượng học tập (9 nhóm · Mở tự do)"}
+            </h2>
+            <p className="text-xs text-[#52645A]">
+              {isEn
+                ? "Switching learning group personalizes lesson order without changing your account role or permissions."
+                : "Đổi nhóm học chỉ sắp xếp bài học phù hợp nhu cầu — hoàn toàn tách biệt với quyền tài khoản (RBAC)."}
+            </p>
+          </div>
+          <Badge tone="success">
+            {isEn ? "9 Learner Tracks" : "9 nhóm đối tượng"}
+          </Badge>
+        </div>
+
+        <div className="nf-scroll-x flex items-center gap-1.5 md:flex-wrap" role="tablist">
+          {LEARNING_AUDIENCES.map((item) => {
+            const active = audience === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                data-audience-id={item.id}
+                onClick={() => setAudience(item.id)}
+                className={cn(
+                  "min-h-[36px] shrink-0 cursor-pointer rounded-full border px-3.5 text-xs font-semibold whitespace-nowrap transition-colors",
+                  active
+                    ? "border-[#245B3D] bg-[#245B3D] text-white"
+                    : "border-[#D6DED2] bg-[#FAF8F1] text-[#25352B] hover:bg-[#EAF0E5]",
+                )}
+              >
+                {isEn ? item.labelEn : item.labelVi}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="rounded-[12px] border border-[#EAEFE6] bg-[#FAF8F1] px-3.5 py-2.5 text-xs text-[#25352B]">
+          <strong className="text-[#245B3D]">
+            {isEn ? selectedAudience.labelEn : selectedAudience.labelVi}:
+          </strong>{" "}
+          {isEn ? selectedAudience.focusEn : selectedAudience.focusVi}
+        </div>
+      </section>
 
       {/* Quick 12+ Bilingual Seed Phrases Preview Strip */}
       <section className="space-y-3">

@@ -62,6 +62,7 @@ export interface Messages {
     heroTitle: string;
     heroSubtitle: string;
     exploreProduceCta: string;
+    exploreFarmsCta: string;
     farmerPublishCta: string;
     qrPlaceholder: string;
     qrLookupCta: string;

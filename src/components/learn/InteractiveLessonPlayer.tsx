@@ -365,7 +365,7 @@ export function InteractiveLessonPlayer({ lessonSlug }: { lessonSlug: string }) 
                     active
                       ? "bg-[#245B3D] text-white"
                       : locked
-                      ? "border border-[#D6DED2] bg-[#F5F3E9] text-[#687A70] opacity-75"
+                      ? "border border-[#D6DED2] bg-[#F5F3E9] text-[#44564C]"
                       : "border border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#EAF0E5]",
                   )}
                 >

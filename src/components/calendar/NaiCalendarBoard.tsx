@@ -128,11 +128,36 @@ export function NaiCalendarBoard({
     });
   }, [monthIso]);
 
+  const scopeLabel =
+    scope === "public"
+      ? isEn
+        ? "Seasonal & Cultural Schedule"
+        : "Mùa vụ & Sự kiện"
+      : scope === "W02"
+        ? isEn
+          ? "Orchard Operations"
+          : "Nhà vườn"
+        : scope === "W03"
+          ? isEn
+            ? "Youth Missions"
+            : "Thanh niên Tình nguyện"
+          : scope === "W04"
+            ? isEn
+              ? "Cluster Coordination"
+              : "Điều phối cộng đồng"
+            : scope === "W05"
+              ? isEn
+                ? "Co-op & Partner Schedule"
+                : "Hợp tác xã & Đối tác"
+              : isEn
+                ? "Governance Schedule"
+                : "Quản trị Hệ thống";
+
   const handleExportIcs = () => {
     const ics = buildIcsDocument(
       visibleEvents.length > 0 ? visibleEvents : filteredEvents,
       locale,
-      `NaiCalendar (${scope})`,
+      `NaiCalendar · ${scopeLabel}`,
     );
     triggerIcsDownload(`naifarm-calendar-${scope.toLowerCase()}.ics`, ics);
     notifySuccess(t.toasts.icsDownloaded);
@@ -148,11 +173,11 @@ export function NaiCalendarBoard({
       id: `CAL-USR-${Date.now()}`,
       title: newTitle.trim(),
       titleEn: newTitle.trim(),
-      description: `Sự kiện tạo trong không gian ${scope}.`,
-      descriptionEn: `Scheduled inside ${scope} workspace.`,
+      description: `Sự kiện tạo trong ${scopeLabel}.`,
+      descriptionEn: `Scheduled inside ${scopeLabel}.`,
       eventKind: newKind,
       classification: "internal",
-      organizer: `Thành viên ${scope}`,
+      organizer: scopeLabel,
       status: "scheduled",
       startIso: `${newStartDate}T${newStartTime}:00+07:00`,
       endIso: `${newStartDate}T${newEndTime}:00+07:00`,
@@ -185,7 +210,7 @@ export function NaiCalendarBoard({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <CalendarIcon className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
-            <h2 className="text-lg font-bold text-[#25352B]">NaiCalendar ({scope})</h2>
+            <h2 className="text-lg font-bold text-[#25352B]">NaiCalendar · {scopeLabel}</h2>
             <Badge tone="neutral">Asia/Ho_Chi_Minh (UTC+7)</Badge>
           </div>
 
@@ -208,7 +233,7 @@ export function NaiCalendarBoard({
         </div>
 
         {/* View Switcher & Filters */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-[auto_auto_minmax(170px,210px)_minmax(180px,1fr)] lg:items-center">
           <div
             role="tablist"
             aria-label={isEn ? "Calendar views" : "Chế độ xem lịch"}

@@ -24,7 +24,7 @@ export function PermissionMatrix() {
         <div>
           <h2 className="flex items-center gap-2 text-lg font-bold text-[#25352B]">
             <ShieldCheck className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
-            <span>Ma trận phân quyền 6 không gian làm việc (W01–W06)</span>
+            <span>Ma trận phân quyền 6 không gian làm việc</span>
           </h2>
           <p className="mt-1 text-xs text-[#52645A]">
             Mỗi quyền phê duyệt tài chính hoặc giờ công đều gắn cơ chế tách quyền Maker ≠ Checker.

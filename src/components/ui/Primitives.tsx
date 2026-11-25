@@ -133,3 +133,41 @@ export function EmptyState({
     </div>
   );
 }
+
+export function PageContainer({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("mx-auto w-full max-w-[1360px] px-4 lg:px-8", className)}>
+      {children}
+    </div>
+  );
+}
+
+export function SectionHeading({
+  title,
+  subtitle,
+  action,
+  id,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+  id?: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="min-w-0">
+        <h2 id={id} className="text-2xl font-bold text-[#25352B] md:text-[30px]">
+          {title}
+        </h2>
+        {subtitle ? <p className="mt-1 text-sm text-[#52645A]">{subtitle}</p> : null}
+      </div>
+      {action ? <div className="flex shrink-0 flex-wrap items-center gap-3">{action}</div> : null}
+    </div>
+  );
+}

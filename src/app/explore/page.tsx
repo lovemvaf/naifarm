@@ -457,7 +457,7 @@ function ExploreMapInner() {
                     onSelectFarm={setSelectedFarmId}
                     userCoords={userCoords}
                     accuracyMeters={accuracyMeters}
-                    heightClassName="h-[440px]"
+                    heightClassName="h-[340px] sm:h-[420px] lg:h-[460px]"
                     zoom={filteredFarms.length === 1 ? 12 : 10}
                   />
 

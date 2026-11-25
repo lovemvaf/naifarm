@@ -90,9 +90,57 @@ const PRODUCT_EDITORIAL_ASSETS: Array<{ file: string; tags: string[]; alt: strin
   { file: "passionfruit-citrus.jpg", tags: ["passionfruit", "citrus", "beverage"], alt: "Chanh dây & nước cốt trái cây minh họa" },
   { file: "taro-bamboo.jpg", tags: ["taro", "vegetables"], alt: "Khoai môn & măng tươi minh họa" },
   { file: "pomelo-oil.jpg", tags: ["pomelo", "essential-oil", "processed"], alt: "Tinh dầu hoa bưởi Tân Triều minh họa" },
+  { file: "pomelo-wine-jar.jpg", tags: ["pomelo", "wine", "craft"], alt: "Rượu bưởi Tân Triều chum sành minh họa" },
+  { file: "pomelo-peel-jam.jpg", tags: ["pomelo", "jam", "processed"], alt: "Mứt vỏ bưởi sấy dẻo mật ong minh họa" },
+  { file: "pomelo-fermented-drink.jpg", tags: ["pomelo", "beverage"], alt: "Nước bưởi lên men nhẹ minh họa" },
+  { file: "fresh-jackfruit.jpg", tags: ["jackfruit", "produce"], alt: "Mít Thái tươi chín múi minh họa" },
+  { file: "cacao-husk-tea.jpg", tags: ["cacao", "tea"], alt: "Trà vỏ hạt ca cao rang thơm minh họa" },
+  { file: "herbal-flower-tea.jpg", tags: ["tea", "herbal"], alt: "Trà hoa cúc & tim sen minh họa" },
+  { file: "fresh-mango.jpg", tags: ["mango", "produce"], alt: "Xoài cát Hòa Lộc tươi minh họa" },
+  { file: "fresh-longan.jpg", tags: ["longan", "produce"], alt: "Nhãn tiêu da bò tươi minh họa" },
+  { file: "fresh-banana.jpg", tags: ["banana", "produce"], alt: "Chuối sứ tươi chín cây minh họa" },
 ];
 
 export const ASSET_MANIFEST: AssetManifestEntry[] = [
+  {
+    assetId: "ASSET-HERO-01",
+    localPath: "/images/hero/dong-nai-orchard-hero.jpg",
+    categoryTags: ["hero", "pomelo", "rambutan", "orchard"],
+    sourceOrigin: "NaiFarm V5 curated high-resolution orchard photography (generated editorial asset, 1280x854)",
+    license: "Tài nguyên ảnh minh họa nội bộ NaiFarm (chỉ dùng trình diễn không gian trải nghiệm)",
+    checkedAt: "2026-11-25",
+    mime: "image/jpeg",
+    altTemplate: "Vườn bưởi và chôm chôm Đồng Nai trong nắng sớm",
+  },
+  ...[
+    { id: "festival-orchard", alt: "Ngày hội Nông sản Đồng Nai — vườn bưởi & chôm chôm" },
+    { id: "harvest-basket", alt: "Giỏ đặc sản OCOP Đồng Nai truy xuất nguồn gốc QR" },
+    { id: "agritourism-ba-tu", alt: "Nhà vườn Đồng Nai & thanh niên đón khách du lịch trải nghiệm" },
+    { id: "summer-mango", alt: "Xoài cát Hòa Lộc mùa thu hoạch Đồng Nai" },
+    { id: "pomelo-craft", alt: "Bưởi Tân Triều & đặc sản thủ công dịp lễ hội" },
+    { id: "longan-orchard", alt: "Nhãn tiêu Đồng Nai & chương trình học tập nông nghiệp số" },
+  ].flatMap((item, i) => [
+    {
+      assetId: `ASSET-HERO-V9-D-${String(i + 1).padStart(2, "0")}`,
+      localPath: `/images/hero/v9-${item.id}-desktop.webp`,
+      categoryTags: ["hero", "v9", "desktop", "webp"],
+      sourceOrigin: "Sharp WebP 1440x500 crop generated from existing verified local NaiFarm assets",
+      license: "Tài nguyên ảnh minh họa nội bộ NaiFarm V9",
+      checkedAt: "2026-11-26",
+      mime: "image/webp",
+      altTemplate: item.alt,
+    },
+    {
+      assetId: `ASSET-HERO-V9-M-${String(i + 1).padStart(2, "0")}`,
+      localPath: `/images/hero/v9-${item.id}-mobile.webp`,
+      categoryTags: ["hero", "v9", "mobile", "webp"],
+      sourceOrigin: "Sharp WebP 720x680 focal crop generated from existing verified local NaiFarm assets",
+      license: "Tài nguyên ảnh minh họa nội bộ NaiFarm V9",
+      checkedAt: "2026-11-26",
+      mime: "image/webp",
+      altTemplate: item.alt,
+    },
+  ]),
   ...Array.from({ length: 65 }, (_, idx) => {
     const num = idx + 1;
     const code = String(num).padStart(2, "0");

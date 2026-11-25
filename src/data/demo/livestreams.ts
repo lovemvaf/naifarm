@@ -31,7 +31,7 @@ const CORE_LIVESTREAMS: LivestreamSession[] = [
         id: "angle-2",
         label: "Góc 2: Bàn thẩm định Brix",
         labelEn: "Angle 2: Brix Tasting Table",
-        image: "/images/stitch/stitch-46.jpg",
+        image: "/images/stitch/stitch-25.jpg",
         caption: "Tép bưởi Tân Triều mọng nước, đo độ ngọt tham khảo 11.8–12.2° Brix.",
         captionEn: "Sample refractometer tasting check showing 11.8–12.2° Brix sweetness.",
       },

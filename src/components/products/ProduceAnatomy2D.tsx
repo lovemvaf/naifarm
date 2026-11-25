@@ -981,12 +981,14 @@ export function ProduceAnatomy2D({
             </span>
           </div>
 
-          <div className="my-4 flex items-center justify-center">
+          <div
+            role="region"
+            aria-label={`${isEn ? "2D cross-section diagram of" : "Sơ đồ mặt cắt"} ${isEn ? spec.titleEn : spec.titleVi}`}
+            className="my-4 flex items-center justify-center"
+          >
             <svg
               viewBox="0 0 400 300"
               className="h-auto w-full max-w-[360px]"
-              role="img"
-              aria-label={`${isEn ? "2D cross-section diagram of" : "Sơ đồ mặt cắt"} ${isEn ? spec.titleEn : spec.titleVi}`}
             >
               <rect x="0" y="0" width="400" height="300" rx="18" fill="#F5F3E9" />
               {renderProduceSvg(spec.id, spec.layers, activeLayerId, setActiveLayerId)}
@@ -1058,7 +1060,12 @@ export function ProduceAnatomy2D({
                   )}
                 >
                   <div className="min-w-0 pr-2">
-                    <p className="text-[11px] font-bold opacity-75">
+                    <p
+                      className={cn(
+                        "text-[11px] font-bold",
+                        selected ? "text-[#19472E]" : "text-[#44564C]",
+                      )}
+                    >
                       {isEn ? `Layer ${index + 1}` : `Lớp ${index + 1}`} ·{" "}
                       {isEn ? layer.shortTagEn : layer.shortTagVi}
                     </p>

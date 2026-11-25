@@ -62,21 +62,21 @@ export const DEFAULT_CMS_BLOCKS: CmsBlock[] = [
     labelVi: "Trang chủ · Tiêu đề Hero chính",
     labelEn: "Home · Main Hero Section",
     status: "published",
-    draftViTitle: "Nông sản Đồng Nai — Minh bạch từ vườn",
-    draftEnTitle: "Dong Nai Produce — Verified from the Orchard",
+    draftViTitle: "Hương vị Đồng Nai\nTừ vườn đến mọi nhà.",
+    draftEnTitle: "Taste Dong Nai.\nFrom farm to table.",
     draftViBody:
-      "Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị. Đồng hành cùng nhà vườn số hóa sản phẩm, truy xuất mã lô QR đến bàn ăn và kết nối thanh niên tình nguyện địa phương.",
+      "Khám phá đặc sản địa phương, kết nối nhà vườn và trải nghiệm nét đẹp nông nghiệp Đồng Nai.",
     draftEnBody:
-      "Sow knowledge – Connect farmers – Spread value. Empowering local orchard owners with digital listings, QR harvest passports, agritourism, and youth support.",
-    publishedViTitle: "Nông sản Đồng Nai — Minh bạch từ vườn",
-    publishedEnTitle: "Dong Nai Produce — Verified from the Orchard",
+      "Discover local specialties, meet growers and explore Dong Nai’s farming heritage.",
+    publishedViTitle: "Hương vị Đồng Nai\nTừ vườn đến mọi nhà.",
+    publishedEnTitle: "Taste Dong Nai.\nFrom farm to table.",
     publishedViBody:
-      "Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị. Đồng hành cùng nhà vườn số hóa sản phẩm, truy xuất mã lô QR đến bàn ăn và kết nối thanh niên tình nguyện địa phương.",
+      "Khám phá đặc sản địa phương, kết nối nhà vườn và trải nghiệm nét đẹp nông nghiệp Đồng Nai.",
     publishedEnBody:
-      "Sow knowledge – Connect farmers – Spread value. Empowering local orchard owners with digital listings, QR harvest passports, agritourism, and youth support.",
-    imageUrl: "/images/stitch/stitch-02.jpg",
-    focalPoint: "50% 45%",
-    updatedAtIso: "2026-11-25T10:00:00+07:00",
+      "Discover local specialties, meet growers and explore Dong Nai’s farming heritage.",
+    imageUrl: "/images/hero/dong-nai-orchard-hero.jpg",
+    focalPoint: "62% 52%",
+    updatedAtIso: "2026-11-25T19:00:00+07:00",
     updatedBy: "Ban biên tập NaiFarm",
   },
   {

@@ -607,7 +607,7 @@ function FarmerWorkspaceContent() {
                         stage: diaryStage,
                         title: diaryTitle.trim(),
                         detail: diaryDetail.trim(),
-                        actorName: `${activeFarm.ownerName} (Chủ vườn W02)`,
+                        actorName: `${activeFarm.ownerName} (Chủ vườn)`,
                         sourceDeclaration: "Nhà vườn tự khai",
                         photo: "/images/stitch/stitch-53.jpg",
                         visibility: "public",

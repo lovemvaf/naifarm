@@ -13,7 +13,7 @@ const STAGES: DiaryEntry["stage"][] = [
 const PHOTOS = [
   "/images/stitch/stitch-19.jpg",
   "/images/stitch/stitch-40.jpg",
-  "/images/stitch/stitch-28.jpg",
+  "/images/stitch/stitch-31.jpg",
   "/images/stitch/stitch-26.jpg",
   "/images/stitch/stitch-32.jpg",
   "/images/stitch/stitch-27.jpg",

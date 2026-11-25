@@ -57,7 +57,7 @@ export default function CoordinatorWorkspacePage() {
   } = useDemoStore();
 
   const [tab, setTab] = useState<CoordTab>("hours");
-  const [reviewerIdentity, setReviewerIdentity] = useState("Thu Hà (Điều phối viên W04)");
+  const [reviewerIdentity, setReviewerIdentity] = useState("Thu Hà (Điều phối viên cơ sở)");
   const [revisionNoteMap, setRevisionNoteMap] = useState<Record<string, string>>({});
   const [docNotes, setDocNotes] = useState<Record<string, string>>({});
 
@@ -172,7 +172,7 @@ export default function CoordinatorWorkspacePage() {
               onChange={(e) => setReviewerIdentity(e.target.value)}
               className="min-h-[38px] rounded-[10px] border border-[#788A7B] bg-white px-3 text-xs font-semibold text-[#25352B]"
             >
-              <option value="Thu Hà (Điều phối viên W04)">Thu Hà (Điều phối viên W04 — Hợp lệ)</option>
+              <option value="Thu Hà (Điều phối viên cơ sở)">Thu Hà (Điều phối viên cơ sở — Hợp lệ)</option>
               <option value="Minh Anh">Minh Anh (Thử tự duyệt nhiệm vụ mình làm — kiểm tra chặn)</option>
             </select>
           </div>
@@ -183,7 +183,7 @@ export default function CoordinatorWorkspacePage() {
           <section id="hours" className="space-y-4">
             <DemoBanner
               title="Quy tắc phê duyệt 2 lớp & chống tự duyệt"
-              detail="Điều phối viên chỉ có thể duyệt giờ công khi Chủ vườn W02 đã xác nhận bàn giao thực tế và người duyệt khác người thực hiện."
+              detail="Điều phối viên chỉ có thể duyệt giờ công khi Chủ vườn đã xác nhận bàn giao thực tế và người duyệt khác người thực hiện."
             />
 
             {scopedMissions.map((m) => {
@@ -200,7 +200,7 @@ export default function CoordinatorWorkspacePage() {
                           {approved
                             ? `Đã duyệt +${m.approvedHours} giờ`
                             : farmAccepted
-                            ? "Chủ vườn W02 đã xác nhận — sẵn sàng duyệt"
+                            ? "Chủ vườn đã xác nhận — sẵn sàng duyệt"
                             : m.status}
                         </Badge>
                         {isSlaAlert ? (

@@ -801,7 +801,7 @@ export default function FarmerPublishWizardPage() {
             return (
               <li
                 key={item.num}
-                className={`flex min-h-[54px] items-center justify-center rounded-[16px] border-2 px-4 text-center font-bold text-[18px] transition-all ${isCurrent
+                className={`flex min-h-[54px] items-center justify-center rounded-[16px] border-2 px-4 text-center font-bold text-[18px] transition-colors ${isCurrent
                     ? "border-[#245B3D] bg-[#245B3D] text-white shadow-md shadow-[#245B3D]/20"
                     : isDone
                       ? "border-[#6C9C5B] bg-[#E6F3E9] text-[#24603B]"
@@ -886,7 +886,7 @@ export default function FarmerPublishWizardPage() {
                     key={sample.id}
                     type="button"
                     onClick={() => handleSelectSamplePhoto(sample)}
-                    className={`group overflow-hidden rounded-[18px] border-2 text-left transition-all cursor-pointer ${selected
+                    className={`group overflow-hidden rounded-[18px] border-2 text-left transition-[border-color,background-color,box-shadow] cursor-pointer ${selected
                         ? "border-[#245B3D] ring-4 ring-[#245B3D]/20 bg-[#EAF0E5] shadow-md"
                         : "border-[#D6DED2] bg-white hover:border-[#6C9C5B] hover:shadow-sm"
                       }`}
@@ -1027,7 +1027,7 @@ export default function FarmerPublishWizardPage() {
                           ? "Đang xử lý giọng nói..."
                           : "Bấm vào icon micro để nói"
                     }
-                    className={`relative z-10 flex h-28 w-28 sm:h-36 sm:w-36 items-center justify-center rounded-full transition-all duration-300 cursor-pointer shadow-xl select-none ${isRecording
+                    className={`relative z-10 flex h-28 w-28 sm:h-36 sm:w-36 items-center justify-center rounded-full transition-[background-color,transform,box-shadow] duration-300 cursor-pointer shadow-xl select-none ${isRecording
                         ? "bg-[#DC2626] text-white border-4 border-red-200 ring-8 ring-red-400/50 scale-105 active:scale-95 shadow-red-500/50"
                         : isTranscribing
                           ? "bg-[#2563EB] text-white border-4 border-blue-200 ring-8 ring-blue-300/40 shadow-blue-500/30 cursor-wait"

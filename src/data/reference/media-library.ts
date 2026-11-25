@@ -74,7 +74,7 @@ export const MEDIA_LIBRARY: MediaAsset[] = [
       "Tư liệu truyền hình ghi lại không khí canh tác và thu hoạch tại vùng bưởi Tân Triều ven sông Đồng Nai.",
     summaryEn:
       "Broadcast feature documenting traditional orchard cultivation in Dong Nai's historic Tan Trieu pomelo cluster.",
-    publisher: "YouTube · Nguồn công khai V5.08 §8.3",
+    publisher: "YouTube · Tư liệu cộng đồng Đồng Nai",
     publishedAt: "2024",
     categoryKey: "pomelo",
     rightsLabelVi: "Nhúng click-to-load của nhà xuất bản (chưa giữ bản quyền tải lại)",
@@ -132,7 +132,7 @@ export const MEDIA_LIBRARY: MediaAsset[] = [
       "Tư liệu tham khảo quy trình lên men hạt cacao và chế biến sản phẩm OCOP vùng Định Quán.",
     summaryEn:
       "Reference video showing cacao pod harvest, wooden box fermentation, and artisan chocolate steps.",
-    publisher: "Nguồn video bên thứ ba (Candidate V5.08 §8.3)",
+    publisher: "YouTube · Tư liệu vùng ca cao Định Quán",
     publishedAt: "2024",
     categoryKey: "cacao",
     rightsLabelVi: "Candidate tham khảo vùng · Mở nhúng khi người dùng bấm",
