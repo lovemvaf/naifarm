@@ -234,6 +234,12 @@ export default function CheckoutPage() {
             setPlacedOrderIds(ids);
             if (res.orders && res.orders.length > 0) {
               setPlacedOrders(res.orders.map((o) => ({ id: o.id, totalVnd: o.totalVnd, farmName: o.farmName })));
+              // Sync orders to Supabase database in background
+              void fetch("/api/orders/sync", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ orders: res.orders }),
+              }).catch(() => {});
             } else {
               setPlacedOrders(ids.map((id) => ({ id, totalVnd })));
             }
