@@ -2,9 +2,9 @@
 
 Cách này chạy Supabase Auth, PostgreSQL, PostgREST và Realtime bằng Docker trên máy. Next.js vẫn dùng LiveKit Cloud qua ba biến `LIVEKIT_*` trong `F:\naifarm\.env`. Supabase cục bộ chỉ dùng cho laptop và kiểm thử tự động. Để thử điện thoại vật lý từ thiết bị khác, dùng URL HTTPS staging với Supabase staging trong [hướng dẫn chính](README.md).
 
-## Dùng stack đã cấu hình trên máy này
+## Dùng Supabase QA local khi stack đang chạy
 
-Từ PowerShell tại `F:\naifarm`, chạy `Invoke-RestMethod http://localhost:3000/api/live`. Nếu trả về danh sách phiên hoặc danh sách rỗng, chuyển trực tiếp tới mục [tạo tài khoản phát](#tạo-một-tài-khoản-phát-để-thử-bằng-tay). Sau đó mở `http://localhost:3000/live/studio`. Nếu Next.js chưa chạy, dùng `npm run dev`. File `.env.local` của workspace đã trỏ riêng livestream tới Supabase QA local.
+Từ PowerShell tại `F:\naifarm`, đặt `LIVE_SUPABASE_URL`, `LIVE_SUPABASE_PUBLISHABLE_KEY` và `LIVE_SUPABASE_SECRET_KEY` của stack local vào process trước khi khởi động Next.js và chạy các test bên dưới. Cấu hình hiện tại không tự trỏ tới Supabase QA local; nếu không đặt ba biến này, livestream dùng chung `SUPABASE_*` trong `.env`. Sau đó xác nhận `Invoke-RestMethod http://localhost:3000/api/live` trả về danh sách phiên (có thể rỗng), rồi mở `http://localhost:3000/live/studio`.
 
 Nếu Docker Desktop vừa khởi động lại, khởi động **các container QA đã tồn tại** rồi gọi lại API. Cấu hình cổng được giữ khi dùng `docker start`.
 
@@ -67,7 +67,7 @@ if (-not $env:CRON_SECRET) { $env:CRON_SECRET = [Guid]::NewGuid().ToString('N') 
 
 ## Tạo một tài khoản phát để thử bằng tay
 
-Đặt email thử và nhập mật khẩu theo prompt, rồi chạy khối sau. Tài khoản được xác nhận trong Supabase local và có quyền với Nhà vườn Ba Tư. Lệnh tự đọc `.env.local` nếu terminal chưa có cấu hình Supabase riêng cho livestream.
+Đặt email thử và nhập mật khẩu theo prompt, rồi chạy khối sau. Tài khoản được xác nhận trong Supabase local và có quyền với Nhà vườn Ba Tư. Trước khi chạy, terminal phải có ba biến `LIVE_SUPABASE_*` trỏ tới loopback QA; không dùng biến Supabase hosted cho bước tạo tài khoản thử.
 
 ```powershell
 $env:NAIFARM_LOCAL_PILOT_EMAIL = 'host-local@example.com'
@@ -93,6 +93,33 @@ console.log("Đã tạo tài khoản host local.");
 '@ | node @dotenvArgs --input-type=module -
 Remove-Item Env:NAIFARM_LOCAL_PILOT_PASSWORD
 ```
+
+Để thử chat bằng một người xem riêng, tạo thêm một user local bằng service key QA. Đặt email và mật khẩu tạm trong terminal, rồi chạy đoạn sau. `farm_id` rỗng chỉ cấp quyền chat, không cấp quyền studio hay nhà vườn.
+
+```powershell
+$env:NAIFARM_LOCAL_CHAT_EMAIL = 'viewer-local@example.com'
+$secure = Read-Host 'Mật khẩu thử cho viewer' -AsSecureString
+$env:NAIFARM_LOCAL_CHAT_PASSWORD = [System.Net.NetworkCredential]::new('', $secure).Password
+@'
+import { createClient } from "@supabase/supabase-js";
+const env = process.env;
+const url = new URL(env.LIVE_SUPABASE_URL);
+if (!["localhost", "127.0.0.1"].includes(url.hostname)) throw new Error("Use the local Supabase stack.");
+const db = createClient(url.href, env.LIVE_SUPABASE_SECRET_KEY, { auth: { persistSession: false } });
+const { data, error } = await db.auth.admin.createUser({
+  email: env.NAIFARM_LOCAL_CHAT_EMAIL, password: env.NAIFARM_LOCAL_CHAT_PASSWORD, email_confirm: true,
+});
+if (error) throw new Error("Viewer creation failed. If the email already exists, choose another test email.");
+const grant = await db.from("live_host_permissions").insert({
+  user_id: data.user.id, farm_id: "", display_name: "Viewer local QA", can_chat: true,
+});
+if (grant.error) throw new Error("Could not grant local chat permission.");
+console.log("Đã tạo tài khoản viewer chat local.");
+'@ | node @dotenvArgs --input-type=module -
+Remove-Item Env:NAIFARM_LOCAL_CHAT_PASSWORD
+```
+
+Trên studio đăng nhập bằng tài khoản host; trên cửa sổ viewer đăng nhập bằng tài khoản chat để gửi tin. Người xem ẩn danh vẫn xem video và đọc chat. Đóng phiên rồi xác minh room đã được xóa trước khi dừng QA stack.
 
 Mở trang studio trên cổng Next.js đang chạy và đăng nhập bằng tài khoản vừa tạo. Nếu đã chạy stack mới với cổng 3107, mở `http://127.0.0.1:3107/live/studio`. Chỉ chạy `npm run dev -- -H 127.0.0.1 -p 3107` khi chưa có Next dev cho repo. Tiếp tục theo [các bước thử laptop](README.md#3-thử-với-laptop-và-điện-thoại).
 

@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LiveKitStage } from "./LiveKitStage";
-import { LiveAuth } from "./LiveAuth";
 import { LiveChat } from "./LiveChat";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { INITIAL_FARMS } from "@/data/demo/farms";
@@ -45,9 +44,7 @@ export function LiveViewer({ sessionId }: { sessionId?: string }) {
       </div>
       <nav className="flex flex-wrap items-center gap-4 text-sm">
         {sessionId && <Link href="/live" className="underline">Danh sách phiên</Link>}
-        <Link href="/live/studio" className="underline">Phòng phát</Link>
-        <Link href="/live/demo" className="underline">Xem minh họa</Link>
-        <LiveAuth token={token} />
+        <Link href="/live/studio" className="underline">Studio phát sóng</Link>
       </nav>
     </header>
     {error && <div role="alert" className="space-y-2 rounded-lg bg-amber-50 p-4 text-amber-900"><p>{error}</p>

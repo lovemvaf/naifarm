@@ -7,7 +7,7 @@
 ## 2. Directory Layout (`naifarm/src/`)
 - `app/`: App Router pages grouped cleanly by route (`/`, `/marketplace`, `/farms`, `/farms/[slug]`, `/products/[slug]`, `/trace`, `/trace/[batchCode]`, `/cart`, `/checkout`, `/account`, `/account/orders`, `/account/orders/[orderId]`, `/explore`, `/live`, `/farmer`, `/farmer/publish`, `/volunteer`, `/learn`, `/coordinator`, `/organization`, `/admin`, `/demo`).
 - `components/ui/`: Accessible primitives (`Button`, `Badge`, `Card`, `Input`, `Dialog`, `Drawer`, `Tabs`, `EmptyState`, `DemoBanner`) built with `cva` + `tailwind-merge` + `clsx` and explicit focus-visible styling.
-- `components/navigation/`: `AppHeader` (desktop nav, global search, cart badge, Workspace Switcher), `MobileBottomNav`, `WorkspaceShell` (`240px` desktop sidebar + scoped tenant selector + mobile bottom bar), `NaiAIFloatingChat`.
+- `components/navigation/`: `AppHeader` (desktop nav, global search, cart badge, Workspace Switcher), `MobileBottomNav`, `WorkspaceShell` (`240px` desktop sidebar + scoped tenant selector + mobile bottom bar). NaiFarmHomeChat được mount toàn cục từ root layout.
 - `components/marketplace/` & `components/traceability/`: `ProductCard`, `FarmCard`, `QrPassportCard`, `HarvestTimeline`, `ExperienceBookingForm`, `DongNaiMapSplit`.
 - `components/three/`: `PomeloViewer3DHost.tsx` (`"use client"` lazy `next/dynamic({ ssr: false })` wrapper + WebGL fallback) & `PomeloViewer3D.tsx` (React Three Fiber + Drei interactive 3D Bưởi Tân Triều with 4 anatomical hotspots).
 - `components/motion/`: `MotionProvider` (`<MotionConfig reducedMotion="user">`), `EditorialReveal`, `EditorialCursor` (confined to homepage hero showcase on desktop pointers only).

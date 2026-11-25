@@ -1,7 +1,8 @@
 "use client";
 
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { useCallback, useEffect, useState } from "react";
+import { createClient as createAppClient } from "@/lib/supabase/client";
+import { createClient as createSupabaseClient, type SupabaseClient } from "@supabase/supabase-js";
 
 export type LiveSession = {
   id: string; farm_id: string; title: string; description: string; scheduled_at: string | null; host_name?: string | null;
@@ -22,11 +23,10 @@ export async function liveFetch<T>(path: string, options?: RequestInit, token?: 
   return result;
 }
 
-let connection: Promise<{ auth: SupabaseClient; events: SupabaseClient }> | undefined;
+let connection: Promise<{ events: SupabaseClient }> | undefined;
 export function liveClients() {
   return connection ??= liveFetch<{ url: string; key: string }>("/config").then(({ url, key }) => ({
-    auth: createClient(url, key, { auth: { storageKey: "naifarm-live-pilot" } }),
-    events: createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }),
+    events: createSupabaseClient(url, key, { auth: { storageKey: "naifarm-live-realtime", persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }),
   })).catch((error) => { connection = undefined; throw error; });
 }
 
@@ -35,14 +35,31 @@ export function useLiveAuth() {
   const [authError, setError] = useState("");
   useEffect(() => {
     let mounted = true;
-    let unsubscribe: (() => void) | undefined;
-    void liveClients().then(({ auth }) => {
-      if (!mounted) return;
-      const { data } = auth.auth.onAuthStateChange((_event, session) => setToken(session?.access_token ?? ""));
-      unsubscribe = () => data.subscription.unsubscribe();
+    let receivedAuthEvent = false;
+    const supabase = createAppClient();
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      receivedAuthEvent = true;
+      setToken(session?.access_token ?? "");
+    });
+    void supabase.auth.getSession().then(({ data: sessionData, error }) => {
+      if (!mounted || receivedAuthEvent) return;
+      if (error) throw error;
+      setToken(sessionData.session?.access_token ?? "");
     }).catch((error) => { if (mounted) setError(error.message); });
-    return () => { mounted = false; unsubscribe?.(); };
+    return () => { mounted = false; data.subscription.unsubscribe(); };
   }, []);
+  useEffect(() => {
+    if (!token || !process.env.NEXT_PUBLIC_SUPABASE_URL) return;
+    let mounted = true;
+    void liveFetch<{ url: string }>("/config").then(({ url }) => {
+      const liveOrigin = new URL(url).origin;
+      if (mounted && liveOrigin !== window.location.origin && liveOrigin !== new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).origin) {
+        setError("Tài khoản NaiFarm và livestream đang dùng hai Supabase project khác nhau. Hãy cấu hình cùng project rồi đăng nhập lại.");
+        setToken("");
+      }
+    }).catch((error) => { if (mounted) setError(error.message); });
+    return () => { mounted = false; };
+  }, [token]);
   return { token, authError };
 }
 

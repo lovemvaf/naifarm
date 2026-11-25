@@ -7,11 +7,13 @@ from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, expect, 
 
 
 def login(page, email):
-    page.get_by_role("button", name="Đăng nhập pilot").click()
+    destination = page.url
+    page.goto(f"{origin}/sign-in")
     page.get_by_label("Email").fill(email)
     page.get_by_label("Mật khẩu").fill(config["password"])
     page.get_by_role("button", name="Đăng nhập", exact=True).click()
-    expect(page.get_by_role("button", name="Đăng xuất")).to_be_visible()
+    page.wait_for_url(lambda url: "/sign-in" not in str(url), timeout=20000)
+    page.goto(destination)
 
 
 def playing(page):
@@ -185,10 +187,9 @@ with sync_playwright() as pw:
         playing(late_viewer)
         expect(late_viewer.get_by_role("link", name="Chôm chôm Java Long Khánh", exact=True)).to_have_attribute("href", re.compile(r"^/products/"))
         late_viewer.get_by_role("button", name="Đặt nhanh (COD Demo)").click()
-        late_viewer.wait_for_url("**/checkout")
-        expect(late_viewer.get_by_text("Chôm chôm Java Long Khánh", exact=True)).to_be_visible()
+        late_viewer.wait_for_url(re.compile(r"/sign-in\?redirect=%2Fcheckout$"))
         late_viewer.close()
-        print("PASS late viewer receives video and the pinned product, then opens demo checkout with that product")
+        print("PASS late viewer receives video and pinned product; unauthenticated COD checkout redirects to sign-in")
         viewer.context.set_offline(True)
         with host.expect_response(pin_url) as response:
             pin.select_option("")

@@ -2,7 +2,7 @@
 
 ## Bối cảnh và phạm vi
 
-Trang cũ trình bày lịch, góc quay và thương mại bằng dữ liệu minh họa. Luồng này nằm ở `/live/demo`. Trang `/live` đọc lịch từ Supabase, dùng LiveKit để phát media và hiển thị trạng thái lỗi khi chưa có kết nối đến hệ thống. Catalog nhà vườn, giá, truy xuất QR và giỏ hàng vẫn dùng dữ liệu demo sẵn có.
+Trang `/live` đọc lịch từ Supabase, dùng LiveKit để phát media và hiển thị trạng thái lỗi khi chưa có kết nối đến hệ thống. `/live/studio` là giao diện host; route phát lại minh họa đã được gỡ để tránh nhầm với phiên realtime. Catalog nhà vườn, giá, truy xuất QR và giỏ hàng vẫn dùng dữ liệu demo sẵn có.
 
 Pilot gồm chủ phiên có quyền theo nhà vườn và tài khoản chỉ có quyền chat. Khách có thể xem chương trình và đọc chat. Mỗi phiên có một laptop chính, tối đa một camera điện thoại và nhiều viewer. Chỉ một phiên được mở tại một thời điểm. Mọi viewer cùng nhận góc camera đang được chọn. Laptop cung cấp mic cho cả hai góc.
 
@@ -31,7 +31,7 @@ stateDiagram-v2
 | Màn hình | Hành vi |
 | --- | --- |
 | `/live` và `/live/[id]` | Xem trực tiếp, lịch, chi tiết phiên, chat, sản phẩm ghim, trạng thái tải/lỗi/rỗng. Lịch hiển thị vườn, tên hiển thị của chủ phiên, thời gian và ảnh đại diện có ghi rõ khi dùng ảnh demo. Video co theo chiều rộng, `playsInline`, âm thanh mặc định tắt và có công tắc. Có toàn màn hình khi trình duyệt hỗ trợ. Chọn góc có `aria-pressed`. Số người xem đếm kết nối có danh tính viewer, mỗi tab là một kết nối. |
-| `/live/studio` và `/live/studio/[id]` | Đăng nhập pilot, tạo và hủy lịch, chọn sản phẩm, xem camera và tín hiệu mic trước khi phát. Chọn webcam/mic ở bước chuẩn bị hoặc kết nối lại. Khi phát có chất lượng kết nối, thời gian phát, trạng thái camera phụ và nút bật/tắt mic hoặc camera. Chủ phiên có thể ghép/ngắt camera phụ, ghim sản phẩm, ẩn tin nhắn và đóng phiên. |
+| `/live/studio` và `/live/studio/[id]` | Dùng phiên Supabase chung của ứng dụng; tài khoản host phải có quyền trong `live_host_permissions`. Tạo và hủy lịch, chọn sản phẩm, xem camera và tín hiệu mic trước khi phát. Chọn webcam/mic ở bước chuẩn bị hoặc kết nối lại. Khi phát có chất lượng kết nối, thời gian phát, trạng thái camera phụ và nút bật/tắt mic hoặc camera. Chủ phiên có thể ghép/ngắt camera phụ, ghim sản phẩm, ẩn tin nhắn và đóng phiên. |
 | `/live/camera` | Đọc mã từ fragment rồi xóa fragment. Tiền kiểm camera ưu tiên camera sau, cho phép chuyển trước/sau. Chỉ phát sau thao tác của người dùng. Hiển thị trạng thái xem trước, đang phát và đã ngắt. |
 
 Góc đang được xem nhận video theo lựa chọn của viewer. Việc camera phụ rời phòng đưa viewer về góc đang có. Chat lưu ở PostgreSQL, giới hạn 500 ký tự, lấy 30 tin gần nhất theo mặc định và cho xem thêm từng nhóm 30 tin. Tin hiển thị giờ Việt Nam và nhãn **Chủ phiên** khi người gửi là owner. Tin đã ẩn không xuất hiện trong lịch sử công khai. Sản phẩm ghim phải thuộc danh sách của phiên, thao tác bỏ ghim dùng giá trị rỗng và viewer mới lấy trạng thái hiện hành qua API.

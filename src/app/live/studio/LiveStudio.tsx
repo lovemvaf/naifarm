@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { createAudioAnalyser, createLocalAudioTrack } from "livekit-client";
 import { LiveKitStage } from "../LiveKitStage";
-import { LiveAuth } from "../LiveAuth";
 import { LiveChat } from "../LiveChat";
 import { INITIAL_FARMS } from "@/data/demo/farms";
 import { INITIAL_PRODUCTS } from "@/data/demo/products";
@@ -188,11 +187,17 @@ export function LiveStudio({ sessionId }: { sessionId?: string }) {
 
   return <section className="mx-auto max-w-6xl space-y-6 px-4 py-8">
     <header className="flex flex-wrap items-center justify-between gap-4">
-      <h1 className="font-editorial text-3xl font-bold">Studio NaiFarm Live</h1>
-      <div className="flex items-center gap-4"><Link className="underline" href="/live">Trang xem</Link><LiveAuth token={token} /></div>
+      <div><h1 className="font-editorial text-3xl font-bold">Studio phát sóng NaiFarm Live</h1><p className="mt-1 text-sm text-[#52645A]">Dành cho nhà vườn tạo lịch, bật camera và điều khiển buổi phát.</p></div>
+      <Link className="underline" href="/live">Trang xem</Link>
     </header>
     {(authError || error || actionError || realtimeError) && <p role="alert" className="rounded-lg bg-amber-50 p-3 text-amber-900">{actionError || error || authError || realtimeError}</p>}
-    {!token && <p>Dùng tài khoản pilot đã được cấp quyền nhà vườn để mở studio.</p>}
+    {!token && <div role="status" className="space-y-2 rounded-lg border border-[#D6DED2] bg-[#F5F3E9] p-4 text-sm">
+      <p>Studio cần phiên đăng nhập Supabase thật. Hồ sơ ghi <strong>Không gian trải nghiệm</strong> ở menu tài khoản chỉ đổi vai trò demo, chưa đăng nhập host livestream.</p>
+      <p>Tài khoản host còn cần được cấp quyền livestream cho đúng nhà vườn.</p>
+      <Link className="inline-flex min-h-10 items-center rounded-lg bg-[#245B3D] px-4 font-semibold text-white" href="/sign-in#signin-email">
+        Đăng nhập bằng Email &amp; mật khẩu
+      </Link>
+    </div>}
     {token && data && <div className="grid gap-6 lg:grid-cols-[1fr_1.6fr]">
       <Card className="space-y-4 p-4">
         <h2 className="font-bold">Phiên của tôi</h2>

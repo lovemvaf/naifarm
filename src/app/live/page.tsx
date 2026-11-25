@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { LiveRoomView } from "@/components/live/LiveRoomView";
+import { LiveViewer } from "./LiveViewer";
 
 export default function LiveHubPage() {
   return (
@@ -10,7 +10,7 @@ export default function LiveHubPage() {
         </div>
       }
     >
-      <LiveRoomView />
+      <LiveViewer />
     </Suspense>
   );
 }
