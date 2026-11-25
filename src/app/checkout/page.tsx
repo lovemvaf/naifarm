@@ -12,13 +12,11 @@ import type { DeliveryMethod } from "@/types/naifarm";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, products, placeDemoOrder } = useDemoStore();
+  const { hydrated, cart, products, placeDemoOrder, profile } = useDemoStore();
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("delivery");
-  const [customerName, setCustomerName] = useState("Ngọc Linh (Demo)");
-  const [customerPhone, setCustomerPhone] = useState("090x xxx 128");
-  const [deliveryAddress, setDeliveryAddress] = useState(
-    "Quận Bình Thạnh, TP. Hồ Chí Minh (Địa chỉ minh họa)"
-  );
+  const [customerName, setCustomerName] = useState(profile?.fullName ?? "");
+  const [customerPhone, setCustomerPhone] = useState(profile?.phone ?? "");
+  const [deliveryAddress, setDeliveryAddress] = useState("Phường Trấn Biên, TP. Đồng Nai");
   const [submitting, setSubmitting] = useState(false);
 
   const detailed = cart
@@ -32,17 +30,25 @@ export default function CheckoutPage() {
   const shippingFee = deliveryMethod === "delivery" ? 20000 : 0;
   const total = subtotal + shippingFee;
 
+  if (!hydrated) {
+    return (
+      <div className="mx-auto max-w-[780px] px-4 py-12 text-sm text-muted">
+        Đang tải thông tin thanh toán...
+      </div>
+    );
+  }
+
   if (detailed.length === 0) {
     return (
       <div className="mx-auto max-w-[780px] px-4 py-12">
         <EmptyState
           icon={<Truck className="h-6 w-6" />}
           title="Chưa có sản phẩm để thanh toán"
-          description="Quay lại Chợ OCOP để chọn nông sản trước khi đặt đơn hàng demo."
+          description="Quay lại Chợ OCOP để chọn nông sản trước khi đặt đơn hàng."
           action={
             <Link
               href="/marketplace"
-              className="inline-flex min-h-[44px] items-center rounded-[10px] bg-[#245B3D] px-5 text-sm font-semibold text-white"
+              className="inline-flex min-h-[44px] items-center rounded-[10px] bg-primary px-5 text-sm font-semibold text-white"
             >
               Về Chợ OCOP
             </Link>
@@ -54,28 +60,28 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-[1120px] space-y-6 px-4 py-8 lg:px-8">
-      <Link href="/cart" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#245B3D] hover:underline">
+      <Link href="/cart" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         <span>Quay lại Giỏ hàng</span>
       </Link>
 
       <div>
-        <Badge tone="gold">W01 · R4 · S06 Đặt hàng COD Demo (NaiAI tạm ẩn để tập trung)</Badge>
-        <h1 className="mt-2 font-editorial text-3xl font-semibold text-[#25352B]">
-          Xác nhận Phương thức Nhận hàng & Đặt đơn Demo
+        <Badge tone="gold">W01 · R4 · S06 Đặt hàng COD</Badge>
+        <h1 className="mt-2 font-editorial text-3xl font-semibold text-foreground">
+          Xác nhận Phương thức Nhận hàng & Đặt đơn
         </h1>
       </div>
 
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           if (submitting) return;
           if (deliveryMethod === "delivery" && deliveryAddress.trim().length < 5) {
-            toast.error("Vui lòng nhập địa chỉ giao hàng minh họa khi chọn Giao tận nơi.");
+            toast.error("Vui lòng nhập địa chỉ giao hàng khi chọn Giao tận nơi.");
             return;
           }
           setSubmitting(true);
-          const res = placeDemoOrder({
+          const res = await placeDemoOrder({
             customerName,
             customerPhoneDemo: customerPhone,
             deliveryMethod,
@@ -93,19 +99,19 @@ export default function CheckoutPage() {
       >
         <div className="space-y-5 lg:col-span-7">
           <Card className="space-y-4 p-5">
-            <h2 className="text-lg font-bold text-[#25352B]">1. Chọn hình thức nhận nông sản</h2>
+            <h2 className="text-lg font-bold text-foreground">1. Chọn hình thức nhận nông sản</h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <label
                 className={`flex cursor-pointer flex-col justify-between rounded-[14px] border-2 p-4 ${
                   deliveryMethod === "delivery"
-                    ? "border-[#245B3D] bg-[#EAF0E5]/70"
-                    : "border-[#D6DED2] bg-white"
+                    ? "border-primary bg-surface-soft/70"
+                    : "border-border bg-white"
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-bold text-[#25352B]">Giao tận nơi (Xe mát HTX)</p>
-                    <p className="mt-1 text-xs text-[#52645A]">
+                    <p className="font-bold text-foreground">Giao tận nơi (Xe mát HTX)</p>
+                    <p className="mt-1 text-xs text-muted">
                       Giao trong ngày tuyến Đồng Nai – TP.HCM
                     </p>
                   </div>
@@ -114,23 +120,23 @@ export default function CheckoutPage() {
                     name="deliveryMethod"
                     checked={deliveryMethod === "delivery"}
                     onChange={() => setDeliveryMethod("delivery")}
-                    className="mt-1 h-4 w-4 accent-[#245B3D]"
+                    className="mt-1 h-4 w-4 accent-primary"
                   />
                 </div>
-                <p className="mt-3 tabular-nums text-sm font-bold text-[#245B3D]">+20.000 đ (Demo)</p>
+                <p className="mt-3 tabular-nums text-sm font-bold text-primary">+20.000 đ</p>
               </label>
 
               <label
                 className={`flex cursor-pointer flex-col justify-between rounded-[14px] border-2 p-4 ${
                   deliveryMethod === "pickup"
-                    ? "border-[#245B3D] bg-[#EAF0E5]/70"
-                    : "border-[#D6DED2] bg-white"
+                    ? "border-primary bg-surface-soft/70"
+                    : "border-border bg-white"
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <p className="font-bold text-[#25352B]">Nhận trực tiếp tại vườn</p>
-                    <p className="mt-1 text-xs text-[#52645A]">
+                    <p className="font-bold text-foreground">Nhận trực tiếp tại vườn</p>
+                    <p className="mt-1 text-xs text-muted">
                       Ghé thăm vườn & đối chiếu tận tay cùng chủ vườn
                     </p>
                   </div>
@@ -139,20 +145,20 @@ export default function CheckoutPage() {
                     name="deliveryMethod"
                     checked={deliveryMethod === "pickup"}
                     onChange={() => setDeliveryMethod("pickup")}
-                    className="mt-1 h-4 w-4 accent-[#245B3D]"
+                    className="mt-1 h-4 w-4 accent-primary"
                   />
                 </div>
-                <p className="mt-3 tabular-nums text-sm font-bold text-[#24603B]">0 đ (Miễn phí)</p>
+                <p className="mt-3 tabular-nums text-sm font-bold text-success">0 đ (Miễn phí)</p>
               </label>
             </div>
           </Card>
 
           <Card className="space-y-4 p-5">
-            <h2 className="text-lg font-bold text-[#25352B]">2. Thông tin người nhận (Dữ liệu Demo)</h2>
+            <h2 className="text-lg font-bold text-foreground">2. Thông tin người nhận</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="co-name" className="block text-sm font-semibold text-[#25352B]">
-                  Họ tên khách hàng (Demo)
+                <label htmlFor="co-name" className="block text-sm font-semibold text-foreground">
+                  Họ tên khách hàng
                 </label>
                 <input
                   id="co-name"
@@ -160,12 +166,12 @@ export default function CheckoutPage() {
                   required
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="mt-1 min-h-[46px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+                  className="mt-1 min-h-[46px] w-full rounded-[10px] border border-input bg-white px-3 text-sm"
                 />
               </div>
               <div>
-                <label htmlFor="co-phone" className="block text-sm font-semibold text-[#25352B]">
-                  Số liên hệ minh họa
+                <label htmlFor="co-phone" className="block text-sm font-semibold text-foreground">
+                  Số liên hệ
                 </label>
                 <input
                   id="co-phone"
@@ -173,15 +179,15 @@ export default function CheckoutPage() {
                   required
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="mt-1 min-h-[46px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+                  className="mt-1 min-h-[46px] w-full rounded-[10px] border border-input bg-white px-3 text-sm"
                 />
               </div>
             </div>
 
             {deliveryMethod === "delivery" ? (
               <div>
-                <label htmlFor="co-address" className="block text-sm font-semibold text-[#25352B]">
-                  Địa chỉ giao hàng minh họa
+                <label htmlFor="co-address" className="block text-sm font-semibold text-foreground">
+                  Địa chỉ giao hàng
                 </label>
                 <input
                   id="co-address"
@@ -189,37 +195,37 @@ export default function CheckoutPage() {
                   required
                   value={deliveryAddress}
                   onChange={(e) => setDeliveryAddress(e.target.value)}
-                  className="mt-1 min-h-[46px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+                  className="mt-1 min-h-[46px] w-full rounded-[10px] border border-input bg-white px-3 text-sm"
                 />
               </div>
             ) : (
-              <div className="flex items-center gap-2 rounded-[10px] bg-[#EAF0E5] px-3.5 py-3 text-sm text-[#245B3D]">
+              <div className="flex items-center gap-2 rounded-[10px] bg-surface-soft px-3.5 py-3 text-sm text-primary">
                 <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <span>Bạn sẽ nhận hàng trực tiếp tại {detailed[0].product.farmName} (0 đ phí giao).</span>
               </div>
             )}
 
-            <div className="rounded-[12px] border border-[#D6DED2] bg-[#FFF2D8]/60 p-3.5 text-sm text-[#25352B]">
-              <p className="font-bold">Thanh toán: COD Demo (Mô phỏng khi nhận hàng)</p>
-              <p className="mt-0.5 text-xs text-[#52645A]">
-                Không tích hợp cổng thanh toán ngân hàng hay ví điện tử thật ở giai đoạn prototype.
+            <div className="rounded-[12px] border border-border bg-warning-bg/60 p-3.5 text-sm text-foreground">
+              <p className="font-bold">Thanh toán: COD (Thanh toán khi nhận hàng)</p>
+              <p className="mt-0.5 text-xs text-muted">
+                Chưa tích hợp cổng thanh toán ngân hàng hay ví điện tử.
               </p>
             </div>
           </Card>
         </div>
 
         <Card className="h-fit space-y-4 p-5 lg:col-span-5">
-          <h2 className="text-lg font-bold text-[#25352B]">Tóm tắt đơn hàng Demo</h2>
-          <ul className="space-y-3 border-b border-[#D6DED2] pb-4">
+          <h2 className="text-lg font-bold text-foreground">Tóm tắt đơn hàng</h2>
+          <ul className="space-y-3 border-b border-border pb-4">
             {detailed.map(({ product, quantity }) => (
               <li key={product.id} className="flex items-center justify-between gap-3 text-sm">
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-[#25352B]">{product.name}</p>
-                  <p className="tabular-nums text-xs text-[#52645A]">
+                  <p className="truncate font-semibold text-foreground">{product.name}</p>
+                  <p className="tabular-nums text-xs text-muted">
                     {quantity} {product.unitLabel} × {formatVnd(product.priceVnd)}
                   </p>
                 </div>
-                <span className="tabular-nums font-bold text-[#25352B]">
+                <span className="tabular-nums font-bold text-foreground">
                   {formatVnd(product.priceVnd * quantity)}
                 </span>
               </li>
@@ -228,28 +234,28 @@ export default function CheckoutPage() {
 
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-[#52645A]">Tiền hàng</span>
+              <span className="text-muted">Tiền hàng</span>
               <span className="tabular-nums font-semibold">{formatVnd(subtotal)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#52645A]">
-                {deliveryMethod === "delivery" ? "Phí giao tận nơi (Demo)" : "Nhận tại vườn"}
+              <span className="text-muted">
+                {deliveryMethod === "delivery" ? "Phí giao tận nơi" : "Nhận tại vườn"}
               </span>
               <span className="tabular-nums font-semibold">{formatVnd(shippingFee)}</span>
             </div>
-            <div className="flex justify-between border-t border-[#D6DED2] pt-3 text-base">
-              <span className="font-bold text-[#25352B]">Tổng cộng (COD Demo)</span>
-              <span className="tabular-nums text-xl font-bold text-[#245B3D]">{formatVnd(total)}</span>
+            <div className="flex justify-between border-t border-border pt-3 text-base">
+              <span className="font-bold text-foreground">Tổng cộng (COD)</span>
+              <span className="tabular-nums text-xl font-bold text-primary">{formatVnd(total)}</span>
             </div>
           </div>
 
           <Button type="submit" variant="primary" size="lg" className="w-full" disabled={submitting}>
             <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
-            <span>{submitting ? "Đang tạo đơn demo..." : "Xác nhận đặt hàng (Demo)"}</span>
+            <span>{submitting ? "Đang tạo đơn..." : "Xác nhận đặt hàng"}</span>
           </Button>
 
-          <p className="flex items-center gap-1.5 text-xs text-[#52645A]">
-            <ShieldCheck className="h-4 w-4 shrink-0 text-[#245B3D]" aria-hidden="true" />
+          <p className="flex items-center gap-1.5 text-xs text-muted">
+            <ShieldCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
             <span>Đơn hàng mới sẽ xuất hiện ngay tại Không gian Nhà nông W02 để xử lý.</span>
           </p>
         </Card>

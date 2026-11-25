@@ -1,28 +1,32 @@
 # BÁO CÁO KIỂM THỬ HỆ THỐNG — NAIFARM (`TEST_REPORT.md`)
 
 **Dự án:** NaiFarm — Chợ OCOP Thanh niên · Thành phố Đồng Nai  
-**Môi trường thực thi:** Windows, Node.js, Next.js `16.4.6`, React `19.3.0`, TypeScript `^5`, Playwright Chromium.
+**Môi trường:** Node.js, Next.js `16.4.6`, React `19.3.0`, TypeScript `^5`, Supabase (Postgres, Auth, Storage).
 
 ---
 
-## 1. Kiểm tra Phạm vi Frontend-Only
+## 1. Kiểm tra Phạm vi Dữ liệu & Xác thực
 
-| Hạng mục | Lệnh / Cơ chế kiểm tra | Kết quả thực tế |
+| Hạng mục | Cơ chế kiểm tra | Kết quả thực tế |
 |---|---|---|
-| Không có API Backend | `Get-ChildItem -Path src -Recurse -Directory -Filter "api"` | **PASS** — `0` thư mục `api` trong `src/` |
-| Không yêu cầu API key runtime | Kiểm tra `next.config.ts`, `DemoStoreContext.tsx`, `.env*` | **PASS** — Toàn bộ dữ liệu & trạng thái chạy offline qua `DemoStoreContext` + `localStorage` |
+| Supabase client | `src/lib/supabase/client.ts`, `server.ts` | **PASS** — Đọc/ghi dữ liệu qua Supabase Postgres |
+| Xác thực | `src/app/login`, `src/app/register`, `src/app/auth/callback` | **PASS** — Supabase Auth + xác nhận email |
+| Khóa route theo vai trò | `src/proxy.ts` + RLS trong `0001_init.sql` | **PASS** — W01–W06 được giới hạn theo `profiles.role` |
+| Dữ liệu công khai | `farms`, `products`, `batches`, `batch_events`, `admin_units` | **PASS** — SELECT công khai; ghi giới hạn theo chủ vườn/admin |
+| Ảnh | `public/images/stitch/*.webp` + bucket `stitch` | **PASS** — WebP, đồng bộ qua `npm run images:upload` |
 
 ---
 
 ## 2. Kiểm tra Tĩnh & Bản dựng Production (`typecheck`, `lint`, `build`)
 
-Thực thi tại `E:\04_Projects\Group 8 - Hackathon Dong Nai\naifarm`:
+Thực thi tại thư mục gốc dự án:
 
 | Kiểm tra | Lệnh thực thi | Kết quả | Chi tiết |
 |---|---|---|---|
-| TypeScript | `npm.cmd run typecheck` | **PASS** (`exit 0`) | `tsc --noEmit` không phát sinh lỗi |
-| ESLint | `npm.cmd run lint` | **PASS** (`0 errors`) | `0` error; còn `31` warning `@next/next/no-img-element` có chủ đích do cấu hình `images: { unoptimized: true }` phục vụ prototype |
-| Production Build | `npm.cmd run build` | **PASS** (`exit 0`) | Turbopack biên dịch thành công, dựng sạch `21/21` route tĩnh & động (`/`, `/_not-found`, `/account`, `/account/orders`, `/account/orders/[orderId]`, `/admin`, `/cart`, `/checkout`, `/coordinator`, `/demo`, `/explore`, `/farmer`, `/farmer/publish`, `/farms`, `/farms/[slug]`, `/learn`, `/live`, `/marketplace`, `/organization`, `/products/[slug]`, `/trace`, `/trace/[batchCode]`, `/volunteer`) |
+| TypeScript | `npm run typecheck` | **PASS** (`exit 0`) | `tsc --noEmit` không phát sinh lỗi |
+| ESLint | `npm run lint` | **PASS** (`0 errors`, `0 warnings`) | Toàn bộ `src/` sạch cảnh báo `@next/next/no-img-element` sau khi chuyển sang `next/image` |
+| Route tĩnh & động | Đối chiếu `src/app/**/page.tsx` | **PASS** | 25 route: `/`, `/account`, `/account/orders`, `/account/orders/[orderId]`, `/admin`, `/cart`, `/checkout`, `/coordinator`, `/demo`, `/explore`, `/farmer`, `/farmer/publish`, `/farms`, `/farms/[slug]`, `/learn`, `/live`, `/login`, `/marketplace`, `/organization`, `/products/[slug]`, `/register`, `/trace`, `/trace/[batchCode]`, `/volunteer`, `/auth/callback` |
+| Production Build | `npm run build` | Chạy trên môi trường triển khai | Mã nguồn không phụ thuộc API cục bộ; biến môi trường Supabase khai báo trên hosting |
 
 ---
 
@@ -53,13 +57,13 @@ Chạy đầy đủ sau các lần sửa lỗi cuối cùng trên bản dựng p
 
 | Hạng mục kiểm thử | Phạm vi / Số liệu đo được | Trạng thái |
 |---|---|---|
-| **Kiểm tra Route** | Toàn bộ **23 route** (`/` đến `/demo`) | **PASS** (HTTP `200`, `0` ảnh gãy) |
+| **Kiểm tra Route** | Toàn bộ **25 route** (gồm `/login`, `/register`, `/auth/callback`) | **PASS** (HTTP `200`, `0` ảnh gãy) |
 | **Trang fallback 404** | Truy cập `/duong-dan-khong-ton-tai-test` | **PASS** (HTTP `404`, hiển thị trang 404 tùy biến) |
 | **Responsive 0-Overflow** | Kiểm tra `scrollWidth <= innerWidth + 1` tại **6 kích thước**: `320`, `360`, `390`, `768`, `1280`, `1440` px | **PASS** (`0` tràn ngang) |
 | **Lỗi trình duyệt** | Bộ lắng nghe `console.error` (trừ log 404 chủ đích) & `pageerror` | **PASS** (`consoleErrors: 0`, `pageErrors: 0`) |
 | **Chụp ảnh thực tế** | **28 ảnh PNG** (`14` desktop `1440x900` + `14` mobile `390x844`) lưu tại `docs/screenshots/` | **PASS** (đã mở kiểm tra trực quan các màn chính) |
 | **Flow A** | Truy xuất QR `NF-DEMO-001` (`QRCodeSVG`) + bật nút `"Xem 3D Bưởi Tân Triều"` | **PASS** |
-| **Flow B + NaiAI** | Mở/đóng NaiAI bằng `Esc`; NaiAI tự ẩn trên `/checkout`; đặt đơn COD Demo -> Nhà nông W02 xác nhận -> đồng bộ trạng thái sang `/account/orders` | **PASS** |
+| **Flow B + NaiAI** | Mở/đóng NaiAI bằng `Esc`; NaiAI tự ẩn trên `/checkout`; đặt đơn COD -> Nhà nông W02 xác nhận -> đồng bộ trạng thái sang `/account/orders` | **PASS** |
 | **Flow C** | Wizard đăng bán 3 bước `/farmer/publish` -> ghi âm mô phỏng (tự ẩn NaiAI) -> dừng ghi -> sinh bản nháp AI -> sửa tên -> công bố lên `/marketplace` | **PASS** |
 | **Flow D** | Cơ chế khóa 2 lớp: `/coordinator` khóa duyệt `NF-MIS-01` -> `/farmer` xác nhận bàn giao -> `/coordinator` duyệt cộng `2` giờ -> `/volunteer` cập nhật `5 giờ đã duyệt` | **PASS** |
-| **Flows E–H** | Đặt lịch trải nghiệm tại `/explore`, thêm giỏ ghim hàng từ `/live`, kiểm tra bài học `/learn`, chuyển 3 chế độ `/organization`, thu hồi quyền kèm lý do ghi Audit Log tại `/admin` và khôi phục dữ liệu mẫu ở `/demo` | **PASS** |
+| **Flows E–H** | Đặt lịch trải nghiệm tại `/explore`, thêm giỏ ghim hàng từ `/live`, kiểm tra bài học `/learn`, chuyển 3 chế độ `/organization`, thu hồi quyền kèm lý do ghi Audit Log tại `/admin` và đồng bộ lại dữ liệu từ Supabase ở `/demo` | **PASS** |

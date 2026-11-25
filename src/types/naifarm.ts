@@ -1,5 +1,21 @@
 export type WorkspaceId = "W01" | "W02" | "W03" | "W04" | "W05" | "W06";
 
+export type AppRole =
+  | "customer"
+  | "farmer"
+  | "volunteer"
+  | "coordinator"
+  | "organization"
+  | "admin";
+
+export interface Profile {
+  id: string;
+  fullName: string;
+  phone: string | null;
+  role: AppRole;
+  farmId: string | null;
+}
+
 export type OcopStatus =
   | "self_declared_unverified"
   | "coop_checked_demo"
@@ -27,14 +43,23 @@ export type MissionStatus =
 
 export type LiveStatus = "replay_demo" | "scheduled" | "ended";
 
+export type RegionName =
+  | "Phường Tân Triều"
+  | "Phường Long Khánh"
+  | "Phường Xuân Lộc"
+  | "Cẩm Mỹ & Định Quán";
+
 export interface Farm {
   id: string;
   slug: string;
   name: string;
   ownerName: string;
   ownerAgeLabel: string;
-  region: "Vĩnh Cửu / Tân Triều" | "Long Khánh" | "Xuân Lộc" | "Cẩm Mỹ & Định Quán";
+  region: RegionName;
   addressLabel: string;
+  adminUnitCode?: string | null;
+  lat: number;
+  lng: number;
   areaHa: number;
   mainCrops: string[];
   ocopStatus: OcopStatus;
@@ -46,9 +71,8 @@ export interface Farm {
   ownerPortrait: string;
   galleryImages: string[];
   youthSupporters: string[];
-  coordinates: { xPercent: number; yPercent: number; latLabel: string; lngLabel: string };
   experiences: ExperiencePackage[];
-  isDemo: true;
+  isDemo?: boolean;
 }
 
 export interface ExperiencePackage {
@@ -61,6 +85,12 @@ export interface ExperiencePackage {
   scheduleSummary: string;
   safetyNote: string;
   image: string;
+}
+
+export interface ProductWeightOption {
+  label: string;
+  kgMultiplier: number;
+  priceVnd: number;
 }
 
 export interface Product {
@@ -81,9 +111,9 @@ export interface Product {
   storyNote: string;
   image: string;
   gallery: string[];
-  weightOptions?: { label: string; kgMultiplier: number; priceVnd: number }[];
+  weightOptions?: ProductWeightOption[];
   has3DViewer?: boolean;
-  isDemo: true;
+  isDemo?: boolean;
 }
 
 export interface BatchEvent {
@@ -92,7 +122,7 @@ export interface BatchEvent {
   title: string;
   detail: string;
   actorCategory: string;
-  sourceDeclaration: "Nhà vườn tự khai" | "Thanh niên hỗ trợ ghi nhận" | "HTX đối chiếu (Demo)";
+  sourceDeclaration: "Nhà vườn tự khai" | "Thanh niên hỗ trợ ghi nhận" | "HTX đối chiếu";
   photo?: string;
 }
 
@@ -109,7 +139,7 @@ export interface TraceBatch {
   docStatus: string;
   summary: string;
   events: BatchEvent[];
-  isDemo: true;
+  isDemo?: boolean;
 }
 
 export interface CartItem {
@@ -118,31 +148,33 @@ export interface CartItem {
   selectedOptionLabel?: string;
 }
 
+export interface OrderItem {
+  productId: string;
+  productName: string;
+  unitLabel: string;
+  quantity: number;
+  unitPriceVnd: number;
+  image: string;
+}
+
 export interface DemoOrder {
   id: string;
   customerName: string;
   customerPhoneDemo: string;
   farmId: string;
   farmName: string;
-  items: {
-    productId: string;
-    productName: string;
-    unitLabel: string;
-    quantity: number;
-    unitPriceVnd: number;
-    image: string;
-  }[];
+  items: OrderItem[];
   deliveryMethod: DeliveryMethod;
   deliveryAddress: string;
   subtotalVnd: number;
   shippingFeeVnd: number;
   totalVnd: number;
-  paymentLabel: "COD Demo (Thanh toán mô phỏng khi nhận hàng)";
+  paymentLabel: string;
   status: OrderStatus;
   createdAtLabel: string;
   timeline: { step: string; time: string; done: boolean }[];
   cancelReason?: string;
-  isDemo: true;
+  isDemo?: boolean;
 }
 
 export interface VolunteerMission {
@@ -163,7 +195,7 @@ export interface VolunteerMission {
   evidenceImage?: string;
   revisionReason?: string;
   status: MissionStatus;
-  isDemo: true;
+  isDemo?: boolean;
 }
 
 export interface SupportRequest {
@@ -191,7 +223,15 @@ export interface LivestreamSession {
   pinnedProductIds: string[];
   angles: { id: string; label: string; image: string; caption: string }[];
   summary: string;
-  isDemo: true;
+  isDemo?: boolean;
+}
+
+export interface RfqRequest {
+  id: string;
+  company: string;
+  note: string;
+  status: string;
+  createdAtLabel: string;
 }
 
 export interface ExperienceBooking {
@@ -213,7 +253,7 @@ export interface DocumentReviewCase {
   documentTitle: string;
   submittedAt: string;
   scopeNote: string;
-  status: "Chờ đối chiếu" | "Hồ sơ đã đối chiếu (Demo)" | "Yêu cầu bổ sung";
+  status: "Chờ đối chiếu" | "Hồ sơ đã đối chiếu" | "Yêu cầu bổ sung";
   reviewerNote?: string;
 }
 
@@ -236,4 +276,12 @@ export interface AuditLogEntry {
   action: string;
   target: string;
   note: string;
+}
+
+export interface AdminUnit {
+  code: string;
+  fullName: string;
+  level: string;
+  lat: number;
+  lng: number;
 }

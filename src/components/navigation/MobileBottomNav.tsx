@@ -63,7 +63,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Điều hướng di động"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-[#D6DED2] bg-white/95 backdrop-blur-sm pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-white/95 backdrop-blur-sm pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       <ul className="mx-auto grid max-w-lg px-2" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
         {items.map((item) => {
@@ -75,7 +75,7 @@ export function MobileBottomNav() {
                 href={item.href}
                 className={cn(
                   "flex min-h-[56px] flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-medium",
-                  active ? "text-[#245B3D] font-bold" : "text-[#52645A]"
+                  active ? "text-primary font-bold" : "text-muted"
                 )}
               >
                 <Icon className="h-5 w-5" aria-hidden="true" strokeWidth={active ? 2.2 : 1.75} />

@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import Image from "next/image";
+
+import React, { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
@@ -22,6 +24,7 @@ import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
 import { Badge, Button, Card, DemoBanner } from "@/components/ui/Primitives";
 import { formatVnd } from "@/lib/format";
 import type { DemoOrder, OrderStatus } from "@/types/naifarm";
+import { assetUrl } from "@/lib/storage/assets";
 
 type FarmerTab = "orders" | "diary" | "support" | "pass";
 
@@ -31,11 +34,13 @@ const ORDER_STATUS_META: Record<
 > = {
   pending_confirm: { label: "Chờ nhà vườn xác nhận", tone: "warning" },
   preparing: { label: "Đang đóng gói tại vườn", tone: "info" },
-  shipping: { label: "Đang giao hàng (Demo)", tone: "info" },
+  shipping: { label: "Đang giao hàng", tone: "info" },
   ready_pickup: { label: "Sẵn sàng nhận tại vườn", tone: "success" },
-  completed: { label: "Đã hoàn thành (Demo)", tone: "success" },
+  completed: { label: "Đã hoàn thành", tone: "success" },
   cancelled: { label: "Đã hủy đơn", tone: "danger" },
 };
+
+const emptySubscribe = () => () => {};
 
 const QUICK_CANCEL_REASONS = [
   "Vườn vừa hết lứa hái chín hôm nay, hẹn lứa sau.",
@@ -52,6 +57,8 @@ export default function FarmerWorkspacePage() {
     orders,
     missions,
     supportRequests,
+    profile,
+    role,
     setActiveWorkspace,
     updateOrderStatus,
     addHarvestDiaryEvent,
@@ -59,7 +66,7 @@ export default function FarmerWorkspacePage() {
     confirmMissionByFarmer,
   } = useDemoStore();
 
-  const [selectedFarmId, setSelectedFarmId] = useState("farm-ba-tu-demo");
+  const [selectedFarmId, setSelectedFarmId] = useState("");
   const [activeTab, setActiveTab] = useState<FarmerTab>("orders");
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
@@ -84,83 +91,156 @@ export default function FarmerWorkspacePage() {
     setActiveWorkspace("W02");
   }, [setActiveWorkspace]);
 
-  const activeFarm = farms.find((f) => f.id === selectedFarmId) ?? farms[0];
-  const farmProducts = products.filter((p) => p.farmId === activeFarm.id);
-  const visibleOrders = showAllOrders
-    ? orders
-    : orders.filter((o) => o.farmId === activeFarm.id || o.id === "NF-ORD-DEMO-01");
-  const farmMissions = missions.filter((m) => m.farmId === activeFarm.id || m.status === "submitted");
+  const siteOrigin = useSyncExternalStore(
+    emptySubscribe,
+    () => window.location.origin,
+    () => ""
+  );
+  const isAdminViewer = role === "admin";
+  const selectableFarms = isAdminViewer
+    ? farms
+    : farms.filter((farm) => farm.id === profile?.farmId);
+  const activeFarmId =
+    selectedFarmId || profile?.farmId || (isAdminViewer ? farms[0]?.id ?? "" : "");
+  const activeFarm = selectableFarms.find((farm) => farm.id === activeFarmId) ?? selectableFarms[0];
+  const farmProducts = activeFarm
+    ? products.filter((p) => p.farmId === activeFarm.id)
+    : [];
+  const visibleOrders = activeFarm
+    ? showAllOrders
+      ? orders
+      : orders.filter((o) => o.farmId === activeFarm.id)
+    : [];
+  const farmMissions = activeFarm
+    ? missions.filter((m) => m.farmId === activeFarm.id || m.status === "submitted")
+    : [];
   const pendingConfirmMissions = farmMissions.filter((m) => m.status === "submitted");
+  const farmBatches = activeFarm
+    ? batches.filter((b) => b.farmId === activeFarm.id)
+    : [];
+  const effectiveDiaryBatchCode = farmBatches.some(
+    (b) => b.batchCode === diaryBatchCode
+  )
+    ? diaryBatchCode
+    : farmBatches[0]?.batchCode ?? "";
 
-  const handleConfirmDeliverable = (missionId: string, title: string) => {
-    confirmMissionByFarmer(missionId);
-    toast.success(`Đã xác nhận kết quả "${title}". Điều phối viên W04 có thể duyệt giờ công.`);
-  };
-
-  const handleAdvanceOrder = (order: DemoOrder) => {
-    if (order.status === "pending_confirm") {
-      updateOrderStatus(order.id, "preparing");
-      toast.success(`Đơn ${order.id} đã chuyển sang "Đang đóng gói tại vườn".`);
-    } else if (order.status === "preparing") {
-      const nextStatus: OrderStatus = order.deliveryMethod === "pickup" ? "ready_pickup" : "shipping";
-      updateOrderStatus(order.id, nextStatus);
-      toast.success(
-        nextStatus === "ready_pickup"
-          ? `Đơn ${order.id} đã sẵn sàng để khách nhận tại vườn.`
-          : `Đơn ${order.id} đã bàn giao vận chuyển (Demo).`
-      );
-    } else if (order.status === "shipping" || order.status === "ready_pickup") {
-      updateOrderStatus(order.id, "completed");
-      toast.success(`Đơn ${order.id} đã hoàn thành!`);
+  const handleConfirmDeliverable = async (missionId: string, title: string) => {
+    try {
+      await confirmMissionByFarmer(missionId);
+      toast.success(`Đã xác nhận kết quả "${title}". Điều phối viên W04 có thể duyệt giờ công.`);
+    } catch {
+      toast.error("Không xác nhận được kết quả. Vui lòng thử lại.");
     }
   };
 
-  const handleConfirmCancel = () => {
+  const handleAdvanceOrder = async (order: DemoOrder) => {
+    try {
+      if (order.status === "pending_confirm") {
+        await updateOrderStatus(order.id, "preparing");
+        toast.success(`Đơn ${order.id} đã chuyển sang "Đang đóng gói tại vườn".`);
+      } else if (order.status === "preparing") {
+        const nextStatus: OrderStatus =
+          order.deliveryMethod === "pickup" ? "ready_pickup" : "shipping";
+        await updateOrderStatus(order.id, nextStatus);
+        toast.success(
+          nextStatus === "ready_pickup"
+            ? `Đơn ${order.id} đã sẵn sàng để khách nhận tại vườn.`
+            : `Đơn ${order.id} đã bàn giao vận chuyển.`
+        );
+      } else if (order.status === "shipping" || order.status === "ready_pickup") {
+        await updateOrderStatus(order.id, "completed");
+        toast.success(`Đơn ${order.id} đã hoàn thành!`);
+      }
+    } catch {
+      toast.error("Không cập nhật được trạng thái đơn. Vui lòng thử lại.");
+    }
+  };
+
+  const handleConfirmCancel = async () => {
     if (!cancelOrderId) return;
     if (!cancelReason.trim()) {
       toast.error("Bác vui lòng chọn hoặc nhập lý do hủy đơn.");
       return;
     }
-    updateOrderStatus(cancelOrderId, "cancelled", cancelReason.trim());
-    toast.success(`Đã cập nhật hủy đơn ${cancelOrderId} kèm lý do cho khách hàng.`);
-    setCancelOrderId(null);
+    try {
+      await updateOrderStatus(cancelOrderId, "cancelled", cancelReason.trim());
+      toast.success(`Đã cập nhật hủy đơn ${cancelOrderId} kèm lý do cho khách hàng.`);
+      setCancelOrderId(null);
+    } catch {
+      toast.error("Không hủy được đơn. Vui lòng thử lại.");
+    }
   };
 
-  const handleAddDiary = (e: React.FormEvent) => {
+  const handleAddDiary = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!diaryTitle.trim() || !diaryDetail.trim()) {
       toast.error("Bác vui lòng nhập tiêu đề và nội dung mốc nhật ký.");
       return;
     }
-    addHarvestDiaryEvent(diaryBatchCode, {
-      dateLabel: "24/11/2026 (Mới ghi)",
-      title: diaryTitle.trim(),
-      detail: diaryDetail.trim(),
-      actorCategory: `${activeFarm.ownerName} (Chủ vườn W02)`,
-      sourceDeclaration: "Nhà vườn tự khai",
-      photo: "/images/stitch/stitch-53.jpg",
-    });
-    toast.success(`Đã ghi thêm mốc nhật ký vào lô ${diaryBatchCode}.`);
+    if (!effectiveDiaryBatchCode) {
+      toast.error("Chưa có mã lô hàng cho vườn này.");
+      return;
+    }
+    try {
+      const now = new Date();
+      const dateLabel = `${String(now.getDate()).padStart(2, "0")}/${String(
+        now.getMonth() + 1
+      ).padStart(2, "0")}/${now.getFullYear()} (Mới ghi)`;
+      await addHarvestDiaryEvent(effectiveDiaryBatchCode, {
+        dateLabel,
+        title: diaryTitle.trim(),
+        detail: diaryDetail.trim(),
+        actorCategory: `${activeFarm.ownerName} (Chủ vườn W02)`,
+        sourceDeclaration: "Nhà vườn tự khai",
+        photo: "stitch/stitch-53.webp",
+      });
+      toast.success(`Đã ghi thêm mốc nhật ký vào lô ${effectiveDiaryBatchCode}.`);
+    } catch {
+      toast.error("Không ghi được nhật ký. Vui lòng thử lại.");
+    }
   };
 
-  const handleSendSupport = (e: React.FormEvent) => {
+  const handleSendSupport = async (e: React.FormEvent) => {
     e.preventDefault();
-    const created = submitSupportRequest({
-      farmId: activeFarm.id,
-      farmName: activeFarm.name,
-      title: `${reqNeedType} — ${activeFarm.name}`,
-      needType: reqNeedType,
-      preferredTime: reqTime,
-      locationMode: reqMode,
-      note: reqNote.trim() || "Cần thanh niên hỗ trợ thao tác số hóa sản phẩm.",
-    });
-    toast.success(`Đã gửi yêu cầu ${created.id} tới Điều phối viên W04.`);
+    try {
+      const created = await submitSupportRequest({
+        farmId: activeFarm.id,
+        farmName: activeFarm.name,
+        title: `${reqNeedType} — ${activeFarm.name}`,
+        needType: reqNeedType,
+        preferredTime: reqTime,
+        locationMode: reqMode,
+        note: reqNote.trim() || "Cần thanh niên hỗ trợ thao tác số hóa sản phẩm.",
+      });
+      toast.success(`Đã gửi yêu cầu ${created.id} tới Điều phối viên W04.`);
+    } catch {
+      toast.error("Không gửi được yêu cầu. Vui lòng thử lại.");
+    }
   };
 
   if (!hydrated) {
     return (
-      <div className="mx-auto max-w-[1280px] px-4 py-12 text-lg text-[#52645A]">
+      <div className="mx-auto max-w-[1280px] px-4 py-12 text-lg text-muted">
         Đang mở Không gian Nhà vườn...
+      </div>
+    );
+  }
+
+  if (!activeFarm) {
+    return (
+      <div className="mx-auto max-w-[780px] px-4 py-12">
+        <Card className="space-y-3 p-6">
+          <h1 className="text-xl font-bold text-foreground">Tài khoản chưa được gắn với nhà vườn</h1>
+          <p className="text-base text-muted">
+            Hồ sơ nhà nông cần được quản trị viên gắn mã nhà vườn trước khi đăng bán và xử lý đơn.
+          </p>
+          <Link
+            href="/account"
+            className="inline-flex min-h-[44px] items-center rounded-[10px] bg-primary px-5 text-sm font-semibold text-white"
+          >
+            Về Không gian Cá nhân
+          </Link>
+        </Card>
       </div>
     );
   }
@@ -170,7 +250,7 @@ export default function FarmerWorkspacePage() {
       workspaceId="W02"
       title="Không gian Nhà vườn"
       subtitle="Chữ to, nút bấm rõ — tự đăng nông sản, xác nhận đơn và ghi nhật ký mùa vụ"
-      scopeBadge="Dữ liệu mô phỏng — Tự quản nhà vườn"
+      scopeBadge="Dữ liệu Supabase — Tự quản nhà vườn"
       navItems={[
         {
           label: "Đăng bán nhanh (3 bước)",
@@ -214,7 +294,7 @@ export default function FarmerWorkspacePage() {
     >
       <div className="space-y-6 text-[17px] leading-[1.6]">
         {/* Farm Switcher + Giant Primary CTA */}
-        <Card className="border-2 border-[#245B3D]/25 bg-gradient-to-br from-white to-[#F5F3E9] p-5 sm:p-6">
+        <Card className="border-2 border-primary/25 bg-gradient-to-br from-white to-background p-5 sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
@@ -223,55 +303,57 @@ export default function FarmerWorkspacePage() {
                   {activeFarm.ocopLabel}
                 </Badge>
               </div>
-              <h2 className="text-2xl font-bold text-[#25352B]">
+              <h2 className="text-2xl font-bold text-foreground">
                 Xin chào, {activeFarm.ownerName} · {activeFarm.name}
               </h2>
-              <p className="inline-flex items-center gap-1.5 text-base text-[#52645A]">
-                <MapPin className="h-4 w-4 shrink-0 text-[#245B3D]" aria-hidden="true" />
+              <p className="inline-flex items-center gap-1.5 text-base text-muted">
+                <MapPin className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                 {activeFarm.addressLabel} · Diện tích {activeFarm.areaHa} ha
               </p>
 
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                <span className="text-sm font-semibold text-[#52645A]">Đổi vườn đang xem (Demo):</span>
-                {farms.slice(0, 2).map((farm) => (
-                  <button
-                    key={farm.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedFarmId(farm.id);
-                      const firstBatch = batches.find((b) => b.farmId === farm.id);
-                      if (firstBatch) setDiaryBatchCode(firstBatch.batchCode);
-                    }}
-                    className={`min-h-[44px] rounded-full px-4 py-1.5 text-sm font-semibold transition cursor-pointer ${
-                      selectedFarmId === farm.id
-                        ? "bg-[#245B3D] text-white"
-                        : "border border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#EAF0E5]"
-                    }`}
-                  >
-                    {farm.ownerName}
-                  </button>
-                ))}
-              </div>
+              {selectableFarms.length > 1 ? (
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <span className="text-sm font-semibold text-muted">Đổi vườn đang xem:</span>
+                  {selectableFarms.map((farm) => (
+                    <button
+                      key={farm.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedFarmId(farm.id);
+                        const firstBatch = batches.find((b) => b.farmId === farm.id);
+                        if (firstBatch) setDiaryBatchCode(firstBatch.batchCode);
+                      }}
+                      className={`min-h-[44px] rounded-full px-4 py-1.5 text-sm font-semibold transition cursor-pointer ${
+                        activeFarm?.id === farm.id
+                          ? "bg-primary text-white"
+                          : "border border-border bg-white text-foreground hover:bg-surface-soft"
+                      }`}
+                    >
+                      {farm.ownerName}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
               <Link
                 href="/farmer/publish"
-                className="inline-flex min-h-[58px] items-center justify-center gap-2.5 rounded-[14px] bg-[#245B3D] px-7 py-3.5 text-[18px] font-bold text-white shadow-[0_6px_16px_rgba(36,91,61,0.22)] hover:bg-[#19472E]"
+                className="inline-flex min-h-[58px] items-center justify-center gap-2.5 rounded-[14px] bg-primary px-7 py-3.5 text-[18px] font-bold text-white shadow-[0_6px_16px_rgba(36,91,61,0.22)] hover:bg-primary-hover"
               >
                 <Camera className="h-6 w-6 shrink-0" aria-hidden="true" />
                 <span>Chụp ảnh & Nói để bán</span>
               </Link>
               <Link
                 href="/live"
-                className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[12px] border border-[#245B3D] bg-white px-5 text-base font-semibold text-[#245B3D] hover:bg-[#EAF0E5]"
+                className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[12px] border border-primary bg-white px-5 text-base font-semibold text-primary hover:bg-surface-soft"
               >
                 <Radio className="h-5 w-5 shrink-0" aria-hidden="true" />
                 <span>Mở Livestream tại vườn</span>
               </Link>
               <Link
                 href={`/farms/${activeFarm.slug}`}
-                className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[12px] border border-[#D6DED2] bg-white px-5 text-base font-semibold text-[#25352B] hover:bg-[#EAF0E5]"
+                className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[12px] border border-border bg-white px-5 text-base font-semibold text-foreground hover:bg-surface-soft"
               >
                 <span>Xem trang vườn ngoài Chợ</span>
               </Link>
@@ -281,12 +363,12 @@ export default function FarmerWorkspacePage() {
 
         {/* Highlight Banner if Youth Deliverable is awaiting Farm confirmation */}
         {pendingConfirmMissions.length > 0 && activeTab !== "support" ? (
-          <div className="flex flex-col items-start justify-between gap-3 rounded-[16px] border-2 border-[#D7A34D] bg-[#FFF2D8] p-4 sm:flex-row sm:items-center">
+          <div className="flex flex-col items-start justify-between gap-3 rounded-[16px] border-2 border-accent bg-warning-bg p-4 sm:flex-row sm:items-center">
             <div className="space-y-1">
-              <p className="text-base font-bold text-[#25352B]">
+              <p className="text-base font-bold text-foreground">
                 Có {pendingConfirmMissions.length} việc hỗ trợ từ Thanh niên đang chờ bác xác nhận
               </p>
-              <p className="text-sm text-[#52645A]">
+              <p className="text-sm text-muted">
                 {pendingConfirmMissions[0].assigneeName} đã nộp ảnh và bàn giao công việc{" "}
                 <span className="font-semibold">{pendingConfirmMissions[0].id}</span>.
               </p>
@@ -301,15 +383,15 @@ export default function FarmerWorkspacePage() {
         {activeTab === "orders" ? (
           <section id="orders" className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-xl font-bold text-[#25352B]">
+              <h3 className="text-xl font-bold text-foreground">
                 Đơn đặt mua cần xử lý ({visibleOrders.length})
               </h3>
               <button
                 type="button"
                 onClick={() => setShowAllOrders((prev) => !prev)}
-                className="min-h-[44px] rounded-[10px] border border-[#D6DED2] bg-white px-4 text-sm font-semibold text-[#245B3D] hover:bg-[#EAF0E5] cursor-pointer"
+                className="min-h-[44px] rounded-[10px] border border-border bg-white px-4 text-sm font-semibold text-primary hover:bg-surface-soft cursor-pointer"
               >
-                {showAllOrders ? "Chỉ xem đơn của vườn đang chọn" : "Xem tất cả đơn Demo trên hệ thống"}
+                {showAllOrders ? "Chỉ xem đơn của vườn đang chọn" : "Xem tất cả đơn trên hệ thống"}
               </button>
             </div>
 
@@ -317,21 +399,21 @@ export default function FarmerWorkspacePage() {
               const meta = ORDER_STATUS_META[order.status];
               return (
                 <Card key={order.id} className="p-5 sm:p-6">
-                  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#EAF0E5] pb-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-surface-soft pb-4">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="tabular-nums text-lg font-bold text-[#245B3D]">
+                        <span className="tabular-nums text-lg font-bold text-primary">
                           {order.id}
                         </span>
                         <Badge tone={meta.tone}>{meta.label}</Badge>
                       </div>
-                      <p className="mt-1 text-base text-[#25352B]">
+                      <p className="mt-1 text-base text-foreground">
                         Khách hàng: <span className="font-semibold">{order.customerName}</span> ·{" "}
                         {order.createdAtLabel}
                       </p>
-                      <p className="text-sm text-[#52645A]">
+                      <p className="text-sm text-muted">
                         Hình thức:{" "}
-                        <span className="font-semibold text-[#25352B]">
+                        <span className="font-semibold text-foreground">
                           {order.deliveryMethod === "pickup"
                             ? "Khách tới nhận tại vườn (0 đ)"
                             : `Giao tận nơi (${order.deliveryAddress})`}
@@ -339,8 +421,8 @@ export default function FarmerWorkspacePage() {
                       </p>
                     </div>
                     <div className="text-left sm:text-right">
-                      <p className="text-sm text-[#52645A]">Tổng tiền thu dự kiến (COD Demo)</p>
-                      <p className="tabular-nums text-2xl font-bold text-[#245B3D]">
+                      <p className="text-sm text-muted">Tổng tiền thu dự kiến (COD)</p>
+                      <p className="tabular-nums text-2xl font-bold text-primary">
                         {formatVnd(order.totalVnd)}
                       </p>
                     </div>
@@ -350,12 +432,12 @@ export default function FarmerWorkspacePage() {
                     {order.items.map((item) => (
                       <li
                         key={item.productId}
-                        className="flex flex-wrap items-center justify-between gap-2 rounded-[12px] bg-[#F5F3E9] px-4 py-2.5 text-base"
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-[12px] bg-background px-4 py-2.5 text-base"
                       >
-                        <span className="font-medium text-[#25352B]">
+                        <span className="font-medium text-foreground">
                           {item.productName} × {item.quantity} ({item.unitLabel})
                         </span>
-                        <span className="tabular-nums font-semibold text-[#25352B]">
+                        <span className="tabular-nums font-semibold text-foreground">
                           {formatVnd(item.quantity * item.unitPriceVnd)}
                         </span>
                       </li>
@@ -363,7 +445,7 @@ export default function FarmerWorkspacePage() {
                   </ul>
 
                   {order.cancelReason ? (
-                    <div className="mb-4 rounded-[12px] border border-[#A32D2D]/30 bg-[#FDECEC] p-3 text-base text-[#A32D2D]">
+                    <div className="mb-4 rounded-[12px] border border-danger/30 bg-danger-bg p-3 text-base text-danger">
                       <span className="font-bold">Lý do đã hủy: </span>
                       {order.cancelReason}
                     </div>
@@ -401,8 +483,8 @@ export default function FarmerWorkspacePage() {
                   ) : null}
 
                   {cancelOrderId === order.id ? (
-                    <div className="mt-4 space-y-3 rounded-[14px] border border-[#A32D2D]/35 bg-[#FDECEC]/60 p-4">
-                      <p className="font-bold text-[#A32D2D]">
+                    <div className="mt-4 space-y-3 rounded-[14px] border border-danger/35 bg-danger-bg/60 p-4">
+                      <p className="font-bold text-danger">
                         Chọn hoặc nhập lý do gửi khách hàng cho đơn {order.id}:
                       </p>
                       <div className="flex flex-wrap gap-2">
@@ -413,8 +495,8 @@ export default function FarmerWorkspacePage() {
                             onClick={() => setCancelReason(r)}
                             className={`min-h-[44px] rounded-full border px-3.5 text-sm font-medium cursor-pointer ${
                               cancelReason === r
-                                ? "border-[#A32D2D] bg-[#A32D2D] text-white"
-                                : "border-[#D6DED2] bg-white text-[#25352B]"
+                                ? "border-danger bg-danger text-white"
+                                : "border-border bg-white text-foreground"
                             }`}
                           >
                             {r}
@@ -426,7 +508,7 @@ export default function FarmerWorkspacePage() {
                         onChange={(e) => setCancelReason(e.target.value)}
                         rows={2}
                         aria-label="Lý do hủy đơn"
-                        className="w-full rounded-[12px] border border-[#D6DED2] bg-white p-3 text-base text-[#25352B]"
+                        className="w-full rounded-[12px] border border-border bg-white p-3 text-base text-foreground"
                       />
                       <div className="flex flex-wrap gap-2">
                         <Button variant="destructive" size="lg" onClick={handleConfirmCancel}>
@@ -449,12 +531,12 @@ export default function FarmerWorkspacePage() {
           <section id="support" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card className="p-5 sm:p-6">
               <div className="mb-4 flex items-center gap-2">
-                <UserCheck className="h-6 w-6 text-[#245B3D]" aria-hidden="true" />
-                <h3 className="text-xl font-bold text-[#25352B]">
+                <UserCheck className="h-6 w-6 text-primary" aria-hidden="true" />
+                <h3 className="text-xl font-bold text-foreground">
                   Xác nhận kết quả Thanh niên hỗ trợ (Lớp 1)
                 </h3>
               </div>
-              <p className="mb-4 text-sm text-[#52645A]">
+              <p className="mb-4 text-sm text-muted">
                 Quy định 2 lớp minh bạch: Chủ vườn xác nhận đã nhận đủ ảnh/tem/bài đăng tại đây
                 trước khi Điều phối viên (W04) được phép duyệt cộng giờ cống hiến.
               </p>
@@ -463,10 +545,10 @@ export default function FarmerWorkspacePage() {
                 {farmMissions.map((m) => (
                   <div
                     key={m.id}
-                    className="rounded-[14px] border border-[#D6DED2] bg-[#F5F3E9] p-4 space-y-3"
+                    className="rounded-[14px] border border-border bg-background p-4 space-y-3"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="tabular-nums text-sm font-bold text-[#245B3D]">{m.id}</span>
+                      <span className="tabular-nums text-sm font-bold text-primary">{m.id}</span>
                       <Badge
                         tone={
                           m.status === "coordinator_approved"
@@ -487,24 +569,26 @@ export default function FarmerWorkspacePage() {
                           : "Đang thực hiện"}
                       </Badge>
                     </div>
-                    <h4 className="text-lg font-bold text-[#25352B]">{m.title}</h4>
-                    <p className="text-sm text-[#52645A]">
+                    <h4 className="text-lg font-bold text-foreground">{m.title}</h4>
+                    <p className="text-sm text-muted">
                       Tình nguyện viên:{" "}
-                      <span className="font-semibold text-[#25352B]">
+                      <span className="font-semibold text-foreground">
                         {m.assigneeName ?? "Chưa phân công"}
                       </span>{" "}
                       · Dự kiến {m.expectedHours} giờ
                     </p>
-                    <p className="text-sm text-[#25352B]">{m.deliverableSummary}</p>
+                    <p className="text-sm text-foreground">{m.deliverableSummary}</p>
                     {m.evidenceImage ? (
-                      <img
-                        src={m.evidenceImage}
+                      <Image
+                        src={assetUrl(m.evidenceImage)}
                         alt={`Minh chứng bàn giao ${m.id}`}
                         className="h-40 w-full rounded-[10px] object-cover"
+                        width={512}
+                        height={279}
                       />
                     ) : null}
                     {m.evidenceNote ? (
-                      <p className="rounded-[10px] bg-white px-3 py-2 text-sm text-[#52645A]">
+                      <p className="rounded-[10px] bg-white px-3 py-2 text-sm text-muted">
                         Ghi chú bàn giao: {m.evidenceNote}
                       </p>
                     ) : null}
@@ -526,20 +610,20 @@ export default function FarmerWorkspacePage() {
 
             <Card className="p-5 sm:p-6">
               <div className="mb-4 flex items-center gap-2">
-                <HandHelping className="h-6 w-6 text-[#245B3D]" aria-hidden="true" />
-                <h3 className="text-xl font-bold text-[#25352B]">Gửi yêu cầu Thanh niên hỗ trợ mới</h3>
+                <HandHelping className="h-6 w-6 text-primary" aria-hidden="true" />
+                <h3 className="text-xl font-bold text-foreground">Gửi yêu cầu Thanh niên hỗ trợ mới</h3>
               </div>
 
               <form onSubmit={handleSendSupport} className="space-y-4">
                 <div>
-                  <label htmlFor="need-type" className="mb-1.5 block font-semibold text-[#25352B]">
+                  <label htmlFor="need-type" className="mb-1.5 block font-semibold text-foreground">
                     Bác cần hỗ trợ việc gì?
                   </label>
                   <select
                     id="need-type"
                     value={reqNeedType}
                     onChange={(e) => setReqNeedType(e.target.value)}
-                    className="min-h-[50px] w-full rounded-[12px] border border-[#D6DED2] bg-white px-3.5 text-base text-[#25352B]"
+                    className="min-h-[50px] w-full rounded-[12px] border border-border bg-white px-3.5 text-base text-foreground"
                   >
                     <option>Chụp ảnh & đăng bán sản phẩm mới</option>
                     <option>Dán tem QR & hướng dẫn ghi nhật ký</option>
@@ -548,19 +632,19 @@ export default function FarmerWorkspacePage() {
                 </div>
 
                 <div>
-                  <label htmlFor="req-time" className="mb-1.5 block font-semibold text-[#25352B]">
+                  <label htmlFor="req-time" className="mb-1.5 block font-semibold text-foreground">
                     Thời gian thuận tiện tại vườn
                   </label>
                   <input
                     id="req-time"
                     value={reqTime}
                     onChange={(e) => setReqTime(e.target.value)}
-                    className="min-h-[50px] w-full rounded-[12px] border border-[#D6DED2] bg-white px-3.5 text-base text-[#25352B]"
+                    className="min-h-[50px] w-full rounded-[12px] border border-border bg-white px-3.5 text-base text-foreground"
                   />
                 </div>
 
                 <div>
-                  <span className="mb-1.5 block font-semibold text-[#25352B]">Hình thức gặp</span>
+                  <span className="mb-1.5 block font-semibold text-foreground">Hình thức gặp</span>
                   <div className="flex gap-3">
                     {(["Tại vườn", "Online"] as const).map((mode) => (
                       <button
@@ -569,8 +653,8 @@ export default function FarmerWorkspacePage() {
                         onClick={() => setReqMode(mode)}
                         className={`min-h-[48px] flex-1 rounded-[12px] border text-base font-semibold cursor-pointer ${
                           reqMode === mode
-                            ? "border-[#245B3D] bg-[#245B3D] text-white"
-                            : "border-[#D6DED2] bg-white text-[#25352B]"
+                            ? "border-primary bg-primary text-white"
+                            : "border-border bg-white text-foreground"
                         }`}
                       >
                         {mode}
@@ -580,7 +664,7 @@ export default function FarmerWorkspacePage() {
                 </div>
 
                 <div>
-                  <label htmlFor="req-note" className="mb-1.5 block font-semibold text-[#25352B]">
+                  <label htmlFor="req-note" className="mb-1.5 block font-semibold text-foreground">
                     Lời nhắn thêm cho đội Thanh niên
                   </label>
                   <textarea
@@ -588,7 +672,7 @@ export default function FarmerWorkspacePage() {
                     rows={3}
                     value={reqNote}
                     onChange={(e) => setReqNote(e.target.value)}
-                    className="w-full rounded-[12px] border border-[#D6DED2] bg-white p-3.5 text-base text-[#25352B]"
+                    className="w-full rounded-[12px] border border-border bg-white p-3.5 text-base text-foreground"
                   />
                 </div>
 
@@ -597,22 +681,22 @@ export default function FarmerWorkspacePage() {
                 </Button>
               </form>
 
-              <div className="mt-6 border-t border-[#D6DED2] pt-4">
-                <h4 className="mb-2 text-base font-bold text-[#25352B]">
+              <div className="mt-6 border-t border-border pt-4">
+                <h4 className="mb-2 text-base font-bold text-foreground">
                   Yêu cầu đã gửi gần đây ({supportRequests.length})
                 </h4>
                 <ul className="space-y-2">
                   {supportRequests.map((req) => (
                     <li
                       key={req.id}
-                      className="rounded-[12px] border border-[#D6DED2] bg-[#F5F3E9] p-3 text-sm"
+                      className="rounded-[12px] border border-border bg-background p-3 text-sm"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-[#245B3D] tabular-nums">{req.id}</span>
+                        <span className="font-bold text-primary tabular-nums">{req.id}</span>
                         <Badge tone="info">{req.status}</Badge>
                       </div>
-                      <p className="font-semibold text-[#25352B]">{req.title}</p>
-                      <p className="text-[#52645A]">
+                      <p className="font-semibold text-foreground">{req.title}</p>
+                      <p className="text-muted">
                         {req.preferredTime} · {req.locationMode}
                       </p>
                     </li>
@@ -627,21 +711,21 @@ export default function FarmerWorkspacePage() {
         {activeTab === "diary" ? (
           <section id="diary" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card className="p-5 sm:p-6">
-              <h3 className="mb-4 text-xl font-bold text-[#25352B]">
+              <h3 className="mb-4 text-xl font-bold text-foreground">
                 Ghi thêm mốc Nhật ký thu hoạch (tự đồng bộ tem QR)
               </h3>
               <form onSubmit={handleAddDiary} className="space-y-4">
                 <div>
-                  <label htmlFor="diary-batch" className="mb-1.5 block font-semibold text-[#25352B]">
+                  <label htmlFor="diary-batch" className="mb-1.5 block font-semibold text-foreground">
                     Chọn mã lô nông sản
                   </label>
                   <select
                     id="diary-batch"
-                    value={diaryBatchCode}
+                    value={effectiveDiaryBatchCode}
                     onChange={(e) => setDiaryBatchCode(e.target.value)}
-                    className="min-h-[50px] w-full rounded-[12px] border border-[#D6DED2] bg-white px-3.5 text-base text-[#25352B]"
+                    className="min-h-[50px] w-full rounded-[12px] border border-border bg-white px-3.5 text-base text-foreground"
                   >
-                    {batches.map((b) => (
+                    {farmBatches.map((b) => (
                       <option key={b.batchCode} value={b.batchCode}>
                         {b.batchCode} — {b.productName} ({b.farmName})
                       </option>
@@ -650,19 +734,19 @@ export default function FarmerWorkspacePage() {
                 </div>
 
                 <div>
-                  <label htmlFor="diary-title" className="mb-1.5 block font-semibold text-[#25352B]">
+                  <label htmlFor="diary-title" className="mb-1.5 block font-semibold text-foreground">
                     Tên công việc hôm nay
                   </label>
                   <input
                     id="diary-title"
                     value={diaryTitle}
                     onChange={(e) => setDiaryTitle(e.target.value)}
-                    className="min-h-[50px] w-full rounded-[12px] border border-[#D6DED2] bg-white px-3.5 text-base text-[#25352B]"
+                    className="min-h-[50px] w-full rounded-[12px] border border-border bg-white px-3.5 text-base text-foreground"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="diary-detail" className="mb-1.5 block font-semibold text-[#25352B]">
+                  <label htmlFor="diary-detail" className="mb-1.5 block font-semibold text-foreground">
                     Mô tả ngắn thực tế tại vườn
                   </label>
                   <textarea
@@ -670,22 +754,22 @@ export default function FarmerWorkspacePage() {
                     rows={3}
                     value={diaryDetail}
                     onChange={(e) => setDiaryDetail(e.target.value)}
-                    className="w-full rounded-[12px] border border-[#D6DED2] bg-white p-3.5 text-base text-[#25352B]"
+                    className="w-full rounded-[12px] border border-border bg-white p-3.5 text-base text-foreground"
                   />
                 </div>
 
                 <Button type="submit" variant="farmer" className="w-full">
-                  Lưu mốc nhật ký vào lô {diaryBatchCode}
+                  Lưu mốc nhật ký vào lô {effectiveDiaryBatchCode}
                 </Button>
               </form>
             </Card>
 
             <Card className="p-5 sm:p-6">
               <div className="mb-4 flex items-center justify-between gap-2">
-                <h3 className="text-xl font-bold text-[#25352B]">Lịch sử lô {diaryBatchCode}</h3>
+                <h3 className="text-xl font-bold text-foreground">Lịch sử lô {effectiveDiaryBatchCode}</h3>
                 <Link
-                  href={`/trace/${diaryBatchCode}`}
-                  className="text-sm font-bold text-[#245B3D] underline"
+                  href={`/trace/${effectiveDiaryBatchCode}`}
+                  className="text-sm font-bold text-primary underline"
                 >
                   Mở trang QR công khai
                 </Link>
@@ -693,22 +777,29 @@ export default function FarmerWorkspacePage() {
 
               {(() => {
                 const currentBatch =
-                  batches.find((b) => b.batchCode === diaryBatchCode) ?? batches[0];
+                  farmBatches.find((b) => b.batchCode === effectiveDiaryBatchCode) ?? farmBatches[0];
+                if (!currentBatch) {
+                  return (
+                    <p className="text-sm text-muted">
+                      Chưa có lô hàng nào cho mã {effectiveDiaryBatchCode}.
+                    </p>
+                  );
+                }
                 return (
                   <ol className="space-y-3">
                     {currentBatch.events.map((ev) => (
                       <li
                         key={ev.id}
-                        className="rounded-[12px] border border-[#D6DED2] bg-[#F5F3E9] p-3.5"
+                        className="rounded-[12px] border border-border bg-background p-3.5"
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="tabular-nums text-xs font-bold text-[#245B3D]">
+                          <span className="tabular-nums text-xs font-bold text-primary">
                             {ev.dateLabel}
                           </span>
                           <Badge tone="neutral">{ev.sourceDeclaration}</Badge>
                         </div>
-                        <p className="mt-1 font-bold text-[#25352B]">{ev.title}</p>
-                        <p className="text-sm text-[#52645A]">{ev.detail}</p>
+                        <p className="mt-1 font-bold text-foreground">{ev.title}</p>
+                        <p className="text-sm text-muted">{ev.detail}</p>
                       </li>
                     ))}
                   </ol>
@@ -723,13 +814,13 @@ export default function FarmerWorkspacePage() {
           <section id="pass" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card className="p-6">
               <div className="mb-4 flex items-center justify-between gap-2">
-                <h3 className="text-xl font-bold text-[#25352B]">Thẻ Nhà vườn Số (Farmer Pass)</h3>
-                <Badge tone="info">Mã trình diễn</Badge>
+                <h3 className="text-xl font-bold text-foreground">Thẻ Nhà vườn Số (Farmer Pass)</h3>
+                <Badge tone="info">QR Hồ sơ Nhà vườn</Badge>
               </div>
               <div className="flex flex-col items-center gap-5 sm:flex-row">
-                <div className="rounded-[14px] border border-[#D6DED2] bg-white p-3.5">
+                <div className="rounded-[14px] border border-border bg-white p-3.5">
                   <QRCodeSVG
-                    value={`https://naifarm-demo.local/farms/${activeFarm.slug}`}
+                    value={`${siteOrigin}/farms/${activeFarm.slug}`}
                     size={132}
                     bgColor="#FFFFFF"
                     fgColor="#000000"
@@ -739,28 +830,28 @@ export default function FarmerWorkspacePage() {
                   />
                 </div>
                 <div className="space-y-2 text-base">
-                  <p className="text-xl font-bold text-[#25352B]">{activeFarm.name}</p>
-                  <p className="text-[#52645A]">
-                    Chủ vườn: <span className="font-semibold text-[#25352B]">{activeFarm.ownerName}</span>{" "}
+                  <p className="text-xl font-bold text-foreground">{activeFarm.name}</p>
+                  <p className="text-muted">
+                    Chủ vườn: <span className="font-semibold text-foreground">{activeFarm.ownerName}</span>{" "}
                     ({activeFarm.ownerAgeLabel})
                   </p>
-                  <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#245B3D]">
+                  <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
                     <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                     {activeFarm.ocopLabel}
                   </p>
-                  <p className="text-xs text-[#52645A]">{activeFarm.ocopNote}</p>
+                  <p className="text-xs text-muted">{activeFarm.ocopNote}</p>
                 </div>
               </div>
             </Card>
 
             <Card className="p-6">
               <div className="mb-4 flex items-center justify-between gap-2">
-                <h3 className="text-xl font-bold text-[#25352B]">
+                <h3 className="text-xl font-bold text-foreground">
                   Mặt hàng đang mở bán ({farmProducts.length})
                 </h3>
                 <Link
                   href="/farmer/publish"
-                  className="text-sm font-bold text-[#245B3D] underline"
+                  className="text-sm font-bold text-primary underline"
                 >
                   + Thêm sản phẩm mới
                 </Link>
@@ -769,28 +860,30 @@ export default function FarmerWorkspacePage() {
                 {farmProducts.map((p) => (
                   <li
                     key={p.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#D6DED2] bg-[#F5F3E9] p-3"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-border bg-background p-3"
                   >
                     <div className="flex items-center gap-3">
-                      <img
-                        src={p.image}
+                      <Image
+                        src={assetUrl(p.image)}
                         alt={p.name}
                         className="h-12 w-12 rounded-[10px] object-cover"
+                        width={512}
+                        height={279}
                       />
                       <div>
-                        <p className="font-bold text-[#25352B]">{p.name}</p>
-                        <p className="text-xs text-[#52645A]">
+                        <p className="font-bold text-foreground">{p.name}</p>
+                        <p className="text-xs text-muted">
                           Tồn {p.stockKg} {p.unitLabel} · Lô {p.batchCode}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="tabular-nums font-bold text-[#245B3D]">
+                      <span className="tabular-nums font-bold text-primary">
                         {formatVnd(p.priceVnd)}/{p.unitLabel}
                       </span>
                       <Link
                         href={`/products/${p.slug}`}
-                        className="rounded-lg border border-[#245B3D] bg-white px-3 py-1.5 text-xs font-semibold text-[#245B3D]"
+                        className="rounded-lg border border-primary bg-white px-3 py-1.5 text-xs font-semibold text-primary"
                       >
                         Xem
                       </Link>
@@ -804,7 +897,7 @@ export default function FarmerWorkspacePage() {
 
         <DemoBanner
           title="Lưu ý minh bạch Không gian Nhà vườn (W02)"
-          detail="Đơn hàng, xác nhận bàn giao Thanh niên và nhật ký mùa vụ lưu trong bộ nhớ trình duyệt (localStorage) để phục vụ trình diễn liên hoàn giữa W01 – W02 – W03 – W04."
+          detail="Đơn hàng, xác nhận bàn giao Thanh niên và nhật ký mùa vụ được đồng bộ trên Supabase giữa W01 – W02 – W03 – W04."
         />
       </div>
     </WorkspaceShell>

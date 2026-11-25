@@ -15,19 +15,19 @@ export const INITIAL_LIVESTREAMS: LivestreamSession[] = [
       {
         id: "angle-1",
         label: "Góc 1: Cắt trái tại liếp",
-        image: "/images/stitch/stitch-44.jpg",
+        image: "stitch/stitch-44.webp",
         caption: "Chú Ba Minh chọn cắt bưởi đường lá cam đúng độ chín da láng bóng.",
       },
       {
         id: "angle-2",
         label: "Góc 2: Bàn thẩm định Brix",
-        image: "/images/stitch/stitch-46.jpg",
+        image: "stitch/stitch-46.webp",
         caption: "Tép bưởi Tân Triều mọng nước, đo độ ngọt tham khảo 11.8–12.2° Brix.",
       },
       {
         id: "angle-3",
         label: "Góc 3: Toàn cảnh cù lao",
-        image: "/images/stitch/stitch-19.jpg",
+        image: "stitch/stitch-19.webp",
         caption: "Khung cảnh liếp vườn phù sa sông Đồng Nai và đội TNV hỗ trợ đóng thùng.",
       },
     ],
@@ -49,7 +49,7 @@ export const INITIAL_LIVESTREAMS: LivestreamSession[] = [
       {
         id: "angle-ba-tu-1",
         label: "Điểm quay vườn chôm chôm",
-        image: "/images/stitch/stitch-40.jpg",
+        image: "stitch/stitch-40.webp",
         caption: "Dự kiến quay trực tiếp khu 2,5 ha tại Long Khánh.",
       },
     ],
@@ -71,7 +71,7 @@ export const INITIAL_LIVESTREAMS: LivestreamSession[] = [
       {
         id: "angle-xl-1",
         label: "Chảo rang củi truyền thống",
-        image: "/images/stitch/stitch-50.jpg",
+        image: "stitch/stitch-50.webp",
         caption: "Giới thiệu công đoạn rang giữ vỏ lụa giòn thơm.",
       },
     ],

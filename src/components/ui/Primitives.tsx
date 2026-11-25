@@ -8,12 +8,12 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-[#245B3D] text-white hover:bg-[#19472E]",
-        secondary: "bg-white text-[#245B3D] border-[1.5px] border-[#245B3D] hover:bg-[#EAF0E5]",
-        gold: "bg-[#D7A34D] text-[#25352B] hover:bg-[#C6923D]",
-        farmer: "bg-[#245B3D] text-white hover:bg-[#19472E] text-[18px] min-h-[56px] px-6",
-        ghost: "bg-transparent text-[#25352B] hover:bg-[#EAF0E5]",
-        destructive: "bg-[#FDECEC] text-[#A32D2D] border border-[#A32D2D] hover:bg-[#FAD6D6]",
+        primary: "bg-primary text-white hover:bg-primary-hover",
+        secondary: "bg-white text-primary border-[1.5px] border-primary hover:bg-surface-soft",
+        gold: "bg-accent text-foreground hover:bg-accent-hover",
+        farmer: "bg-primary text-white hover:bg-primary-hover text-[18px] min-h-[56px] px-6",
+        ghost: "bg-transparent text-foreground hover:bg-surface-soft",
+        destructive: "bg-danger-bg text-danger border border-danger hover:bg-danger-bg-hover",
       },
       size: {
         sm: "min-h-[40px] px-3.5 text-sm",
@@ -41,12 +41,12 @@ export const badgeVariants = cva(
   {
     variants: {
       tone: {
-        success: "bg-[#E6F3E9] text-[#24603B]",
-        warning: "bg-[#FFF2D8] text-[#80520C]",
-        danger: "bg-[#FDECEC] text-[#A32D2D]",
-        info: "bg-[#E8F2F8] text-[#245B78]",
-        neutral: "bg-[#EAF0E5] text-[#25352B] border border-[#D6DED2]",
-        gold: "bg-[#D7A34D] text-[#25352B]",
+        success: "bg-success-bg text-success",
+        warning: "bg-warning-bg text-warning",
+        danger: "bg-danger-bg text-danger",
+        info: "bg-info-bg text-info",
+        neutral: "bg-surface-soft text-foreground border border-border",
+        gold: "bg-accent text-foreground",
       },
     },
     defaultVariants: {
@@ -75,7 +75,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "bg-white border border-[#D6DED2] rounded-[16px] shadow-[0_2px_8px_rgba(37,53,43,0.06)]",
+        "bg-white border border-border rounded-[16px] shadow-[0_2px_8px_rgba(37,53,43,0.06)]",
         className
       )}
       {...props}
@@ -98,14 +98,14 @@ export function DemoBanner({
     <div
       role="note"
       className={cn(
-        "flex items-start gap-3 rounded-[12px] border border-[#D6DED2] bg-[#EAF0E5] px-4 py-3 text-sm text-[#25352B]",
+        "flex items-start gap-3 rounded-[12px] border border-border bg-surface-soft px-4 py-3 text-sm text-foreground",
         className
       )}
     >
-      <Info className="h-5 w-5 shrink-0 text-[#245B3D] mt-0.5" aria-hidden="true" />
+      <Info className="h-5 w-5 shrink-0 text-primary mt-0.5" aria-hidden="true" />
       <div>
         <span className="font-semibold">{title}: </span>
-        <span className="text-[#52645A]">{detail}</span>
+        <span className="text-muted">{detail}</span>
       </div>
     </div>
   );
@@ -123,12 +123,12 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-[16px] border border-dashed border-[#788A7B] bg-white px-6 py-12 text-center">
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#EAF0E5] text-[#245B3D]">
+    <div className="flex flex-col items-center justify-center rounded-[16px] border border-dashed border-input bg-white px-6 py-12 text-center">
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface-soft text-primary">
         {icon}
       </div>
-      <h3 className="text-lg font-semibold text-[#25352B]">{title}</h3>
-      <p className="mt-1.5 max-w-md text-sm text-[#52645A]">{description}</p>
+      <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+      <p className="mt-1.5 max-w-md text-sm text-muted">{description}</p>
       {action ? <div className="mt-5">{action}</div> : null}
     </div>
   );

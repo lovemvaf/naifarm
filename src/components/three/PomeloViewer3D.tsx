@@ -116,8 +116,8 @@ function PomeloModel({
               onClick={() => onSelectHotspot(spot.id)}
               className={`rounded-full px-2.5 py-1 text-[11px] font-bold shadow-md transition-transform cursor-pointer whitespace-nowrap ${
                 active
-                  ? "bg-[#D7A34D] text-[#25352B] ring-2 ring-[#245B3D] scale-105"
-                  : "bg-[#245B3D] text-white hover:bg-[#19472E]"
+                  ? "bg-accent text-foreground ring-2 ring-primary scale-105"
+                  : "bg-primary text-white hover:bg-primary-hover"
               }`}
             >
               {spot.label}
@@ -139,7 +139,7 @@ export default function PomeloViewer3D() {
 
   return (
     <div className="space-y-4">
-      <div className="relative h-[340px] w-full overflow-hidden rounded-[16px] border border-[#D6DED2] bg-gradient-to-b from-[#EAF0E5] to-[#F5F3E9] sm:h-[400px]">
+      <div className="relative h-[340px] w-full overflow-hidden rounded-[16px] border border-border bg-gradient-to-b from-surface-soft to-background sm:h-[400px]">
         <Canvas
           dpr={[1, 1.5]}
           camera={{ position: [0, 0.5, 3.6 / zoomScale], fov: 42 }}
@@ -157,7 +157,7 @@ export default function PomeloViewer3D() {
           <OrbitControls enablePan={false} minDistance={2.2} maxDistance={5.2} />
         </Canvas>
 
-        <div className="absolute top-3 left-3 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-[#245B3D] shadow-sm">
+        <div className="absolute top-3 left-3 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-primary shadow-sm">
           Mô hình 3D minh họa · Bưởi Tân Triều (Kéo để xoay)
         </div>
 
@@ -165,7 +165,7 @@ export default function PomeloViewer3D() {
           <button
             type="button"
             onClick={() => setSliced((s) => !s)}
-            className="min-h-[38px] rounded-[10px] border border-[#D6DED2] bg-white px-3 text-xs font-semibold text-[#25352B] shadow-sm hover:bg-[#EAF0E5] cursor-pointer"
+            className="min-h-[38px] rounded-[10px] border border-border bg-white px-3 text-xs font-semibold text-foreground shadow-sm hover:bg-surface-soft cursor-pointer"
           >
             {sliced ? "Xem trái nguyên" : "Mở lát cắt múi"}
           </button>
@@ -173,7 +173,7 @@ export default function PomeloViewer3D() {
             type="button"
             onClick={() => setRotY((r) => r + Math.PI / 3)}
             aria-label="Xoay mô hình 60 độ"
-            className="min-h-[38px] rounded-[10px] border border-[#D6DED2] bg-white px-2.5 text-xs font-semibold text-[#25352B] shadow-sm hover:bg-[#EAF0E5] cursor-pointer"
+            className="min-h-[38px] rounded-[10px] border border-border bg-white px-2.5 text-xs font-semibold text-foreground shadow-sm hover:bg-surface-soft cursor-pointer"
           >
             Xoay
           </button>
@@ -181,7 +181,7 @@ export default function PomeloViewer3D() {
             type="button"
             onClick={() => setZoomScale((z) => Math.min(1.4, +(z + 0.15).toFixed(2)))}
             aria-label="Phóng to"
-            className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] border border-[#D6DED2] bg-white text-[#25352B] shadow-sm hover:bg-[#EAF0E5] cursor-pointer"
+            className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] border border-border bg-white text-foreground shadow-sm hover:bg-surface-soft cursor-pointer"
           >
             <ZoomIn className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -189,7 +189,7 @@ export default function PomeloViewer3D() {
             type="button"
             onClick={() => setZoomScale((z) => Math.max(0.75, +(z - 0.15).toFixed(2)))}
             aria-label="Thu nhỏ"
-            className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] border border-[#D6DED2] bg-white text-[#25352B] shadow-sm hover:bg-[#EAF0E5] cursor-pointer"
+            className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] border border-border bg-white text-foreground shadow-sm hover:bg-surface-soft cursor-pointer"
           >
             <ZoomOut className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -201,7 +201,7 @@ export default function PomeloViewer3D() {
               setSliced(false);
             }}
             aria-label="Đặt lại góc nhìn"
-            className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] border border-[#D6DED2] bg-white text-[#25352B] shadow-sm hover:bg-[#EAF0E5] cursor-pointer"
+            className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] border border-border bg-white text-foreground shadow-sm hover:bg-surface-soft cursor-pointer"
           >
             <RotateCcw className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -209,7 +209,7 @@ export default function PomeloViewer3D() {
       </div>
 
       {/* Accessible text & keyboard hotspot selector fallback */}
-      <div className="rounded-[14px] border border-[#D6DED2] bg-white p-4">
+      <div className="rounded-[14px] border border-border bg-white p-4">
         <div className="flex flex-wrap gap-2">
           {POMELO_HOTSPOTS.map((spot) => (
             <button
@@ -218,16 +218,16 @@ export default function PomeloViewer3D() {
               onClick={() => setSelectedHotspot(spot.id)}
               className={`min-h-[36px] rounded-full px-3 text-xs font-semibold cursor-pointer ${
                 spot.id === selectedHotspot
-                  ? "bg-[#245B3D] text-white"
-                  : "border border-[#D6DED2] bg-[#F5F3E9] text-[#25352B]"
+                  ? "bg-primary text-white"
+                  : "border border-border bg-background text-foreground"
               }`}
             >
               {spot.label}
             </button>
           ))}
         </div>
-        <p className="mt-3 text-sm text-[#25352B]">
-          <span className="font-bold text-[#245B3D]">{activeSpot.label}: </span>
+        <p className="mt-3 text-sm text-foreground">
+          <span className="font-bold text-primary">{activeSpot.label}: </span>
           {activeSpot.description}
         </p>
       </div>

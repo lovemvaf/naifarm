@@ -20,27 +20,11 @@ import { formatVnd } from "@/lib/format";
 
 type OrgViewMode = "coop" | "b2b" | "school";
 
-const B2B_RFQ_SAMPLES = [
-  {
-    id: "RFQ-DN-01",
-    buyer: "Hệ thống Siêu thị Xanh Biên Hòa (Demo)",
-    product: "Bưởi da xanh Tân Triều & Chôm chôm Java",
-    volume: "450 kg / tuần",
-    note: "Yêu cầu gắn tem QR lô hàng theo từng xã viên giao.",
-  },
-  {
-    id: "RFQ-DN-02",
-    buyer: "Bếp ăn Khu công nghiệp Amata (Demo)",
-    product: "Trái cây theo mùa đóng sọt tiêu chuẩn",
-    volume: "600 kg / đợt",
-    note: "Đề xuất đặt trước 5 ngày để chủ vườn cắt đồng loạt.",
-  },
-];
-
 export default function OrganizationWorkspacePage() {
-  const { hydrated, farms, products, batches, setActiveWorkspace } = useDemoStore();
+  const { hydrated, farms, products, batches, rfqRequests, submitRfq, setActiveWorkspace } =
+    useDemoStore();
   const [mode, setMode] = useState<OrgViewMode>("coop");
-  const [rfqCompany, setRfqCompany] = useState("Chuỗi Cửa hàng Đặc sản Miền Đông (Demo)");
+  const [rfqCompany, setRfqCompany] = useState("");
   const [rfqNote, setRfqNote] = useState(
     "Quan tâm đặt sỉ Bưởi da xanh Tân Triều và Hạt điều vỏ lụa theo tháng."
   );
@@ -49,14 +33,28 @@ export default function OrganizationWorkspacePage() {
     setActiveWorkspace("W05");
   }, [setActiveWorkspace]);
 
-  const handleSubmitRfq = (e: React.FormEvent) => {
+  const handleSubmitRfq = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success(`Đã ghi nhận yêu cầu báo giá minh họa từ "${rfqCompany}" (Chế độ Roadmap).`);
+    if (!rfqCompany.trim() || !rfqNote.trim()) {
+      toast.error("Vui lòng nhập tên đơn vị và nhu cầu sản phẩm.");
+      return;
+    }
+    try {
+      const created = await submitRfq({
+        company: rfqCompany.trim(),
+        note: rfqNote.trim(),
+      });
+      toast.success(`Đã gửi yêu cầu báo giá ${created.id} tới HTX.`);
+      setRfqCompany("");
+      setRfqNote("");
+    } catch {
+      toast.error("Không gửi được yêu cầu báo giá. Vui lòng đăng nhập bằng tài khoản tổ chức.");
+    }
   };
 
   if (!hydrated) {
     return (
-      <div className="mx-auto max-w-[1280px] px-4 py-12 text-sm text-[#52645A]">
+      <div className="mx-auto max-w-[1280px] px-4 py-12 text-sm text-muted">
         Đang mở Không gian Tổ chức Đối tác...
       </div>
     );
@@ -99,7 +97,7 @@ export default function OrganizationWorkspacePage() {
       <div className="space-y-6">
         {/* Org Role Selector */}
         <Card className="p-4">
-          <p className="mb-2 text-xs font-semibold text-[#52645A]">
+          <p className="mb-2 text-xs font-semibold text-muted">
             Chọn loại hình tổ chức trong W05 (Hạn chế phân mảnh shell):
           </p>
           <div className="flex flex-wrap gap-2">
@@ -108,8 +106,8 @@ export default function OrganizationWorkspacePage() {
               onClick={() => setMode("coop")}
               className={`min-h-[44px] rounded-[12px] px-4 text-sm font-semibold transition cursor-pointer ${
                 mode === "coop"
-                  ? "bg-[#245B3D] text-white"
-                  : "border border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#EAF0E5]"
+                  ? "bg-primary text-white"
+                  : "border border-border bg-white text-foreground hover:bg-surface-soft"
               }`}
             >
               HTX Nông nghiệp (Active MVP)
@@ -119,8 +117,8 @@ export default function OrganizationWorkspacePage() {
               onClick={() => setMode("b2b")}
               className={`min-h-[44px] rounded-[12px] px-4 text-sm font-semibold transition cursor-pointer ${
                 mode === "b2b"
-                  ? "bg-[#245B3D] text-white"
-                  : "border border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#EAF0E5]"
+                  ? "bg-primary text-white"
+                  : "border border-border bg-white text-foreground hover:bg-surface-soft"
               }`}
             >
               Doanh nghiệp B2B · RFQ (Roadmap)
@@ -130,8 +128,8 @@ export default function OrganizationWorkspacePage() {
               onClick={() => setMode("school")}
               className={`min-h-[44px] rounded-[12px] px-4 text-sm font-semibold transition cursor-pointer ${
                 mode === "school"
-                  ? "bg-[#245B3D] text-white"
-                  : "border border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#EAF0E5]"
+                  ? "bg-primary text-white"
+                  : "border border-border bg-white text-foreground hover:bg-surface-soft"
               }`}
             >
               Nhà trường · Farm as a Classroom (Roadmap)
@@ -144,29 +142,29 @@ export default function OrganizationWorkspacePage() {
           <div id="coop" className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Card className="p-4">
-                <p className="text-xs font-semibold text-[#52645A]">Nhà vườn thành viên kết nối</p>
-                <p className="mt-1 tabular-nums text-2xl font-bold text-[#245B3D]">{farms.length} vườn</p>
-                <p className="text-xs text-[#52645A]">Tân Triều, Long Khánh, Xuân Lộc, Cẩm Mỹ</p>
+                <p className="text-xs font-semibold text-muted">Nhà vườn thành viên kết nối</p>
+                <p className="mt-1 tabular-nums text-2xl font-bold text-primary">{farms.length} vườn</p>
+                <p className="text-xs text-muted">Tân Triều, Long Khánh, Xuân Lộc, Cẩm Mỹ</p>
               </Card>
               <Card className="p-4">
-                <p className="text-xs font-semibold text-[#52645A]">Mã lô truy xuất đang theo dõi</p>
-                <p className="mt-1 tabular-nums text-2xl font-bold text-[#245B3D]">
+                <p className="text-xs font-semibold text-muted">Mã lô truy xuất đang theo dõi</p>
+                <p className="mt-1 tabular-nums text-2xl font-bold text-primary">
                   {batches.length} mã lô QR
                 </p>
-                <p className="text-xs text-[#52645A]">Chuẩn tách biệt tự khai & đối chiếu</p>
+                <p className="text-xs text-muted">Chuẩn tách biệt tự khai & đối chiếu</p>
               </Card>
               <Card className="p-4">
-                <p className="text-xs font-semibold text-[#52645A]">Mặt hàng sẵn sàng gom đơn</p>
-                <p className="mt-1 tabular-nums text-2xl font-bold text-[#245B3D]">
+                <p className="text-xs font-semibold text-muted">Mặt hàng sẵn sàng gom đơn</p>
+                <p className="mt-1 tabular-nums text-2xl font-bold text-primary">
                   {products.length} sản phẩm
                 </p>
-                <p className="text-xs text-[#52645A]">Đồng bộ tồn kho từ W02</p>
+                <p className="text-xs text-muted">Đồng bộ tồn kho từ W02</p>
               </Card>
             </div>
 
             <Card className="p-5 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-bold text-[#25352B]">
+                <h2 className="text-lg font-bold text-foreground">
                   Danh sách Nhà vườn & Lô hàng HTX quản lý (S37–S40)
                 </h2>
                 <Badge tone="success">HTX đối chiếu minh họa</Badge>
@@ -177,13 +175,13 @@ export default function OrganizationWorkspacePage() {
                   return (
                     <div
                       key={farm.id}
-                      className="rounded-[14px] border border-[#D6DED2] bg-[#F5F3E9] p-4 space-y-2.5"
+                      className="rounded-[14px] border border-border bg-background p-4 space-y-2.5"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <h3 className="font-bold text-[#25352B]">{farm.name}</h3>
-                          <p className="inline-flex items-center gap-1 text-xs text-[#52645A]">
-                            <MapPin className="h-3.5 w-3.5 text-[#245B3D]" aria-hidden="true" />
+                          <h3 className="font-bold text-foreground">{farm.name}</h3>
+                          <p className="inline-flex items-center gap-1 text-xs text-muted">
+                            <MapPin className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                             {farm.addressLabel} · {farm.areaHa} ha
                           </p>
                         </div>
@@ -191,7 +189,7 @@ export default function OrganizationWorkspacePage() {
                           {farm.ocopLabel}
                         </Badge>
                       </div>
-                      <p className="text-xs text-[#52645A]">
+                      <p className="text-xs text-muted">
                         Cây trồng chính: {farm.mainCrops.join(", ")}
                       </p>
                       <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -199,7 +197,7 @@ export default function OrganizationWorkspacePage() {
                           <Link
                             key={b.batchCode}
                             href={`/trace/${b.batchCode}`}
-                            className="inline-flex items-center gap-1 rounded-full border border-[#245B3D] bg-white px-3 py-1 text-xs font-semibold text-[#245B3D]"
+                            className="inline-flex items-center gap-1 rounded-full border border-primary bg-white px-3 py-1 text-xs font-semibold text-primary"
                           >
                             <QrCode className="h-3 w-3" aria-hidden="true" />
                             {b.batchCode}
@@ -207,7 +205,7 @@ export default function OrganizationWorkspacePage() {
                         ))}
                         <Link
                           href={`/farms/${farm.slug}`}
-                          className="text-xs font-bold text-[#245B3D] underline ml-auto"
+                          className="text-xs font-bold text-primary underline ml-auto"
                         >
                           Xem hồ sơ vườn
                         </Link>
@@ -225,38 +223,46 @@ export default function OrganizationWorkspacePage() {
           <div id="b2b" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card className="p-5 space-y-4">
               <div className="flex items-center justify-between gap-2">
-                <h2 className="text-lg font-bold text-[#25352B]">
+                <h2 className="text-lg font-bold text-foreground">
                   Kết nối Thu mua Doanh nghiệp B2B (Roadmap S48)
                 </h2>
                 <Badge tone="warning">Phiên bản Lộ trình</Badge>
               </div>
               <DemoBanner
-                title="Chức năng minh họa Lộ trình giai đoạn sau"
-                detail="Thể hiện cách doanh nghiệp bếp ăn / siêu thị gửi nhu cầu thu mua định kỳ theo lô QR từ HTX. Không phát sinh hợp đồng hay thanh toán B2B thật."
+                title="Yêu cầu báo giá B2B"
+                detail="Doanh nghiệp bếp ăn / siêu thị gửi nhu cầu thu mua định kỳ theo lô QR từ HTX. Yêu cầu được lưu trên Supabase và hiển thị cho tài khoản tổ chức."
               />
 
               <div className="space-y-3">
-                {B2B_RFQ_SAMPLES.map((rfq) => (
-                  <div
-                    key={rfq.id}
-                    className="rounded-[12px] border border-[#D6DED2] bg-[#F5F3E9] p-4 space-y-1"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="tabular-nums text-xs font-bold text-[#245B3D]">
-                        {rfq.id}
-                      </span>
-                      <span className="text-xs font-bold text-[#25352B]">{rfq.volume}</span>
+                {rfqRequests.length === 0 ? (
+                  <p className="rounded-[12px] border border-dashed border-border bg-background p-4 text-sm text-muted">
+                    Chưa có yêu cầu báo giá nào.
+                  </p>
+                ) : (
+                  rfqRequests.map((rfq) => (
+                    <div
+                      key={rfq.id}
+                      className="rounded-[12px] border border-border bg-background p-4 space-y-1"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="tabular-nums text-xs font-bold text-primary">
+                          {rfq.id}
+                        </span>
+                        <span className="text-xs font-semibold text-muted">
+                          {rfq.createdAtLabel}
+                        </span>
+                      </div>
+                      <p className="font-bold text-foreground">{rfq.company}</p>
+                      <p className="text-sm text-primary">{rfq.note}</p>
+                      <p className="text-xs font-semibold text-warning">{rfq.status}</p>
                     </div>
-                    <p className="font-bold text-[#25352B]">{rfq.buyer}</p>
-                    <p className="text-sm text-[#245B3D]">{rfq.product}</p>
-                    <p className="text-xs text-[#52645A]">{rfq.note}</p>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </Card>
 
             <Card className="p-5 space-y-4">
-              <h3 className="text-lg font-bold text-[#25352B]">Gửi đề nghị báo giá mẫu (RFQ Demo)</h3>
+              <h3 className="text-lg font-bold text-foreground">Gửi đề nghị báo giá (RFQ)</h3>
               <form onSubmit={handleSubmitRfq} className="space-y-3">
                 <div>
                   <label htmlFor="rfq-company" className="mb-1 block text-xs font-semibold">
@@ -266,7 +272,7 @@ export default function OrganizationWorkspacePage() {
                     id="rfq-company"
                     value={rfqCompany}
                     onChange={(e) => setRfqCompany(e.target.value)}
-                    className="min-h-[44px] w-full rounded-[10px] border border-[#D6DED2] bg-white px-3 text-sm"
+                    className="min-h-[44px] w-full rounded-[10px] border border-border bg-white px-3 text-sm"
                   />
                 </div>
                 <div>
@@ -278,16 +284,16 @@ export default function OrganizationWorkspacePage() {
                     rows={3}
                     value={rfqNote}
                     onChange={(e) => setRfqNote(e.target.value)}
-                    className="w-full rounded-[10px] border border-[#D6DED2] bg-white p-3 text-sm"
+                    className="w-full rounded-[10px] border border-border bg-white p-3 text-sm"
                   />
                 </div>
                 <Button type="submit" variant="primary" className="w-full">
                   <Package className="h-4 w-4" aria-hidden="true" />
-                  <span>Gửi yêu cầu RFQ minh họa</span>
+                  <span>Gửi yêu cầu RFQ</span>
                 </Button>
               </form>
 
-              <div className="rounded-[12px] bg-[#EAF0E5] p-3 text-xs text-[#245B3D]">
+              <div className="rounded-[12px] bg-surface-soft p-3 text-xs text-primary">
                 Tham khảo giá bán lẻ niêm yết hiện tại từ các vườn:{" "}
                 {products
                   .slice(0, 3)
@@ -308,26 +314,26 @@ export default function OrganizationWorkspacePage() {
             />
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <Card className="p-5 space-y-3">
-                <div className="flex items-center gap-2 text-[#245B3D]">
+                <div className="flex items-center gap-2 text-primary">
                   <ShieldCheck className="h-5 w-5" aria-hidden="true" />
-                  <h3 className="text-lg font-bold text-[#25352B]">
+                  <h3 className="text-lg font-bold text-foreground">
                     Chuyên đề 1: Nhật ký Bưởi Tân Triều & Chuyển đổi số
                   </h3>
                 </div>
-                <p className="text-sm text-[#52645A]">
+                <p className="text-sm text-muted">
                   Học sinh quan sát quy trình chăm sóc bưởi, tự quét mã QR {batches[1]?.batchCode ?? "NF-TT-2026-01"} và
                   nghe câu chuyện nghề nông từ Chú Ba Minh cùng đội Thanh niên tình nguyện.
                 </p>
                 <div className="flex flex-wrap gap-2 pt-1">
                   <Link
                     href="/learn"
-                    className="inline-flex min-h-[42px] items-center rounded-[10px] bg-[#245B3D] px-4 text-xs font-bold text-white"
+                    className="inline-flex min-h-[42px] items-center rounded-[10px] bg-primary px-4 text-xs font-bold text-white"
                   >
                     Mở Học liệu & 3D Bưởi
                   </Link>
                   <Link
                     href="/explore"
-                    className="inline-flex min-h-[42px] items-center rounded-[10px] border border-[#245B3D] bg-white px-4 text-xs font-bold text-[#245B3D]"
+                    className="inline-flex min-h-[42px] items-center rounded-[10px] border border-primary bg-white px-4 text-xs font-bold text-primary"
                   >
                     Đặt lịch tham quan vườn
                   </Link>
@@ -335,13 +341,13 @@ export default function OrganizationWorkspacePage() {
               </Card>
 
               <Card className="p-5 space-y-3">
-                <div className="flex items-center gap-2 text-[#245B3D]">
+                <div className="flex items-center gap-2 text-primary">
                   <Truck className="h-5 w-5" aria-hidden="true" />
-                  <h3 className="text-lg font-bold text-[#25352B]">
-                    Cam kết an toàn trải nghiệm học đường (Demo)
+                  <h3 className="text-lg font-bold text-foreground">
+                    Cam kết an toàn trải nghiệm học đường
                   </h3>
                 </div>
-                <ul className="space-y-1.5 text-sm text-[#52645A] list-disc pl-5">
+                <ul className="space-y-1.5 text-sm text-muted list-disc pl-5">
                   <li>Nhóm tối đa 20–25 học sinh mỗi buổi kèm giáo viên và tình nguyện viên.</li>
                   <li>Không sử dụng nông cụ sắc nhọn khi chưa có người hướng dẫn trực tiếp.</li>
                   <li>Các em có thể thực hành ngay bài trắc nghiệm ở Góc học mở sau chuyến đi.</li>

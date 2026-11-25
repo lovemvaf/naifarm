@@ -2,7 +2,7 @@
 
 **Đội thi:** Nhóm 8 — Hackathon Thành phố Đồng Nai 2026  
 **Sản phẩm:** **NaiFarm** — *Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị*  
-**Dạng sản phẩm:** Frontend-Only High-Fidelity Prototype (Next.js App Router)
+**Dạng sản phẩm:** Ứng dụng Next.js App Router + Supabase (Postgres, Auth, Storage)
 
 ---
 
@@ -18,7 +18,7 @@
 
 ## 2. Kịch bản Thuyết trình 5 Phút cho Ban Giám khảo
 
-Mở trang **`/demo`** (`Trung tâm Trình diễn BGK`) để bấm nhanh hoặc dùng nút **Khôi phục Dữ liệu Mẫu (Reset Demo)** trước mỗi lượt thuyết trình:
+Mở trang **`/demo`** (`Trung tâm Trình diễn BGK`) để bấm nhanh hoặc dùng nút **Đồng bộ lại Dữ liệu từ Supabase** trước mỗi lượt thuyết trình:
 
 1. **Mở đầu & Niềm tin số (`/`, `/products/buoi-da-xanh-tan-trieu`, `/trace/NF-DEMO-001`)**:
    - Giới thiệu chợ nông sản 60/40 editorial, hộp tra cứu mã QR nhanh, hộ chiếu nông sản SVG thật tách biệt rõ trạng thái tự khai và đã đối chiếu.
@@ -27,7 +27,7 @@ Mở trang **`/demo`** (`Trung tâm Trình diễn BGK`) để bấm nhanh hoặc
    - Chuyển sang W02 từ nút Header hoặc `/farmer`: chữ to, nút 56px, không biểu đồ rườm rà.
    - Đi qua 3 bước đăng bán bằng giọng nói mô phỏng (hệ thống tự ẩn chatbot nổi khi đang ghi âm) và đưa ngay sản phẩm mới ra ngoài `/marketplace`.
 3. **Liên kết Đơn hàng Khách mua ↔ Nhà nông (`/checkout` ↔ `/farmer` ↔ `/account/orders`)**:
-   - Đặt đơn COD Demo -> Nhà nông bấm **"Xác nhận nhận đơn này"** -> Trang đơn hàng của khách tự đồng bộ sang **"Đang đóng gói tại vườn"**.
+   - Đặt đơn COD -> Nhà nông bấm **"Xác nhận nhận đơn này"** -> Trang đơn hàng của khách tự đồng bộ sang **"Đang đóng gói tại vườn"**.
 4. **Thanh niên Tình nguyện & Kiểm chứng 2 lớp (`/coordinator` → `/farmer` → `/coordinator` → `/volunteer`)**:
    - Cho giám khảo thấy nút duyệt giờ ở W04 **bị khóa** khi chủ vườn chưa xác nhận bàn giao (`NF-MIS-01`).
    - Sau khi chủ vườn xác nhận ở `/farmer`, điều phối viên mở khóa duyệt `+2 giờ`, và **Youth Impact Pass** tại `/volunteer` tăng *Giờ đã duyệt chính thức* từ `3` lên `5 giờ` (luôn tách riêng với *Giờ chờ duyệt*).
@@ -36,8 +36,10 @@ Mở trang **`/demo`** (`Trung tâm Trình diễn BGK`) để bấm nhanh hoặc
 
 ---
 
-## 3. Hạn chế minh bạch của giai đoạn Prototype
+## 3. Phạm vi Dữ liệu & Minh bạch
 
-- Không lưu dữ liệu giữa các trình duyệt hoặc thiết bị khác nhau (trạng thái sử dụng `localStorage` trên từng trình duyệt).
-- Trợ lý **NaiAI**, **AI tạo bản nháp giọng nói**, **đối chiếu hồ sơ**, **COD Demo**, **Replay Live** và **RBAC W06** đều hoạt động theo kịch bản mô phỏng ở phía frontend, không gọi API AI hoặc cổng thanh toán thực tế.
-- Tọa độ bản đồ Đồng Nai (`/explore`) là tọa độ minh họa vùng sinh thái mẫu, không thay thế bản đồ địa giới hành chính.
+- Nhà vườn, sản phẩm, lô QR, đơn hàng COD, nhiệm vụ, hồ sơ đối chiếu, RFQ và nhật ký kiểm toán được lưu trên Supabase và đồng bộ giữa mọi trình duyệt/thiết bị.
+- Đăng nhập/đăng ký dùng Supabase Auth với xác nhận email; quyền truy cập route được khóa theo vai trò tại `src/proxy.ts` và RLS.
+- Trợ lý **NaiAI**, **AI tạo bản nháp giọng nói** (ghi âm mô phỏng) và **Replay Live** vẫn là phần trình diễn phía client, không gọi API AI.
+- Thanh toán COD khi nhận hàng, chưa tích hợp cổng thanh toán trực tuyến.
+- Bản đồ `/explore` dùng GeoJSON nguồn mở theo NQ 1662/NQ-UBTVQH15 (2025) và NQ 237/NQ-UBTVQH16 (2026), không dùng tile OpenStreetMap; ranh giới mang tính tham chiếu.

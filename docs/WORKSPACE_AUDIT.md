@@ -33,6 +33,6 @@
 | 6 | Unslop | `../.agents/skills/unslop` & `../.toolbox/repos/unslop` | `EXEC_READY` (`snapshot.mjs` via `../.toolbox/qa-runtime`) | 9-pass anti-slop polish, copy discipline, typography & spacing refinement |
 
 ## 3. Scope Boundaries & Constraints
-- **Frontend-only high-fidelity prototype:** Zero backend server, zero database, zero `src/app/api/*`, zero Server Actions, zero runtime secrets/API keys.
-- **Data Integrity:** All figures, OCOP/VietGAP verification states, QR passports, COD orders, live/replay feeds, and AI draft outputs are client-side demo records labeled honestly.
+- **Supabase-backed application:** Postgres + Row Level Security, Supabase Auth (xác nhận email) và Storage cho ảnh WebP; `src/proxy.ts` giữ phiên và khóa route theo vai trò.
+- **Data Integrity:** Nhà vườn, sản phẩm, lô QR, đơn hàng COD, nhiệm vụ, hồ sơ đối chiếu, RFQ và nhật ký kiểm toán lưu trên Supabase; chatbot NaiAI và Replay Live là phần trình diễn phía client được ghi nhãn rõ.
 - **Specification Alignment:** Harmonizes the 12 verified Stitch exports (Project ID `12256474506032242478`, primary Tân Triều pomelo + Cooperative flow) with the mandatory Dong Nai Hackathon De 3 seed (`Nhà vườn Ba Tư`, 2,5 ha Long Khánh, `P01` Chôm chôm Java `35.000 đ/kg` .. `P05` Sầu riêng tuyển chọn `120.000 đ/kg`, Minh Anh & Tuấn, `NF-DEMO-001`, `NF-ORD-DEMO-01`, `NF-MIS-01`, `NF-LIVE-01`).

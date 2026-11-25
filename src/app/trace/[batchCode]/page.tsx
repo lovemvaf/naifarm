@@ -15,32 +15,40 @@ export default function TraceBatchDetailPage({
 }) {
   const { batchCode } = use(params);
   const router = useRouter();
-  const { batches, products, farms } = useDemoStore();
+  const { hydrated, batches, products, farms } = useDemoStore();
   const [manualCode, setManualCode] = useState("");
 
   const normalized = decodeURIComponent(batchCode).trim().toUpperCase();
   const batch = batches.find((b) => b.batchCode.toUpperCase() === normalized);
 
+  if (!hydrated) {
+    return (
+      <div className="mx-auto max-w-[780px] px-4 py-10 text-sm text-muted">
+        Đang tra cứu mã lô...
+      </div>
+    );
+  }
+
   if (!batch) {
     return (
       <div className="mx-auto max-w-[780px] space-y-6 px-4 py-10">
-        <Link href="/trace" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#245B3D] hover:underline">
+        <Link href="/trace" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           <span>Danh sách mã lô mẫu</span>
         </Link>
 
         <Card className="p-6">
           <div className="flex items-start gap-3">
-            <AlertCircle className="h-6 w-6 shrink-0 text-[#A32D2D]" aria-hidden="true" />
+            <AlertCircle className="h-6 w-6 shrink-0 text-danger" aria-hidden="true" />
             <div>
-              <h1 className="text-xl font-bold text-[#25352B]">
-                Mã QR hoặc mã lô “{normalized}” chưa tồn tại trong hệ thống demo
+              <h1 className="text-xl font-bold text-foreground">
+                Mã QR hoặc mã lô “{normalized}” chưa tồn tại trong hệ thống
               </h1>
-              <p className="mt-1 text-sm text-[#52645A]">
-                Vui lòng kiểm tra lại tem hoặc nhập trực tiếp một trong các mã lô demo hợp lệ:
-                <strong className="mx-1 text-[#245B3D]">NF-DEMO-001</strong>,
-                <strong className="mx-1 text-[#245B3D]">NF-TT-2026-01</strong>,
-                <strong className="mx-1 text-[#245B3D]">NF-XL-2026-03</strong>.
+              <p className="mt-1 text-sm text-muted">
+                Vui lòng kiểm tra lại tem hoặc nhập trực tiếp một trong các mã lô hợp lệ:
+                <strong className="mx-1 text-primary">NF-DEMO-001</strong>,
+                <strong className="mx-1 text-primary">NF-TT-2026-01</strong>,
+                <strong className="mx-1 text-primary">NF-XL-2026-03</strong>.
               </p>
             </div>
           </div>
@@ -59,7 +67,7 @@ export default function TraceBatchDetailPage({
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
               placeholder="Nhập mã lô thủ công (ví dụ NF-DEMO-001)"
-              className="min-h-[46px] flex-1 rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+              className="min-h-[46px] flex-1 rounded-[10px] border border-input bg-white px-3 text-sm"
             />
             <Button type="submit" variant="primary">
               <QrCode className="h-4 w-4" aria-hidden="true" />
@@ -77,18 +85,18 @@ export default function TraceBatchDetailPage({
   return (
     <div className="mx-auto max-w-[1000px] space-y-6 px-4 py-8 lg:px-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/trace" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#245B3D] hover:underline">
+        <Link href="/trace" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           <span>Tất cả mã lô truy xuất</span>
         </Link>
         <div className="flex flex-wrap gap-3 text-sm">
           {product ? (
-            <Link href={`/products/${product.slug}`} className="font-semibold text-[#245B3D] hover:underline">
+            <Link href={`/products/${product.slug}`} className="font-semibold text-primary hover:underline">
               Xem sản phẩm →
             </Link>
           ) : null}
           {farm ? (
-            <Link href={`/farms/${farm.slug}`} className="font-semibold text-[#245B3D] hover:underline">
+            <Link href={`/farms/${farm.slug}`} className="font-semibold text-primary hover:underline">
               Hồ sơ nhà vườn →
             </Link>
           ) : null}

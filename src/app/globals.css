@@ -26,6 +26,13 @@
   --info: #245B78;
   --info-bg: #E8F2F8;
 
+  --accent-hover: #C6923D;
+  --danger-bg-hover: #FAD6D6;
+  --leaf-soft: #DDE7D6;
+  --leaf-mist: #DDE8D5;
+  --sand: #EFE8D5;
+  --primary-soft: #2F6E4B;
+
   --shadow-card: 0 2px 8px rgba(37, 53, 43, 0.06);
   --shadow-raised: 0 8px 24px rgba(37, 53, 43, 0.12);
   --shadow-overlay: 0 16px 48px rgba(37, 53, 43, 0.18);
@@ -41,12 +48,29 @@
   --color-foreground: var(--ink);
   --color-surface: var(--surface);
   --color-surface-soft: var(--surface-soft);
+  --color-surface-warm: var(--surface-warm);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
   --color-leaf: var(--leaf);
+  --color-leaf-soft: var(--leaf-soft);
+  --color-leaf-mist: var(--leaf-mist);
+  --color-sand: var(--sand);
   --color-accent: var(--accent-gold);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-input: var(--input-border);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-bg-hover: var(--danger-bg-hover);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
   --font-sans: var(--font-be-vietnam-pro), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-serif: var(--font-lora), Georgia, Cambria, serif;
 }
@@ -117,4 +141,32 @@ p {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+.leaflet-container {
+  background: #f5f3e9;
+  font-family: inherit;
+}
+
+.leaflet-container .naifarm-unit-label {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #d6ded2;
+  border-radius: 8px;
+  box-shadow: none;
+  color: #25352b;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+
+.leaflet-container .naifarm-unit-label::before {
+  display: none;
+}
+
+.leaflet-container .leaflet-tooltip {
+  border-radius: 8px;
+  border-color: #d6ded2;
+  color: #25352b;
+  font-size: 11px;
 }

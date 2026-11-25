@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import React, { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -25,6 +27,7 @@ import {
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
 import { Badge, Button, Card, DemoBanner } from "@/components/ui/Primitives";
+import { assetUrl } from "@/lib/storage/assets";
 
 type CoordinatorTab = "dispatch" | "documents" | "hours" | "analytics";
 
@@ -43,7 +46,7 @@ const COLD_CHAIN_TRIPS = [
     farmSummary: "Vườn Bưởi Chú Ba Minh & HTX Tân Triều",
     departure: "25/11/2026 · 05:30",
     tempTarget: "14°C – 16°C (Thùng thoáng rơm khô)",
-    status: "Đã chốt lịch (Demo)",
+    status: "Đã chốt lịch",
   },
 ];
 
@@ -53,6 +56,7 @@ export default function CoordinatorWorkspacePage() {
   const {
     hydrated,
     missions,
+    farms,
     supportRequests,
     docCases,
     orders,
@@ -80,28 +84,48 @@ export default function CoordinatorWorkspacePage() {
     setActiveWorkspace("W04");
   }, [setActiveWorkspace]);
 
-  const handleApproveHours = (missionId: string) => {
-    const res = approveMissionHoursByCoordinator(missionId);
-    if (res.ok) {
-      toast.success(res.message);
-    } else {
-      toast.error(res.message);
+  const handleApproveHours = async (missionId: string) => {
+    try {
+      const res = await approveMissionHoursByCoordinator(missionId);
+      if (res.ok) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
+    } catch {
+      toast.error("Không duyệt được giờ công. Vui lòng thử lại.");
     }
   };
 
-  const handleRequestRevision = (missionId: string) => {
+  const handleRequestRevision = async (missionId: string) => {
     if (!revisionReason.trim()) {
       toast.error("Vui lòng nhập lý do cần bổ sung minh chứng.");
       return;
     }
-    requestMissionRevision(missionId, revisionReason.trim());
-    setRevisionOpenId(null);
-    toast.success(`Đã gửi yêu cầu bổ sung cho nhiệm vụ ${missionId}.`);
+    try {
+      await requestMissionRevision(missionId, revisionReason.trim());
+      setRevisionOpenId(null);
+      toast.success(`Đã gửi yêu cầu bổ sung cho nhiệm vụ ${missionId}.`);
+    } catch {
+      toast.error("Không gửi được yêu cầu bổ sung. Vui lòng thử lại.");
+    }
   };
+
+  const scopedMissions = missions.filter((mission) => {
+    if (unitScope.startsWith("Phường Long Khánh")) {
+      const farm = farms.find((f) => f.id === mission.farmId);
+      return farm?.region === "Phường Long Khánh";
+    }
+    if (unitScope.startsWith("Cụm Cù lao Tân Triều")) {
+      const farm = farms.find((f) => f.id === mission.farmId);
+      return farm?.region === "Phường Tân Triều";
+    }
+    return true;
+  });
 
   const analyticsData = [
     {
-      name: "Đơn hàng Demo",
+      name: "Đơn hàng",
       soLuong: orders.length,
     },
     {
@@ -118,13 +142,13 @@ export default function CoordinatorWorkspacePage() {
     },
     {
       name: "Hồ sơ đối chiếu",
-      soLuong: docCases.filter((d) => d.status === "Hồ sơ đã đối chiếu (Demo)").length,
+      soLuong: docCases.filter((d) => d.status === "Hồ sơ đã đối chiếu").length,
     },
   ];
 
   if (!hydrated) {
     return (
-      <div className="mx-auto max-w-[1280px] px-4 py-12 text-sm text-[#52645A]">
+      <div className="mx-auto max-w-[1280px] px-4 py-12 text-sm text-muted">
         Đang tải Không gian Điều phối viên...
       </div>
     );
@@ -134,11 +158,11 @@ export default function CoordinatorWorkspacePage() {
     <WorkspaceShell
       workspaceId="W04"
       title="Không gian Điều phối viên Cơ sở"
-      subtitle="Phân công hỗ trợ nhà vườn, đối chiếu chứng từ minh họa và duyệt giờ công 2 lớp"
+      subtitle="Phân công hỗ trợ nhà vườn, đối chiếu chứng từ và duyệt giờ công 2 lớp"
       scopeBadge={unitScope}
       navItems={[
         {
-          label: `S24c · Duyệt giờ công 2 lớp (${missions.length})`,
+          label: `S24c · Duyệt giờ công 2 lớp (${scopedMissions.length})`,
           href: "#hours",
           active: tab === "hours",
           onClick: () => setTab("hours"),
@@ -159,7 +183,7 @@ export default function CoordinatorWorkspacePage() {
           icon: <Truck className="h-4 w-4" aria-hidden="true" />,
         },
         {
-          label: "S24d · Thống kê Demo trực tiếp",
+          label: "S24d · Thống kê trực tiếp",
           href: "#analytics",
           active: tab === "analytics",
           onClick: () => setTab("analytics"),
@@ -171,8 +195,8 @@ export default function CoordinatorWorkspacePage() {
         {/* Unit Scope Switcher */}
         <Card className="p-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold text-[#52645A]">Phạm vi phụ trách (Scoped Governance Demo)</p>
-            <p className="text-sm font-bold text-[#25352B]">
+            <p className="text-xs font-semibold text-muted">Phạm vi phụ trách (Scoped Governance)</p>
+            <p className="text-sm font-bold text-foreground">
               Điều phối viên cơ sở chỉ thao tác trong đơn vị được cấp quyền W06
             </p>
           </div>
@@ -180,11 +204,11 @@ export default function CoordinatorWorkspacePage() {
             aria-label="Chọn phạm vi đơn vị điều phối"
             value={unitScope}
             onChange={(e) => setUnitScope(e.target.value)}
-            className="min-h-[42px] rounded-[10px] border border-[#D6DED2] bg-white px-3 text-sm font-semibold text-[#245B3D]"
+            className="min-h-[42px] rounded-[10px] border border-border bg-white px-3 text-sm font-semibold text-primary"
           >
             <option>Phường Long Khánh (Giới hạn đơn vị)</option>
-            <option>Cụm Cù lao Tân Triều — Vĩnh Cửu</option>
-            <option>Liên cụm Đồng Nai (Góc nhìn trình diễn)</option>
+            <option>Cụm Cù lao Tân Triều (Phường Tân Triều)</option>
+            <option>Toàn Thành phố Đồng Nai (Góc nhìn tổng hợp)</option>
           </select>
         </Card>
 
@@ -196,7 +220,7 @@ export default function CoordinatorWorkspacePage() {
               detail="Điều phối viên chỉ có thể duyệt cộng giờ vào Youth Impact Pass khi trạng thái nhiệm vụ là 'Chủ vườn W02 đã xác nhận bàn giao'. Nếu còn ở trạng thái 'TNV vừa nộp', hệ thống khóa nút Duyệt."
             />
 
-            {missions.map((m) => {
+            {scopedMissions.map((m) => {
               const farmAccepted = m.status === "farm_accepted";
               const approved = m.status === "coordinator_approved";
               const submittedOnly = m.status === "submitted";
@@ -205,7 +229,7 @@ export default function CoordinatorWorkspacePage() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="tabular-nums text-xs font-bold text-[#245B3D]">
+                        <span className="tabular-nums text-xs font-bold text-primary">
                           {m.id}
                         </span>
                         <Badge
@@ -230,24 +254,26 @@ export default function CoordinatorWorkspacePage() {
                             : "Chưa nộp minh chứng"}
                         </Badge>
                       </div>
-                      <h3 className="mt-1 text-lg font-bold text-[#25352B]">{m.title}</h3>
-                      <p className="text-xs text-[#52645A]">
-                        TNV: <span className="font-semibold text-[#25352B]">{m.assigneeName ?? "Chưa nhận"}</span>{" "}
+                      <h3 className="mt-1 text-lg font-bold text-foreground">{m.title}</h3>
+                      <p className="text-xs text-muted">
+                        TNV: <span className="font-semibold text-foreground">{m.assigneeName ?? "Chưa nhận"}</span>{" "}
                         · Vườn: {m.farmName} · Giờ đề nghị: {m.submittedHours || m.expectedHours} giờ
                       </p>
                     </div>
                   </div>
 
                   {m.evidenceNote ? (
-                    <div className="flex flex-col gap-3 rounded-[12px] bg-[#F5F3E9] p-3.5 sm:flex-row sm:items-center">
+                    <div className="flex flex-col gap-3 rounded-[12px] bg-background p-3.5 sm:flex-row sm:items-center">
                       {m.evidenceImage ? (
-                        <img
-                          src={m.evidenceImage}
+                        <Image
+                          src={assetUrl(m.evidenceImage)}
                           alt={`Minh chứng ${m.id}`}
                           className="h-16 w-24 rounded-[8px] object-cover"
+                          width={512}
+                          height={279}
                         />
                       ) : null}
-                      <p className="text-sm text-[#25352B]">
+                      <p className="text-sm text-foreground">
                         <span className="font-bold">Báo cáo minh chứng: </span>
                         {m.evidenceNote}
                       </p>
@@ -256,7 +282,7 @@ export default function CoordinatorWorkspacePage() {
 
                   <div className="flex flex-wrap items-center gap-3">
                     {approved ? (
-                      <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[#24603B]">
+                      <span className="inline-flex items-center gap-1.5 text-sm font-bold text-success">
                         <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                         Đã ghi nhận {m.approvedHours} giờ vào Youth Impact Pass của {m.assigneeName}
                       </span>
@@ -265,7 +291,7 @@ export default function CoordinatorWorkspacePage() {
                         <Button
                           variant="primary"
                           disabled={!farmAccepted}
-                          onClick={() => handleApproveHours(m.id)}
+                          onClick={() => void handleApproveHours(m.id)}
                         >
                           {farmAccepted ? (
                             <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
@@ -282,7 +308,7 @@ export default function CoordinatorWorkspacePage() {
                         {submittedOnly ? (
                           <Link
                             href="/farmer"
-                            className="inline-flex min-h-[44px] items-center rounded-[10px] border border-[#245B3D] bg-white px-4 text-xs font-bold text-[#245B3D] hover:bg-[#EAF0E5]"
+                            className="inline-flex min-h-[44px] items-center rounded-[10px] border border-primary bg-white px-4 text-xs font-bold text-primary hover:bg-surface-soft"
                           >
                             Mở W02 (/farmer) để chủ vườn xác nhận →
                           </Link>
@@ -302,21 +328,21 @@ export default function CoordinatorWorkspacePage() {
                   </div>
 
                   {revisionOpenId === m.id ? (
-                    <div className="rounded-[12px] border border-[#D6DED2] bg-[#F5F3E9] p-3.5 space-y-2.5">
-                      <label htmlFor={`rev-${m.id}`} className="block text-xs font-bold text-[#25352B]">
+                    <div className="rounded-[12px] border border-border bg-background p-3.5 space-y-2.5">
+                      <label htmlFor={`rev-${m.id}`} className="block text-xs font-bold text-foreground">
                         Lý do yêu cầu Thanh niên bổ sung:
                       </label>
                       <input
                         id={`rev-${m.id}`}
                         value={revisionReason}
                         onChange={(e) => setRevisionReason(e.target.value)}
-                        className="min-h-[42px] w-full rounded-[10px] border border-[#D6DED2] bg-white px-3 text-sm"
+                        className="min-h-[42px] w-full rounded-[10px] border border-border bg-white px-3 text-sm"
                       />
                       <div className="flex gap-2">
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => handleRequestRevision(m.id)}
+                          onClick={() => void handleRequestRevision(m.id)}
                         >
                           Gửi yêu cầu bổ sung
                         </Button>
@@ -341,14 +367,14 @@ export default function CoordinatorWorkspacePage() {
           <section id="documents" className="space-y-4">
             <div
               role="note"
-              className="flex items-start gap-3 rounded-[14px] border border-[#D7A34D]/50 bg-[#FFF2D8] p-4 text-sm text-[#25352B]"
+              className="flex items-start gap-3 rounded-[14px] border border-accent/50 bg-warning-bg p-4 text-sm text-foreground"
             >
-              <AlertTriangle className="h-5 w-5 shrink-0 text-[#80520C] mt-0.5" aria-hidden="true" />
+              <AlertTriangle className="h-5 w-5 shrink-0 text-warning mt-0.5" aria-hidden="true" />
               <div>
-                <p className="font-bold text-[#80520C]">
-                  Ranh giới pháp lý: Đối chiếu chứng từ (Demo) ≠ Cấp chứng nhận OCOP
+                <p className="font-bold text-warning">
+                  Ranh giới pháp lý: Đối chiếu chứng từ ≠ Cấp chứng nhận OCOP
                 </p>
-                <p className="text-xs text-[#80520C]">
+                <p className="text-xs text-warning">
                   Điều phối viên chỉ đối chiếu tính đầy đủ của ảnh chụp hồ sơ tự khai trên hệ thống.
                   Thẩm quyền cấp sao OCOP chính thức thuộc Hội đồng đánh giá OCOP có thẩm quyền.
                 </p>
@@ -360,10 +386,10 @@ export default function CoordinatorWorkspacePage() {
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="tabular-nums text-xs font-bold text-[#245B3D]">{c.id}</span>
+                      <span className="tabular-nums text-xs font-bold text-primary">{c.id}</span>
                       <Badge
                         tone={
-                          c.status === "Hồ sơ đã đối chiếu (Demo)"
+                          c.status === "Hồ sơ đã đối chiếu"
                             ? "success"
                             : c.status === "Yêu cầu bổ sung"
                             ? "danger"
@@ -373,19 +399,19 @@ export default function CoordinatorWorkspacePage() {
                         {c.status}
                       </Badge>
                     </div>
-                    <h3 className="mt-1 text-base font-bold text-[#25352B]">{c.documentTitle}</h3>
-                    <p className="text-xs text-[#52645A]">
+                    <h3 className="mt-1 text-base font-bold text-foreground">{c.documentTitle}</h3>
+                    <p className="text-xs text-muted">
                       {c.farmName} · Nộp lúc {c.submittedAt}
                     </p>
                   </div>
                 </div>
 
-                <p className="rounded-[10px] bg-[#F5F3E9] px-3 py-2 text-xs text-[#52645A]">
+                <p className="rounded-[10px] bg-background px-3 py-2 text-xs text-muted">
                   {c.scopeNote}
                 </p>
 
                 {c.reviewerNote ? (
-                  <p className="text-xs font-semibold text-[#24603B]">
+                  <p className="text-xs font-semibold text-success">
                     Ghi chú đối chiếu: {c.reviewerNote}
                   </p>
                 ) : null}
@@ -394,32 +420,40 @@ export default function CoordinatorWorkspacePage() {
                   <input
                     value={docNotes[c.id] ?? ""}
                     onChange={(e) => setDocNotes((p) => ({ ...p, [c.id]: e.target.value }))}
-                    placeholder="Ghi chú đối chiếu minh họa (ví dụ: Đã kiểm tra ảnh bản scan và địa chỉ vườn)..."
+                    placeholder="Ghi chú đối chiếu (ví dụ: Đã kiểm tra ảnh bản scan và địa chỉ vườn)..."
                     aria-label={`Ghi chú đối chiếu ${c.id}`}
-                    className="min-h-[42px] flex-1 rounded-[10px] border border-[#D6DED2] bg-white px-3 text-sm"
+                    className="min-h-[42px] flex-1 rounded-[10px] border border-border bg-white px-3 text-sm"
                   />
                   <div className="flex flex-wrap gap-2">
                     <Button
                       variant="primary"
                       size="sm"
-                      onClick={() => {
+                      onClick={async () => {
                         const note =
                           docNotes[c.id]?.trim() ||
-                          "Đã đối chiếu bản scan hồ sơ tự khai (Demo — không thay thế chứng nhận OCOP chính thức).";
-                        reviewDocumentCase(c.id, "Hồ sơ đã đối chiếu (Demo)", note);
-                        toast.success(`Đã đánh dấu ${c.id} là Hồ sơ đã đối chiếu (Demo).`);
+                          "Đã đối chiếu bản scan hồ sơ tự khai (không thay thế chứng nhận OCOP chính thức).";
+                        try {
+                          await reviewDocumentCase(c.id, "Hồ sơ đã đối chiếu", note);
+                          toast.success(`Đã đánh dấu ${c.id} là Hồ sơ đã đối chiếu.`);
+                        } catch {
+                          toast.error("Không cập nhật được hồ sơ. Vui lòng thử lại.");
+                        }
                       }}
                     >
-                      Đánh dấu Đã đối chiếu (Demo)
+                      Đánh dấu Đã đối chiếu
                     </Button>
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => {
+                      onClick={async () => {
                         const note =
                           docNotes[c.id]?.trim() || "Cần bổ sung ảnh mặt sau phiếu thu hoạch.";
-                        reviewDocumentCase(c.id, "Yêu cầu bổ sung", note);
-                        toast.info(`Đã chuyển ${c.id} sang Yêu cầu bổ sung.`);
+                        try {
+                          await reviewDocumentCase(c.id, "Yêu cầu bổ sung", note);
+                          toast.info(`Đã chuyển ${c.id} sang Yêu cầu bổ sung.`);
+                        } catch {
+                          toast.error("Không cập nhật được hồ sơ. Vui lòng thử lại.");
+                        }
                       }}
                     >
                       Yêu cầu bổ sung
@@ -435,54 +469,54 @@ export default function CoordinatorWorkspacePage() {
         {tab === "dispatch" ? (
           <section id="dispatch" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card className="p-5 space-y-4">
-              <h2 className="text-lg font-bold text-[#25352B]">
+              <h2 className="text-lg font-bold text-foreground">
                 Yêu cầu hỗ trợ từ Nhà vườn ({supportRequests.length})
               </h2>
               <div className="space-y-3">
                 {supportRequests.map((req) => (
                   <div
                     key={req.id}
-                    className="rounded-[12px] border border-[#D6DED2] bg-[#F5F3E9] p-4 space-y-1.5"
+                    className="rounded-[12px] border border-border bg-background p-4 space-y-1.5"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="tabular-nums text-xs font-bold text-[#245B3D]">{req.id}</span>
+                      <span className="tabular-nums text-xs font-bold text-primary">{req.id}</span>
                       <Badge tone="info">{req.status}</Badge>
                     </div>
-                    <p className="font-bold text-[#25352B]">{req.title}</p>
-                    <p className="text-xs text-[#52645A]">
+                    <p className="font-bold text-foreground">{req.title}</p>
+                    <p className="text-xs text-muted">
                       {req.farmName} · {req.preferredTime} · {req.locationMode}
                     </p>
-                    <p className="text-sm text-[#25352B]">{req.note}</p>
+                    <p className="text-sm text-foreground">{req.note}</p>
                   </div>
                 ))}
               </div>
               <Link
                 href="/volunteer"
-                className="inline-flex min-h-[44px] items-center rounded-[10px] border border-[#245B3D] bg-white px-4 text-xs font-bold text-[#245B3D] hover:bg-[#EAF0E5]"
+                className="inline-flex min-h-[44px] items-center rounded-[10px] border border-primary bg-white px-4 text-xs font-bold text-primary hover:bg-surface-soft"
               >
                 Mở bảng Nhiệm vụ Thanh niên (/volunteer) →
               </Link>
             </Card>
 
             <Card className="p-5 space-y-4">
-              <h2 className="text-lg font-bold text-[#25352B]">
+              <h2 className="text-lg font-bold text-foreground">
                 Điều phối chuyến gom lạnh liên kết HTX (Minh họa)
               </h2>
               <div className="space-y-3">
                 {COLD_CHAIN_TRIPS.map((trip) => (
                   <div
                     key={trip.id}
-                    className="rounded-[12px] border border-[#D6DED2] bg-[#F5F3E9] p-4 space-y-1.5"
+                    className="rounded-[12px] border border-border bg-background p-4 space-y-1.5"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="tabular-nums text-xs font-bold text-[#245B3D]">
+                      <span className="tabular-nums text-xs font-bold text-primary">
                         {trip.id}
                       </span>
                       <Badge tone="neutral">{trip.status}</Badge>
                     </div>
-                    <p className="font-bold text-[#25352B]">{trip.route}</p>
-                    <p className="text-xs text-[#52645A]">{trip.farmSummary}</p>
-                    <p className="text-xs font-semibold text-[#245B3D]">
+                    <p className="font-bold text-foreground">{trip.route}</p>
+                    <p className="text-xs text-muted">{trip.farmSummary}</p>
+                    <p className="text-xs font-semibold text-primary">
                       Khởi hành: {trip.departure} · Nhiệt độ mục tiêu: {trip.tempTarget}
                     </p>
                   </div>
@@ -492,15 +526,15 @@ export default function CoordinatorWorkspacePage() {
           </section>
         ) : null}
 
-        {/* Tab 4: S24d Live Demo Analytics */}
+        {/* Tab 4: S24d Live Analytics */}
         {tab === "analytics" ? (
           <section id="analytics" className="space-y-5">
             <Card className="p-6 space-y-5">
               <div className="flex items-center justify-between gap-2">
-                <h2 className="text-lg font-bold text-[#25352B]">
-                  Biểu đồ chỉ số thực hành trên Prototype (S24d)
+                <h2 className="text-lg font-bold text-foreground">
+                  Biểu đồ chỉ số vận hành nền tảng (S24d)
                 </h2>
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#52645A]">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted">
                   <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                   Cập nhật tức thì
                 </span>
@@ -514,11 +548,11 @@ export default function CoordinatorWorkspacePage() {
                       <XAxis dataKey="name" tick={{ fill: "#25352B", fontSize: 12 }} />
                       <YAxis allowDecimals={false} tick={{ fill: "#52645A", fontSize: 12 }} />
                       <Tooltip />
-                      <Bar dataKey="soLuong" name="Số lượng (Demo)" fill="#245B3D" radius={[8, 8, 0, 0]} />
+                      <Bar dataKey="soLuong" name="Số lượng" fill="#245B3D" radius={[8, 8, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex h-full items-center justify-center rounded-[12px] bg-[#F5F3E9] text-sm text-[#52645A]">
+                  <div className="flex h-full items-center justify-center rounded-[12px] bg-background text-sm text-muted">
                     Đang dựng biểu đồ...
                   </div>
                 )}
@@ -528,16 +562,16 @@ export default function CoordinatorWorkspacePage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-[#D6DED2] text-xs text-[#52645A]">
-                      <th className="py-2 pr-4 font-semibold">Chỉ số trạng thái Demo</th>
+                    <tr className="border-b border-border text-xs text-muted">
+                      <th className="py-2 pr-4 font-semibold">Chỉ số trạng thái</th>
                       <th className="py-2 font-semibold">Số lượng hiện có</th>
                     </tr>
                   </thead>
                   <tbody>
                     {analyticsData.map((row) => (
-                      <tr key={row.name} className="border-b border-[#EAF0E5]">
-                        <td className="py-2 pr-4 font-medium text-[#25352B]">{row.name}</td>
-                        <td className="py-2 font-bold text-[#245B3D] tabular-nums">{row.soLuong}</td>
+                      <tr key={row.name} className="border-b border-surface-soft">
+                        <td className="py-2 pr-4 font-medium text-foreground">{row.name}</td>
+                        <td className="py-2 font-bold text-primary tabular-nums">{row.soLuong}</td>
                       </tr>
                     ))}
                   </tbody>

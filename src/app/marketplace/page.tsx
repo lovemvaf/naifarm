@@ -8,7 +8,13 @@ import { Badge, Button, DemoBanner, EmptyState } from "@/components/ui/Primitive
 import { cn } from "@/lib/format";
 
 const CATEGORIES = ["Tất cả", "Trái cây tươi", "Hạt & Cà phê", "Mật ong & Đặc sản"] as const;
-const REGIONS = ["Tất cả vùng", "Long Khánh", "Vĩnh Cửu / Tân Triều", "Xuân Lộc", "Cẩm Mỹ & Định Quán"] as const;
+const REGIONS = [
+  "Tất cả vùng",
+  "Phường Tân Triều",
+  "Phường Long Khánh",
+  "Phường Xuân Lộc",
+  "Cẩm Mỹ & Định Quán",
+] as const;
 
 export default function MarketplacePage() {
   const { products } = useDemoStore();
@@ -42,16 +48,16 @@ export default function MarketplacePage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <Badge tone="success">Chợ OCOP Thanh niên · S01 & S26</Badge>
-          <h1 className="mt-2 font-editorial text-3xl font-semibold text-[#25352B]">
+          <h1 className="mt-2 font-editorial text-3xl font-semibold text-foreground">
             Danh mục Nông sản & Lịch Mùa vụ Đồng Nai
           </h1>
-          <p className="mt-1 text-sm text-[#52645A]">
+          <p className="mt-1 text-sm text-muted">
             Lọc theo vùng trồng, danh mục, trạng thái mùa vụ (tách bạch hàng có sẵn và hàng hẹn mùa).
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-[10px] border border-[#D6DED2] bg-white px-3.5 py-2 text-xs text-[#52645A]">
-          <Calendar className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
-          <span>Hiển thị {filtered.length}/{products.length} sản phẩm demo</span>
+        <div className="flex items-center gap-2 rounded-[10px] border border-border bg-white px-3.5 py-2 text-xs text-muted">
+          <Calendar className="h-4 w-4 text-primary" aria-hidden="true" />
+          <span>Hiển thị {filtered.length}/{products.length} sản phẩm</span>
         </div>
       </div>
 
@@ -60,10 +66,10 @@ export default function MarketplacePage() {
         detail="Sản phẩm 'Hẹn mùa vụ tới' (như Chôm chôm nhãn, Chôm chôm tuyển chọn) tắt nút đặt mua để tránh nhận đơn khi chưa có tồn kho sẵn."
       />
 
-      <div className="space-y-4 rounded-[16px] border border-[#D6DED2] bg-white p-4 shadow-[0_2px_8px_rgba(37,53,43,0.04)]">
+      <div className="space-y-4 rounded-[16px] border border-border bg-white p-4 shadow-[0_2px_8px_rgba(37,53,43,0.04)]">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#52645A]" aria-hidden="true" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true" />
             <label htmlFor="mkt-search" className="sr-only">Tìm kiếm sản phẩm</label>
             <input
               id="mkt-search"
@@ -71,7 +77,7 @@ export default function MarketplacePage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm sản phẩm, nhà vườn, mã lô..."
-              className="min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white pl-9 pr-3 text-sm"
+              className="min-h-[44px] w-full rounded-[10px] border border-input bg-white pl-9 pr-3 text-sm"
             />
           </div>
 
@@ -81,7 +87,7 @@ export default function MarketplacePage() {
               id="mkt-region"
               value={region}
               onChange={(e) => setRegion(e.target.value as (typeof REGIONS)[number])}
-              className="min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+              className="min-h-[44px] w-full rounded-[10px] border border-input bg-white px-3 text-sm"
             >
               {REGIONS.map((r) => (
                 <option key={r} value={r}>{r}</option>
@@ -95,7 +101,7 @@ export default function MarketplacePage() {
               id="mkt-sort"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-              className="min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+              className="min-h-[44px] w-full rounded-[10px] border border-input bg-white px-3 text-sm"
             >
               <option value="default">Mặc định (Ưu tiên nổi bật)</option>
               <option value="price_asc">Giá từ thấp đến cao</option>
@@ -113,7 +119,7 @@ export default function MarketplacePage() {
                 onClick={() => setCategory(c)}
                 className={cn(
                   "min-h-[38px] rounded-full px-3.5 text-xs font-semibold cursor-pointer",
-                  category === c ? "bg-[#245B3D] text-white" : "border border-[#D6DED2] bg-[#F5F3E9] text-[#25352B]"
+                  category === c ? "bg-primary text-white" : "border border-border bg-background text-foreground"
                 )}
               >
                 {c}
@@ -133,8 +139,8 @@ export default function MarketplacePage() {
                 className={cn(
                   "min-h-[38px] rounded-full px-3.5 text-xs font-semibold cursor-pointer",
                   seasonFilter === st.id
-                    ? "bg-[#D7A34D] text-[#25352B]"
-                    : "border border-[#D6DED2] bg-white text-[#52645A]"
+                    ? "bg-accent text-foreground"
+                    : "border border-border bg-white text-muted"
                 )}
               >
                 {st.label}

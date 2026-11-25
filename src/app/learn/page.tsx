@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -17,6 +19,7 @@ import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
 import { Badge, Button, Card, DemoBanner } from "@/components/ui/Primitives";
 import { CASHEW_LESSON } from "@/data/demo/community";
 import { PomeloViewer3DHost } from "@/components/three/PomeloViewer3DHost";
+import { assetUrl } from "@/lib/storage/assets";
 
 export default function OpenLearningPage() {
   const { setActiveWorkspace } = useDemoStore();
@@ -67,33 +70,35 @@ export default function OpenLearningPage() {
         {/* Micro-learning Lesson (S20) */}
         <section id="lesson">
           <Card className="overflow-hidden">
-            <div className="border-b border-[#D6DED2] bg-[#EAF0E5] p-6">
+            <div className="border-b border-border bg-surface-soft p-6">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone="success">Học liệu mở (S20)</Badge>
                 <Badge tone="neutral">{CASHEW_LESSON.level}</Badge>
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#245B3D]">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
                   <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                   {CASHEW_LESSON.duration}
                 </span>
               </div>
-              <h2 className="mt-3 text-2xl font-bold text-[#25352B]">{CASHEW_LESSON.title}</h2>
-              <p className="mt-2 text-sm text-[#52645A]">{CASHEW_LESSON.objective}</p>
+              <h2 className="mt-3 text-2xl font-bold text-foreground">{CASHEW_LESSON.title}</h2>
+              <p className="mt-2 text-sm text-muted">{CASHEW_LESSON.objective}</p>
             </div>
 
             <div className="grid grid-cols-1 gap-6 p-6">
               {CASHEW_LESSON.sections.map((sec) => (
                 <article
                   key={sec.heading}
-                  className="grid grid-cols-1 items-center gap-5 rounded-[14px] border border-[#D6DED2] bg-[#F5F3E9] p-4 md:grid-cols-[200px_minmax(0,1fr)]"
+                  className="grid grid-cols-1 items-center gap-5 rounded-[14px] border border-border bg-background p-4 md:grid-cols-[200px_minmax(0,1fr)]"
                 >
-                  <img
-                    src={sec.image}
+                  <Image
+                    src={assetUrl(sec.image)}
                     alt={sec.heading}
                     className="h-40 w-full rounded-[12px] object-cover"
+                    width={512}
+                    height={279}
                   />
                   <div className="space-y-2">
-                    <h3 className="text-lg font-bold text-[#25352B]">{sec.heading}</h3>
-                    <p className="text-sm leading-relaxed text-[#52645A]">{sec.body}</p>
+                    <h3 className="text-lg font-bold text-foreground">{sec.heading}</h3>
+                    <p className="text-sm leading-relaxed text-muted">{sec.body}</p>
                   </div>
                 </article>
               ))}
@@ -104,17 +109,17 @@ export default function OpenLearningPage() {
         {/* Interactive Quiz (S21) */}
         <section id="quiz">
           <Card className="p-6 space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#D6DED2] pb-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
               <div>
-                <h2 className="text-xl font-bold text-[#25352B]">
+                <h2 className="text-xl font-bold text-foreground">
                   Trắc nghiệm kiểm tra nhanh (S21)
                 </h2>
-                <p className="text-sm text-[#52645A]">
+                <p className="text-sm text-muted">
                   Chọn đáp án để nhận giải thích kiến thức nông nghiệp & truy xuất QR ngay lập tức.
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="rounded-full bg-[#EAF0E5] px-4 py-1.5 text-sm font-bold text-[#245B3D] tabular-nums">
+                <span className="rounded-full bg-surface-soft px-4 py-1.5 text-sm font-bold text-primary tabular-nums">
                   Điểm: {score}/{totalQuestions}
                 </span>
                 {answeredCount > 0 ? (
@@ -137,9 +142,9 @@ export default function OpenLearningPage() {
                 return (
                   <div
                     key={q.id}
-                    className="rounded-[14px] border border-[#D6DED2] bg-[#F5F3E9] p-4 space-y-3"
+                    className="rounded-[14px] border border-border bg-background p-4 space-y-3"
                   >
-                    <p className="font-bold text-[#25352B]">
+                    <p className="font-bold text-foreground">
                       Câu {qIdx + 1}: {q.question}
                     </p>
                     <div className="grid grid-cols-1 gap-2">
@@ -147,12 +152,12 @@ export default function OpenLearningPage() {
                         const isSelected = picked === idx;
                         const isCorrect = idx === q.correctIndex;
                         let style =
-                          "border-[#D6DED2] bg-white text-[#25352B] hover:border-[#6C9C5B]";
+                          "border-border bg-white text-foreground hover:border-leaf";
                         if (isAnswered) {
                           if (isCorrect) {
-                            style = "border-[#24603B] bg-[#E6F3E9] text-[#24603B] font-semibold";
+                            style = "border-success bg-success-bg text-success font-semibold";
                           } else if (isSelected) {
-                            style = "border-[#A32D2D] bg-[#FDECEC] text-[#A32D2D]";
+                            style = "border-danger bg-danger-bg text-danger";
                           }
                         }
                         return (
@@ -164,9 +169,9 @@ export default function OpenLearningPage() {
                           >
                             <span>{opt}</span>
                             {isAnswered && isCorrect ? (
-                              <CheckCircle2 className="h-4 w-4 shrink-0 text-[#24603B]" />
+                              <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
                             ) : isAnswered && isSelected && !isCorrect ? (
-                              <XCircle className="h-4 w-4 shrink-0 text-[#A32D2D]" />
+                              <XCircle className="h-4 w-4 shrink-0 text-danger" />
                             ) : null}
                           </button>
                         );
@@ -174,8 +179,8 @@ export default function OpenLearningPage() {
                     </div>
 
                     {isAnswered ? (
-                      <p className="rounded-[10px] bg-white px-3.5 py-2 text-xs text-[#25352B]">
-                        <span className="font-bold text-[#245B3D]">Giải thích: </span>
+                      <p className="rounded-[10px] bg-white px-3.5 py-2 text-xs text-foreground">
+                        <span className="font-bold text-primary">Giải thích: </span>
                         {q.explanation}
                       </p>
                     ) : null}
@@ -186,7 +191,7 @@ export default function OpenLearningPage() {
 
             {answeredCount === totalQuestions ? (
               <DemoBanner
-                title={`Hoàn thành bài học (Demo) — Đạt ${score}/${totalQuestions} câu đúng`}
+                title={`Hoàn thành bài học — Đạt ${score}/${totalQuestions} câu đúng`}
                 detail="Bạn có thể khám phá thêm sản phẩm Hạt điều Xuân Lộc ngoài Chợ hoặc chuyển sang Trải nghiệm mô hình 3D Bưởi Tân Triều bên dưới."
               />
             ) : null}
@@ -197,17 +202,17 @@ export default function OpenLearningPage() {
         <section id="pomelo-3d" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold text-[#25352B]">
+              <h2 className="text-xl font-bold text-foreground">
                 Khám phá cấu tạo nông sản 3D — Bưởi Tân Triều (S22)
               </h2>
-              <p className="text-sm text-[#52645A]">
+              <p className="text-sm text-muted">
                 Xoay 360°, cắt đôi trực quan và chạm vào 4 điểm thông tin cấu tạo vỏ – cùi – tép –
                 cuống lá.
               </p>
             </div>
             <Link
               href="/products/buoi-da-xanh-tan-trieu"
-              className="text-sm font-bold text-[#245B3D] underline"
+              className="text-sm font-bold text-primary underline"
             >
               Xem trang đặt mua Bưởi Tân Triều →
             </Link>

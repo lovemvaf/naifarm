@@ -6,7 +6,7 @@
 |---|---|---|
 | Verified Google Stitch Local Export Screens (`ST-01`..`ST-12`) | **12** | Extracted to `.stitch/screens/` from `stitch_naifarm_ocop_marketplace` (Project ID `12256474506032242478`) |
 | Reconstructed Blueprint V3 / Playbook Screens (`BP-01`..`BP-10`) | **10** | Specified in `NaiFarm_Master_Blueprint_Dong_Nai_2026_v3` & `STITCH_PLAYBOOK.md`, not in the 12-screen Stitch export |
-| Newly Proposed Navigation / Prototype Helper (`PR-01`) | **1** | `/demo` Judge Presentation Hub (`Demo Switcher`, Stitch coverage map, Flows A–H launcher, Reset Demo) |
+| Newly Proposed Navigation / Prototype Helper (`PR-01`) | **1** | `/demo` Judge Presentation Hub (`Demo Switcher`, Stitch coverage map, Flows A–H launcher, Đồng bộ lại dữ liệu từ Supabase) |
 | Remote-only Unexported Screens | **0 known / unverified** | Stitch MCP not authenticated (`0` tools); no inaccessible remote screen data invented |
 
 ## 2. Full Inventory Table

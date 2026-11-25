@@ -26,7 +26,7 @@ const lora = Lora({
 export const metadata: Metadata = {
   title: "NaiFarm · Chợ OCOP Thanh niên Đồng Nai 2026",
   description:
-    "Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị. Nguyên mẫu hệ sinh thái chợ OCOP thanh niên, truy xuất QR, chuyển đổi số nhà nông và tình nguyện số tại Thành phố Đồng Nai.",
+    "Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị. Nền tảng chợ OCOP thanh niên, truy xuất QR, chuyển đổi số nhà nông và tình nguyện số tại Thành phố Đồng Nai.",
 };
 
 export default function RootLayout({
@@ -36,12 +36,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" className={`${beVietnamPro.variable} ${lora.variable}`}>
-      <body className="min-h-screen flex flex-col bg-[#F5F3E9] text-[#25352B]">
+      <body className="min-h-screen flex flex-col bg-background text-foreground">
         <MotionProvider>
           <DemoStoreProvider>
             <a
               href="#main-content"
-              className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-[#245B3D] focus:px-4 focus:py-2 focus:text-white"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-white"
             >
               Chuyển đến nội dung chính
             </a>

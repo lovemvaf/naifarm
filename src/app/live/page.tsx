@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import React, { useState } from "react";
 import Link from "next/link";
 import {
@@ -27,6 +29,7 @@ import { useDemoStore } from "@/context/DemoStoreContext";
 import { cn, formatVnd } from "@/lib/format";
 import { Badge, Button, Card, DemoBanner } from "@/components/ui/Primitives";
 import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
+import { assetUrl } from "@/lib/storage/assets";
 
 export default function LiveStoryRoomPage() {
   const {
@@ -119,10 +122,10 @@ export default function LiveStoryRoomPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <Badge tone="info">{roleHeaderCopy.badge}</Badge>
-          <h2 className="mt-2 font-editorial text-2xl font-semibold text-[#25352B] sm:text-3xl">
+          <h2 className="mt-2 font-editorial text-2xl font-semibold text-foreground sm:text-3xl">
             {roleHeaderCopy.title}
           </h2>
-          <p className="mt-1 max-w-2xl text-sm text-[#52645A]">{roleHeaderCopy.subtitle}</p>
+          <p className="mt-1 max-w-2xl text-sm text-muted">{roleHeaderCopy.subtitle}</p>
         </div>
 
         {canScheduleLive ? (
@@ -142,8 +145,8 @@ export default function LiveStoryRoomPage() {
       />
 
       {canScheduleLive && showCreateForm ? (
-        <Card className="border-2 border-[#245B3D]/25 p-5 sm:p-6">
-          <h3 className="text-lg font-bold text-[#25352B]">{roleHeaderCopy.formHeading}</h3>
+        <Card className="border-2 border-primary/25 p-5 sm:p-6">
+          <h3 className="text-lg font-bold text-foreground">{roleHeaderCopy.formHeading}</h3>
           <form
             className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
             onSubmit={(e) => {
@@ -172,7 +175,7 @@ export default function LiveStoryRoomPage() {
             }}
           >
             <div className="sm:col-span-2">
-              <label htmlFor="live-title" className="block text-xs font-semibold text-[#25352B]">
+              <label htmlFor="live-title" className="block text-xs font-semibold text-foreground">
                 Tiêu đề phiên phát sóng
               </label>
               <input
@@ -181,19 +184,19 @@ export default function LiveStoryRoomPage() {
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 placeholder="Ví dụ: Cắt chôm chôm sáng sớm tại vườn Ba Tư"
-                className="mt-1 min-h-[46px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+                className="mt-1 min-h-[46px] w-full rounded-[10px] border border-input bg-white px-3 text-sm"
               />
             </div>
 
             <div>
-              <label htmlFor="live-farm" className="block text-xs font-semibold text-[#25352B]">
+              <label htmlFor="live-farm" className="block text-xs font-semibold text-foreground">
                 Nhà vườn
               </label>
               <select
                 id="live-farm"
                 value={newFarmId}
                 onChange={(e) => setNewFarmId(e.target.value)}
-                className="mt-1 min-h-[46px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+                className="mt-1 min-h-[46px] w-full rounded-[10px] border border-input bg-white px-3 text-sm"
               >
                 {farms.map((f) => (
                   <option key={f.id} value={f.id}>
@@ -204,14 +207,14 @@ export default function LiveStoryRoomPage() {
             </div>
 
             <div>
-              <label htmlFor="live-prod" className="block text-xs font-semibold text-[#25352B]">
+              <label htmlFor="live-prod" className="block text-xs font-semibold text-foreground">
                 Sản phẩm ghim
               </label>
               <select
                 id="live-prod"
                 value={newProductId}
                 onChange={(e) => setNewProductId(e.target.value)}
-                className="mt-1 min-h-[46px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+                className="mt-1 min-h-[46px] w-full rounded-[10px] border border-input bg-white px-3 text-sm"
               >
                 {products.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -222,7 +225,7 @@ export default function LiveStoryRoomPage() {
             </div>
 
             <div>
-              <label htmlFor="live-time" className="block text-xs font-semibold text-[#25352B]">
+              <label htmlFor="live-time" className="block text-xs font-semibold text-foreground">
                 Thời gian dự kiến
               </label>
               <input
@@ -230,12 +233,12 @@ export default function LiveStoryRoomPage() {
                 type="text"
                 value={newSchedule}
                 onChange={(e) => setNewSchedule(e.target.value)}
-                className="mt-1 min-h-[46px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+                className="mt-1 min-h-[46px] w-full rounded-[10px] border border-input bg-white px-3 text-sm"
               />
             </div>
 
             <div>
-              <label htmlFor="live-youth" className="block text-xs font-semibold text-[#25352B]">
+              <label htmlFor="live-youth" className="block text-xs font-semibold text-foreground">
                 {isFarmerRole ? "Thanh niên hỗ trợ (nếu cần)" : "Người dẫn phiên / TNV phụ trách"}
               </label>
               <input
@@ -243,7 +246,7 @@ export default function LiveStoryRoomPage() {
                 type="text"
                 value={newYouth}
                 onChange={(e) => setNewYouth(e.target.value)}
-                className="mt-1 min-h-[46px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+                className="mt-1 min-h-[46px] w-full rounded-[10px] border border-input bg-white px-3 text-sm"
               />
             </div>
 
@@ -264,11 +267,13 @@ export default function LiveStoryRoomPage() {
       {activeSession ? (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           <Card className="overflow-hidden lg:col-span-8">
-            <div className="relative aspect-[16/9] bg-[#25352B]">
-              <img
-                src={activeAngle?.image || "/images/stitch/stitch-44.jpg"}
+            <div className="relative aspect-[16/9] bg-foreground">
+              <Image
+                src={assetUrl(activeAngle?.image || "stitch/stitch-44.webp")}
                 alt={activeSession.title}
                 className="h-full w-full object-cover"
+                width={512}
+                height={279}
               />
               <div className="absolute top-3 left-3 flex flex-wrap gap-2">
                 <Badge tone={activeSession.status === "replay_demo" ? "info" : "gold"}>
@@ -292,8 +297,8 @@ export default function LiveStoryRoomPage() {
                     className={cn(
                       "inline-flex min-h-[38px] items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold cursor-pointer",
                       angleIndex === idx
-                        ? "bg-[#245B3D] text-white"
-                        : "border border-[#D6DED2] bg-[#F5F3E9] text-[#25352B]"
+                        ? "bg-primary text-white"
+                        : "border border-border bg-background text-foreground"
                     )}
                   >
                     <Video className="h-3.5 w-3.5" aria-hidden="true" />
@@ -303,12 +308,12 @@ export default function LiveStoryRoomPage() {
               </div>
 
               <div>
-                <h3 className="text-xl font-bold text-[#25352B]">{activeSession.title}</h3>
-                <p className="mt-1 text-xs font-medium text-[#52645A]">
+                <h3 className="text-xl font-bold text-foreground">{activeSession.title}</h3>
+                <p className="mt-1 text-xs font-medium text-muted">
                   {activeSession.farmName} · Chủ vườn: {activeSession.farmerName} · Phụ trách:{" "}
                   {activeSession.hostYouth}
                 </p>
-                <p className="mt-2 text-sm text-[#25352B]">
+                <p className="mt-2 text-sm text-foreground">
                   {activeAngle?.caption || activeSession.summary}
                 </p>
               </div>
@@ -317,7 +322,7 @@ export default function LiveStoryRoomPage() {
 
           <div className="space-y-4 lg:col-span-4">
             <Card className="p-4">
-              <h3 className="text-base font-bold text-[#25352B]">
+              <h3 className="text-base font-bold text-foreground">
                 {isBuyerRole
                   ? `Sản phẩm ghim trong phiên (${pinnedProducts.length})`
                   : `Sản phẩm đang ghim & Tem QR (${pinnedProducts.length})`}
@@ -326,21 +331,23 @@ export default function LiveStoryRoomPage() {
                 {pinnedProducts.map((p) => (
                   <div
                     key={p.id}
-                    className="flex gap-3 rounded-[12px] border border-[#D6DED2] bg-[#F5F3E9]/60 p-3"
+                    className="flex gap-3 rounded-[12px] border border-border bg-background/60 p-3"
                   >
-                    <img
-                      src={p.image}
+                    <Image
+                      src={assetUrl(p.image)}
                       alt={p.name}
                       className="h-20 w-20 shrink-0 rounded-[10px] object-cover"
+                      width={512}
+                      height={279}
                     />
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/products/${p.slug}`}
-                        className="line-clamp-2 text-sm font-bold text-[#25352B] hover:text-[#245B3D]"
+                        className="line-clamp-2 text-sm font-bold text-foreground hover:text-primary"
                       >
                         {p.name}
                       </Link>
-                      <p className="mt-0.5 tabular-nums text-sm font-bold text-[#245B3D]">
+                      <p className="mt-0.5 tabular-nums text-sm font-bold text-primary">
                         {formatVnd(p.priceVnd)}/{p.unitLabel}
                       </p>
 
@@ -349,8 +356,8 @@ export default function LiveStoryRoomPage() {
                           <Button
                             size="sm"
                             variant="primary"
-                            onClick={() => {
-                              const r = addToCart(p.id, 1);
+                            onClick={async () => {
+                              const r = await addToCart(p.id, 1);
                               if (r.ok) toast.success(r.message);
                               else toast.error(r.message);
                             }}
@@ -360,7 +367,7 @@ export default function LiveStoryRoomPage() {
                           </Button>
                           <Link
                             href={`/trace/${p.batchCode}`}
-                            className="inline-flex min-h-[36px] items-center gap-1 rounded-[10px] border border-[#D6DED2] bg-white px-2.5 text-xs font-semibold text-[#245B3D]"
+                            className="inline-flex min-h-[36px] items-center gap-1 rounded-[10px] border border-border bg-white px-2.5 text-xs font-semibold text-primary"
                           >
                             <QrCode className="h-3.5 w-3.5" aria-hidden="true" />
                             <span>QR</span>
@@ -370,14 +377,14 @@ export default function LiveStoryRoomPage() {
                         <div className="mt-2 flex flex-wrap gap-2">
                           <Link
                             href={`/trace/${p.batchCode}`}
-                            className="inline-flex min-h-[36px] items-center gap-1 rounded-[10px] border border-[#245B3D] bg-white px-2.5 text-xs font-semibold text-[#245B3D]"
+                            className="inline-flex min-h-[36px] items-center gap-1 rounded-[10px] border border-primary bg-white px-2.5 text-xs font-semibold text-primary"
                           >
                             <QrCode className="h-3.5 w-3.5" aria-hidden="true" />
                             <span>Kiểm tra QR</span>
                           </Link>
                           <Link
                             href={`/products/${p.slug}`}
-                            className="inline-flex min-h-[36px] items-center gap-1 rounded-[10px] border border-[#D6DED2] bg-white px-2.5 text-xs font-semibold text-[#25352B]"
+                            className="inline-flex min-h-[36px] items-center gap-1 rounded-[10px] border border-border bg-white px-2.5 text-xs font-semibold text-foreground"
                           >
                             <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                             <span>Trang bán</span>
@@ -395,8 +402,8 @@ export default function LiveStoryRoomPage() {
 
       {/* Upcoming Schedule List */}
       <section className="space-y-4">
-        <h3 className="flex items-center gap-2 text-xl font-bold text-[#25352B]">
-          <Calendar className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
+        <h3 className="flex items-center gap-2 text-xl font-bold text-foreground">
+          <Calendar className="h-5 w-5 text-primary" aria-hidden="true" />
           <span>Danh sách Lịch phát sóng OCOP Live ({livestreams.length})</span>
         </h3>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -407,7 +414,7 @@ export default function LiveStoryRoomPage() {
                 key={s.id}
                 className={cn(
                   "flex flex-col justify-between p-4 transition-colors",
-                  s.id === activeSession?.id ? "border-[#245B3D] bg-[#EAF0E5]/40" : ""
+                  s.id === activeSession?.id ? "border-primary bg-surface-soft/40" : ""
                 )}
               >
                 <div>
@@ -416,13 +423,13 @@ export default function LiveStoryRoomPage() {
                       <Radio className="h-3 w-3" aria-hidden="true" />
                       <span>{s.status === "replay_demo" ? "Replay Demo" : "Lịch dự kiến"}</span>
                     </Badge>
-                    <span className="text-xs font-semibold text-[#52645A]">{s.id}</span>
+                    <span className="text-xs font-semibold text-muted">{s.id}</span>
                   </div>
-                  <h4 className="mt-2 font-bold text-[#25352B]">{s.title}</h4>
-                  <p className="mt-1 text-xs text-[#52645A]">
+                  <h4 className="mt-2 font-bold text-foreground">{s.title}</h4>
+                  <p className="mt-1 text-xs text-muted">
                     {s.farmName} · {s.scheduleLabel}
                   </p>
-                  <p className="mt-1 text-xs font-medium text-[#245B3D]">Phụ trách: {s.hostYouth}</p>
+                  <p className="mt-1 text-xs font-medium text-primary">Phụ trách: {s.hostYouth}</p>
                 </div>
 
                 <div className="mt-4 flex flex-col gap-2">
@@ -441,7 +448,7 @@ export default function LiveStoryRoomPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full border border-[#D6DED2]"
+                      className="w-full border border-border"
                       onClick={() => {
                         setRemindedIds((prev) =>
                           prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id]
@@ -454,9 +461,9 @@ export default function LiveStoryRoomPage() {
                       }}
                     >
                       {reminded ? (
-                        <CheckCircle2 className="h-3.5 w-3.5 text-[#24603B]" aria-hidden="true" />
+                        <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-hidden="true" />
                       ) : (
-                        <Bell className="h-3.5 w-3.5 text-[#245B3D]" aria-hidden="true" />
+                        <Bell className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                       )}
                       <span>{reminded ? "Đã đặt nhắc lịch" : "Nhắc tôi khi phát sóng"}</span>
                     </Button>
@@ -472,7 +479,7 @@ export default function LiveStoryRoomPage() {
 
   if (!hydrated) {
     return (
-      <div className="mx-auto max-w-[1280px] px-4 py-12 text-sm text-[#52645A]">
+      <div className="mx-auto max-w-[1280px] px-4 py-12 text-sm text-muted">
         Đang tải Phòng Livestream OCOP...
       </div>
     );

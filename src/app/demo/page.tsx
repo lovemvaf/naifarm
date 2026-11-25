@@ -30,7 +30,7 @@ const DEMO_FLOWS = [
   },
   {
     code: "Flow B",
-    title: "Giỏ hàng → Thanh toán COD Demo ↔ Nhà vườn Xử lý đơn (W01 ↔ W02)",
+    title: "Giỏ hàng → Thanh toán COD ↔ Nhà vườn Xử lý đơn (W01 ↔ W02)",
     desc: "Thêm sản phẩm vào giỏ, đặt hàng tại /checkout, chuyển trạng thái ở /farmer và thấy đồng bộ ngay tại /account/orders.",
     links: [
       { label: "Giỏ hàng (/cart)", href: "/cart" },
@@ -74,7 +74,7 @@ const DEMO_FLOWS = [
     desc: "Một shell thống nhất cho HTX/B2B/Trường học (/organization) và cấp/thu hồi quyền ghi Audit Log (/admin).",
     links: [
       { label: "Hợp tác xã & Đối tác W05 (/organization)", href: "/organization" },
-      { label: "Quản trị RBAC Demo W06 (/admin)", href: "/admin" },
+      { label: "Quản trị RBAC W06 (/admin)", href: "/admin" },
     ],
   },
 ];
@@ -82,43 +82,47 @@ const DEMO_FLOWS = [
 export default function JudgeDemoHubPage() {
   const { resetDemoState, orders, products, missions } = useDemoStore();
 
-  const handleReset = () => {
-    resetDemoState();
-    toast.success("Đã khôi phục toàn bộ dữ liệu mẫu NaiFarm về trạng thái ban đầu!");
+  const handleReset = async () => {
+    try {
+      await resetDemoState();
+      toast.success("Đã đồng bộ lại toàn bộ dữ liệu NaiFarm từ Supabase.");
+    } catch {
+      toast.error("Không đồng bộ được dữ liệu. Vui lòng thử lại.");
+    }
   };
 
   return (
     <div className="mx-auto max-w-[1280px] px-4 py-8 lg:px-8 space-y-8">
-      <div className="rounded-[20px] border border-[#D6DED2] bg-gradient-to-br from-white to-[#EAF0E5] p-6 sm:p-8">
+      <div className="rounded-[20px] border border-border bg-gradient-to-br from-white to-surface-soft p-6 sm:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2 max-w-2xl">
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone="success">Hackathon TP. Đồng Nai 2026 · Group 8</Badge>
-              <Badge tone="info">Frontend-Only High-Fidelity Prototype</Badge>
+              <Badge tone="info">Next.js + Supabase Production Stack</Badge>
             </div>
-            <h1 className="font-[family-name:var(--font-lora)] text-3xl font-bold text-[#25352B] sm:text-4xl">
+            <h1 className="font-[family-name:var(--font-lora)] text-3xl font-bold text-foreground sm:text-4xl">
               Trung tâm Trình diễn & Kiểm chứng (Judge Demo Hub)
             </h1>
-            <p className="text-sm text-[#52645A] sm:text-base">
+            <p className="text-sm text-muted sm:text-base">
               Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị. Toàn bộ 12 màn hình trích xuất từ
               Google Stitch (<span className="font-mono font-semibold">12256474506032242478</span>)
-              và 6 không gian W01–W06 vận hành đồng bộ trên bộ nhớ trình duyệt.
+              và 6 không gian W01–W06 vận hành đồng bộ trên Supabase.
             </p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-            <Button variant="gold" size="lg" onClick={handleReset}>
+            <Button variant="gold" size="lg" onClick={() => void handleReset()}>
               <RefreshCcw className="h-5 w-5" aria-hidden="true" />
-              <span>Khôi phục Dữ liệu Mẫu (Reset Demo)</span>
+              <span>Đồng bộ lại Dữ liệu từ Supabase</span>
             </Button>
-            <div className="flex flex-wrap gap-2 text-xs font-semibold text-[#245B3D]">
-              <span className="rounded-full bg-white px-3 py-1 border border-[#D6DED2] tabular-nums">
+            <div className="flex flex-wrap gap-2 text-xs font-semibold text-primary">
+              <span className="rounded-full bg-white px-3 py-1 border border-border tabular-nums">
                 {products.length} sản phẩm
               </span>
-              <span className="rounded-full bg-white px-3 py-1 border border-[#D6DED2] tabular-nums">
-                {orders.length} đơn demo
+              <span className="rounded-full bg-white px-3 py-1 border border-border tabular-nums">
+                {orders.length} đơn hàng
               </span>
-              <span className="rounded-full bg-white px-3 py-1 border border-[#D6DED2] tabular-nums">
+              <span className="rounded-full bg-white px-3 py-1 border border-border tabular-nums">
                 {missions.length} nhiệm vụ TNV
               </span>
             </div>
@@ -127,15 +131,15 @@ export default function JudgeDemoHubPage() {
       </div>
 
       <DemoBanner
-        title="Cam kết Trung thực Dữ liệu & Phạm vi Frontend"
-        detail="Prototype không sử dụng cơ sở dữ liệu, API backend, thanh toán hay AI key runtime. Dữ liệu gắn nhãn minh bạch giữa 'Nhà vườn tự khai' và 'Hồ sơ đã đối chiếu (Demo)' — không giả mạo chứng nhận OCOP pháp lý."
+        title="Cam kết Trung thực Dữ liệu"
+        detail="Dữ liệu nhà vườn, nông sản, đơn hàng và hồ sơ được lưu trên Supabase với phân quyền RLS. Dữ liệu gắn nhãn minh bạch giữa 'Nhà vườn tự khai' và 'Hồ sơ đã đối chiếu' — không giả mạo chứng nhận OCOP pháp lý."
       />
 
       {/* Interactive Demo Flows */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
-          <Compass className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
-          <h2 className="text-2xl font-bold text-[#25352B]">
+          <Compass className="h-5 w-5 text-primary" aria-hidden="true" />
+          <h2 className="text-2xl font-bold text-foreground">
             8 Luồng Trình diễn Liên hoàn cho Ban Giám khảo
           </h2>
         </div>
@@ -145,15 +149,15 @@ export default function JudgeDemoHubPage() {
             <Card key={flow.code} className="p-5 flex flex-col justify-between space-y-4">
               <div className="space-y-2">
                 <Badge tone="neutral">{flow.code}</Badge>
-                <h3 className="text-lg font-bold text-[#25352B]">{flow.title}</h3>
-                <p className="text-sm text-[#52645A]">{flow.desc}</p>
+                <h3 className="text-lg font-bold text-foreground">{flow.title}</h3>
+                <p className="text-sm text-muted">{flow.desc}</p>
               </div>
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-[#EAF0E5]">
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-surface-soft">
                 {flow.links.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="inline-flex min-h-[38px] items-center gap-1 rounded-[10px] border border-[#245B3D]/35 bg-[#F5F3E9] px-3 py-1.5 text-xs font-semibold text-[#245B3D] hover:bg-[#245B3D] hover:text-white transition"
+                    className="inline-flex min-h-[38px] items-center gap-1 rounded-[10px] border border-primary/35 bg-background px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary hover:text-white transition"
                   >
                     <span>{link.label}</span>
                     <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -169,12 +173,12 @@ export default function JudgeDemoHubPage() {
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Layers className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
-            <h2 className="text-2xl font-bold text-[#25352B]">
+            <Layers className="h-5 w-5 text-primary" aria-hidden="true" />
+            <h2 className="text-2xl font-bold text-foreground">
               Đối chiếu 12 Màn hình Stitch Gốc & Blueprint V3
             </h2>
           </div>
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#24603B]">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-success">
             <ShieldCheck className="h-4 w-4" aria-hidden="true" />
             12/12 export cục bộ + 4 màn hình tái dựng Blueprint đều đã ánh xạ route thật
           </span>
@@ -183,7 +187,7 @@ export default function JudgeDemoHubPage() {
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-[#EAF0E5] text-xs font-semibold text-[#245B3D]">
+              <thead className="bg-surface-soft text-xs font-semibold text-primary">
                 <tr>
                   <th className="px-4 py-3">Mã</th>
                   <th className="px-4 py-3">Blueprint IDs</th>
@@ -193,24 +197,24 @@ export default function JudgeDemoHubPage() {
                   <th className="px-4 py-3">Đường dẫn kiểm thử</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#EAF0E5]">
+              <tbody className="divide-y divide-surface-soft">
                 {STITCH_SCREEN_COVERAGE.map((row) => (
-                  <tr key={row.stitchId} className="hover:bg-[#F5F3E9]/60">
-                    <td className="px-4 py-3 font-bold text-[#245B3D] tabular-nums">
+                  <tr key={row.stitchId} className="hover:bg-background/60">
+                    <td className="px-4 py-3 font-bold text-primary tabular-nums">
                       {row.stitchId}
                     </td>
-                    <td className="px-4 py-3 text-xs font-mono text-[#52645A]">
+                    <td className="px-4 py-3 text-xs font-mono text-muted">
                       {row.blueprintIds}
                     </td>
                     <td className="px-4 py-3">
-                      <p className="font-semibold text-[#25352B]">{row.title}</p>
-                      <p className="text-xs text-[#52645A]">{row.note}</p>
+                      <p className="font-semibold text-foreground">{row.title}</p>
+                      <p className="text-xs text-muted">{row.note}</p>
                     </td>
                     <td className="px-4 py-3">
                       <Badge tone="neutral">{row.workspace}</Badge>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#24603B]">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-success">
                         <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
                         {row.kind === "verified-stitch" ? "Stitch PNG + HTML" : "Blueprint V3"}
                       </span>
@@ -218,7 +222,7 @@ export default function JudgeDemoHubPage() {
                     <td className="px-4 py-3">
                       <Link
                         href={row.route}
-                        className="inline-flex items-center gap-1 font-mono text-xs font-bold text-[#245B3D] underline"
+                        className="inline-flex items-center gap-1 font-mono text-xs font-bold text-primary underline"
                       >
                         {row.route}
                         <ExternalLink className="h-3 w-3" aria-hidden="true" />
