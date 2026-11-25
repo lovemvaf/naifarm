@@ -68,7 +68,7 @@ export async function recordSepayTransaction(
   const supabase = await getSupabaseClient();
   if (supabase) {
     try {
-      await supabase.from("payment_transactions").upsert(
+      const { error: txError } = await supabase.from("payment_transactions").upsert(
         {
           id: record.id,
           order_id: record.orderId,
@@ -85,15 +85,37 @@ export async function recordSepayTransaction(
         { onConflict: "id" }
       );
 
+      if (txError) {
+        console.error("[SePay Store] Supabase payment_transactions upsert error:", txError);
+      } else {
+        console.log("[SePay Store] Successfully stored payment transaction in Supabase:", record.id);
+      }
+
       // If order ID exists in database orders table, update it
       if (orderId && record.status === "success") {
-        await supabase
+        const updatePayload: Record<string, unknown> = {
+          payment_label: "Đã thanh toán qua MBBank (SePay)",
+        };
+        // Also update payment_status if column exists
+        updatePayload.payment_status = "paid_bank";
+
+        const { error: orderError } = await supabase
           .from("orders")
-          .update({
-            payment_status: "paid_bank",
-            payment_label: "Đã thanh toán qua MBBank (SePay)",
-          })
+          .update(updatePayload)
           .eq("id", orderId);
+
+        if (orderError) {
+          console.warn("[SePay Store] Supabase order update notice:", orderError.message);
+          // If payment_status column didn't exist, try updating only payment_label
+          if (orderError.message?.includes("payment_status")) {
+            await supabase
+              .from("orders")
+              .update({ payment_label: "Đã thanh toán qua MBBank (SePay)" })
+              .eq("id", orderId);
+          }
+        } else {
+          console.log("[SePay Store] Updated order payment status in Supabase:", orderId);
+        }
       }
     } catch (err) {
       console.warn("[SePay Store] Supabase sync warning (ignorable in demo):", err);
