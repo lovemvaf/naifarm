@@ -1,4 +1,5 @@
 import type {
+  AddressBookEntry,
   AdminGrant,
   AdminUnit,
   AppRole,
@@ -6,22 +7,36 @@ import type {
   BatchEvent,
   CalendarEvent,
   CampaignRecord,
+  CoopPool,
   DemoGeoPoint,
   DemoOrder,
   DemoOrderItem,
   DocumentReviewCase,
   DongNaiZone,
+  ExpenseEntry,
   ExperienceBooking,
   ExperiencePackage,
   Farm,
+  InventoryMovement,
+  LogisticsTrip,
+  MemberDelivery,
   ObservanceRecord,
+  PartnerOrganization,
   Product,
   Profile,
   PromotionRecord,
+  PurchaseOrder,
+  ReceivablePayable,
   RfqRequest,
+  SponsorCampaign,
+  Supplier,
   SupportRequest,
+  SupportTicket,
   TraceBatch,
+  UserNotification,
   VolunteerMission,
+  Warehouse,
+  WarehouseStock,
 } from "@/types/naifarm";
 import { getAdministrativeUnitByCode } from "@/lib/geography/administrative-lookup";
 
@@ -479,5 +494,220 @@ export function mapAdminUnit(row: Row): AdminUnit {
     level: str(row.level),
     lat: num(row.lat),
     lng: num(row.lng),
+  };
+}
+
+export function mapNotification(row: Row): UserNotification {
+  return {
+    id: str(row.id),
+    title: str(row.title),
+    titleEn: row.title_en ? String(row.title_en) : undefined,
+    message: str(row.message),
+    messageEn: row.message_en ? String(row.message_en) : undefined,
+    category: str(row.category, "system") as UserNotification["category"],
+    createdAtLabel: str(row.created_at_label),
+    read: bool(row.read),
+    href: str(row.href),
+    dedupeKey: row.dedupe_key ? String(row.dedupe_key) : undefined,
+    roleScope: row.role_scope ? (String(row.role_scope) as UserNotification["roleScope"]) : undefined,
+  };
+}
+
+export function mapTicket(row: Row): SupportTicket {
+  return {
+    id: str(row.id),
+    requesterName: str(row.requester_name),
+    roleLabel: str(row.role_label),
+    category: str(row.category),
+    subject: str(row.subject),
+    administrativeUnitCode: row.administrative_unit_code ? String(row.administrative_unit_code) : "",
+    administrativeUnitName: str(row.administrative_unit_name),
+    status: str(row.status, "Mới tiếp nhận") as SupportTicket["status"],
+    priority: str(row.priority, "Thường") as SupportTicket["priority"],
+    createdAtLabel: str(row.created_at_label),
+    note: str(row.note),
+  };
+}
+
+export function mapAddressEntry(row: Row): AddressBookEntry {
+  return {
+    id: str(row.id),
+    label: str(row.label),
+    recipientName: str(row.recipient_name),
+    phoneDemo: str(row.phone_demo),
+    detailAddress: str(row.detail_address),
+    administrativeUnitCode: row.administrative_unit_code ? String(row.administrative_unit_code) : "",
+    fullAddress: str(row.full_address),
+    isDefault: bool(row.is_default),
+  };
+}
+
+export function mapPartnerOrg(row: Row): PartnerOrganization {
+  return {
+    id: str(row.id),
+    name: str(row.name),
+    type: str(row.type, "HTX") as PartnerOrganization["type"],
+    administrativeUnitCode: row.administrative_unit_code ? String(row.administrative_unit_code) : "",
+    administrativeUnitName: str(row.administrative_unit_name),
+    linkedFarmsCount: num(row.linked_farms_count),
+    contactRoleDemo: str(row.contact_role_demo),
+    focusArea: str(row.focus_area),
+    statusLabel: str(row.status_label),
+  };
+}
+
+export function mapSponsorCampaign(row: Row): SponsorCampaign {
+  return {
+    id: str(row.id),
+    sponsorName: str(row.sponsor_name),
+    title: str(row.title),
+    plannedBudgetVnd: num(row.planned_budget_vnd),
+    approvedBudgetVnd: num(row.approved_budget_vnd),
+    milestoneSummary: str(row.milestone_summary),
+    outputsAcceptedCount: num(row.outputs_accepted_count),
+  };
+}
+
+export function mapWarehouse(row: Row): Warehouse {
+  return {
+    id: str(row.id),
+    name: str(row.name),
+    farmId: str(row.farm_id),
+    administrativeUnitCode: row.administrative_unit_code ? String(row.administrative_unit_code) : "",
+    administrativeUnitName: str(row.administrative_unit_name),
+    storageType: str(row.storage_type, "kho_mat") as Warehouse["storageType"],
+    bins: strArray(row.bins),
+  };
+}
+
+export function mapWarehouseStock(row: Row): WarehouseStock {
+  return {
+    id: str(row.id),
+    warehouseId: str(row.warehouse_id),
+    productId: str(row.product_id),
+    batchCode: str(row.batch_code),
+    binCode: str(row.bin_code),
+    unitLabel: str(row.unit_label),
+    unitCostVnd: num(row.unit_cost_vnd),
+    onHandQty: num(row.on_hand_qty),
+    reservedQty: num(row.reserved_qty),
+    blockedQty: num(row.blocked_qty),
+    quarantineQty: num(row.quarantine_qty),
+    expiryDateIso: row.expiry_date_iso ? String(row.expiry_date_iso) : undefined,
+    minThreshold: num(row.min_threshold),
+    maxThreshold: num(row.max_threshold),
+  };
+}
+
+export function mapInventoryMovement(row: Row): InventoryMovement {
+  return {
+    id: str(row.id),
+    warehouseId: str(row.warehouse_id),
+    productId: str(row.product_id),
+    batchCode: str(row.batch_code),
+    type: str(row.type, "inbound") as InventoryMovement["type"],
+    quantityDelta: num(row.quantity_delta),
+    unitLabel: str(row.unit_label),
+    dateIso: str(row.date_iso),
+    actorName: str(row.actor_name),
+    reason: str(row.reason),
+    isInternalTransfer: row.is_internal_transfer ? Boolean(row.is_internal_transfer) : undefined,
+  };
+}
+
+export function mapSupplier(row: Row): Supplier {
+  return {
+    id: str(row.id),
+    name: str(row.name),
+    category: str(row.category),
+    administrativeUnitCode: row.administrative_unit_code ? String(row.administrative_unit_code) : "",
+    administrativeUnitName: str(row.administrative_unit_name),
+    ratingNote: str(row.rating_note),
+  };
+}
+
+export function mapPurchaseOrder(row: Row): PurchaseOrder {
+  return {
+    id: str(row.id),
+    supplierId: str(row.supplier_id),
+    supplierName: str(row.supplier_name),
+    farmId: str(row.farm_id),
+    itemName: str(row.item_name),
+    quantity: num(row.quantity),
+    unitLabel: str(row.unit_label),
+    unitCostVnd: num(row.unit_cost_vnd),
+    totalVnd: num(row.total_vnd),
+    expectedDateIso: str(row.expected_date_iso),
+    status: str(row.status, "rfq_draft") as PurchaseOrder["status"],
+    qcNote: row.qc_note ? String(row.qc_note) : undefined,
+  };
+}
+
+export function mapCoopPool(row: Row): CoopPool {
+  return {
+    id: str(row.id),
+    title: str(row.title),
+    targetOrderCode: str(row.target_order_code),
+    mixedBatchCode: str(row.mixed_batch_code),
+    totalCommittedQty: num(row.total_committed_qty),
+    unitLabel: str(row.unit_label),
+    status: str(row.status, "dang_gom") as CoopPool["status"],
+  };
+}
+
+export function mapMemberDelivery(row: Row): MemberDelivery {
+  return {
+    id: str(row.id),
+    poolId: str(row.pool_id),
+    memberFarmId: str(row.member_farm_id),
+    memberFarmName: str(row.member_farm_name),
+    productName: str(row.product_name),
+    unitLabel: str(row.unit_label),
+    deliveredQty: num(row.delivered_qty),
+    gradeLabel: str(row.grade_label),
+    agreedBuyPriceVnd: num(row.agreed_buy_price_vnd),
+    sharedFeeVnd: num(row.shared_fee_vnd),
+    netPayableVnd: num(row.net_payable_vnd),
+    settlementStatus: str(row.settlement_status, "cho_doi_soat") as MemberDelivery["settlementStatus"],
+    makerName: str(row.maker_name),
+    checkerName: row.checker_name ? String(row.checker_name) : undefined,
+    deliveredDateIso: str(row.delivered_date_iso),
+  };
+}
+
+export function mapExpense(row: Row): ExpenseEntry {
+  return {
+    id: str(row.id),
+    farmId: str(row.farm_id),
+    category: str(row.category, "vat_tu") as ExpenseEntry["category"],
+    description: str(row.description),
+    amountVnd: num(row.amount_vnd),
+    dateIso: str(row.date_iso),
+  };
+}
+
+export function mapReceivablePayable(row: Row): ReceivablePayable {
+  return {
+    id: str(row.id),
+    farmId: str(row.farm_id),
+    kind: str(row.kind, "receivable") as ReceivablePayable["kind"],
+    counterpartyName: str(row.counterparty_name),
+    originalVnd: num(row.original_vnd),
+    paidVnd: num(row.paid_vnd),
+    dueDateIso: str(row.due_date_iso),
+    status: str(row.status, "open") as ReceivablePayable["status"],
+  };
+}
+
+export function mapLogisticsTrip(row: Row): LogisticsTrip {
+  return {
+    id: str(row.id),
+    routeLabel: str(row.route_label),
+    driverName: str(row.driver_name),
+    orderIds: strArray(row.order_ids),
+    parcelCount: num(row.parcel_count),
+    plannedDeparture: str(row.planned_departure),
+    status: str(row.status, "scheduled") as LogisticsTrip["status"],
+    podNote: row.pod_note ? String(row.pod_note) : undefined,
   };
 }

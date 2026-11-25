@@ -1,43 +1,73 @@
 import { createClient } from "@/lib/supabase/client";
 import {
+  mapAddressEntry,
   mapAdminUnit,
   mapAuditLog,
   mapBatch,
   mapBatchEvent,
   mapCalendarEvent,
   mapCampaign,
+  mapCoopPool,
   mapDocCase,
   mapExperience,
   mapExperienceBooking,
+  mapExpense,
   mapFarm,
   mapGrant,
+  mapInventoryMovement,
+  mapLogisticsTrip,
+  mapMemberDelivery,
   mapMission,
+  mapNotification,
   mapObservance,
   mapOrder,
   mapOrderItem,
+  mapPartnerOrg,
   mapProduct,
+  mapPurchaseOrder,
   mapPromotion,
+  mapReceivablePayable,
   mapRfqRequest,
+  mapSponsorCampaign,
+  mapSupplier,
   mapSupportRequest,
+  mapTicket,
+  mapWarehouse,
+  mapWarehouseStock,
 } from "@/lib/supabase/mappers";
 import type {
-  CalendarEvent,
-  CampaignRecord,
-  ObservanceRecord,
-  PromotionRecord,
+  AddressBookEntry,
   AdminGrant,
   AdminUnit,
   AuditLogEntry,
+  CalendarEvent,
+  CampaignRecord,
+  CoopPool,
+  DemoOrder,
   DocumentReviewCase,
+  ExpenseEntry,
   ExperienceBooking,
   ExperiencePackage,
   Farm,
+  InventoryMovement,
+  LogisticsTrip,
+  MemberDelivery,
+  ObservanceRecord,
+  PartnerOrganization,
   Product,
+  PromotionRecord,
+  PurchaseOrder,
+  ReceivablePayable,
   RfqRequest,
+  SponsorCampaign,
+  Supplier,
   SupportRequest,
+  SupportTicket,
   TraceBatch,
+  UserNotification,
   VolunteerMission,
-  DemoOrder,
+  Warehouse,
+  WarehouseStock,
 } from "@/types/naifarm";
 
 export interface CoreData {
@@ -60,6 +90,21 @@ export interface CoreData {
   cartItems: { productId: string; quantity: number; selectedOptionLabel?: string }[];
   favoriteIds: string[];
   followedIds: string[];
+  notifications: UserNotification[];
+  tickets: SupportTicket[];
+  addressBook: AddressBookEntry[];
+  partnerOrgs: PartnerOrganization[];
+  sponsorCampaigns: SponsorCampaign[];
+  warehouses: Warehouse[];
+  warehouseStocks: WarehouseStock[];
+  inventoryMovements: InventoryMovement[];
+  suppliers: Supplier[];
+  purchaseOrders: PurchaseOrder[];
+  coopPools: CoopPool[];
+  memberDeliveries: MemberDelivery[];
+  expenses: ExpenseEntry[];
+  receivablesPayables: ReceivablePayable[];
+  logisticsTrips: LogisticsTrip[];
 }
 
 const supabase = createClient();
@@ -96,6 +141,21 @@ export async function fetchCoreData(): Promise<CoreData> {
     cartRows,
     favoriteRows,
     followRows,
+    notificationRows,
+    ticketRows,
+    addressRows,
+    partnerOrgRows,
+    sponsorCampaignRows,
+    warehouseRows,
+    warehouseStockRows,
+    inventoryMovementRows,
+    supplierRows,
+    purchaseOrderRows,
+    coopPoolRows,
+    memberDeliveryRows,
+    expenseRows,
+    receivableRows,
+    logisticsTripRows,
   ] = await Promise.all([
     selectAll("farms"),
     selectAll("experiences"),
@@ -125,6 +185,27 @@ export async function fetchCoreData(): Promise<CoreData> {
     userId
       ? supabase.from("season_follows").select("*").eq("user_id", userId).then((r) => (r.error ? [] : r.data ?? []))
       : Promise.resolve([]),
+    userId
+      ? supabase.from("notifications").select("*").eq("user_id", userId).then((r) => (r.error ? [] : r.data ?? []))
+      : Promise.resolve([]),
+    userId
+      ? supabase.from("tickets").select("*").eq("user_id", userId).then((r) => (r.error ? [] : r.data ?? []))
+      : Promise.resolve([]),
+    userId
+      ? supabase.from("address_book").select("*").eq("user_id", userId).then((r) => (r.error ? [] : r.data ?? []))
+      : Promise.resolve([]),
+    selectAll("partner_orgs"),
+    selectAll("sponsor_campaigns"),
+    selectAll("warehouses"),
+    selectAll("warehouse_stocks"),
+    selectAll("inventory_movements"),
+    selectAll("suppliers"),
+    selectAll("purchase_orders"),
+    selectAll("coop_pools"),
+    selectAll("member_deliveries"),
+    selectAll("expenses"),
+    selectAll("receivables_payables"),
+    selectAll("logistics_trips"),
   ]);
 
   const experiencesByFarm = new Map<string, ExperiencePackage[]>();
@@ -189,5 +270,20 @@ export async function fetchCoreData(): Promise<CoreData> {
     })),
     favoriteIds: favoriteRows.map((row) => String(row.product_id ?? "")),
     followedIds: followRows.map((row) => String(row.product_id ?? "")),
+    notifications: notificationRows.map(mapNotification),
+    tickets: ticketRows.map(mapTicket),
+    addressBook: addressRows.map(mapAddressEntry),
+    partnerOrgs: partnerOrgRows.map(mapPartnerOrg),
+    sponsorCampaigns: sponsorCampaignRows.map(mapSponsorCampaign),
+    warehouses: warehouseRows.map(mapWarehouse),
+    warehouseStocks: warehouseStockRows.map(mapWarehouseStock),
+    inventoryMovements: inventoryMovementRows.map(mapInventoryMovement),
+    suppliers: supplierRows.map(mapSupplier),
+    purchaseOrders: purchaseOrderRows.map(mapPurchaseOrder),
+    coopPools: coopPoolRows.map(mapCoopPool),
+    memberDeliveries: memberDeliveryRows.map(mapMemberDelivery),
+    expenses: expenseRows.map(mapExpense),
+    receivablesPayables: receivableRows.map(mapReceivablePayable),
+    logisticsTrips: logisticsTripRows.map(mapLogisticsTrip),
   };
 }
