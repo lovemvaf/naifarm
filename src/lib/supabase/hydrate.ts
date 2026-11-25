@@ -15,6 +15,7 @@ import {
   mapFarm,
   mapGrant,
   mapInventoryMovement,
+  mapLesson,
   mapLogisticsTrip,
   mapMemberDelivery,
   mapMission,
@@ -28,7 +29,9 @@ import {
   mapPromotion,
   mapReceivablePayable,
   mapRfqRequest,
+  mapSchoolClass,
   mapSponsorCampaign,
+  mapSubmission,
   mapSupplier,
   mapSupportRequest,
   mapTicket,
@@ -50,6 +53,7 @@ import type {
   ExperiencePackage,
   Farm,
   InventoryMovement,
+  LearningLesson,
   LogisticsTrip,
   MemberDelivery,
   ObservanceRecord,
@@ -59,7 +63,9 @@ import type {
   PurchaseOrder,
   ReceivablePayable,
   RfqRequest,
+  SchoolClass,
   SponsorCampaign,
+  StudentSubmission,
   Supplier,
   SupportRequest,
   SupportTicket,
@@ -87,6 +93,9 @@ export interface CoreData {
   observances: ObservanceRecord[];
   campaigns: CampaignRecord[];
   promotions: PromotionRecord[];
+  lessons: LearningLesson[];
+  submissions: StudentSubmission[];
+  schoolClasses: SchoolClass[];
   cartItems: { productId: string; quantity: number; selectedOptionLabel?: string }[];
   favoriteIds: string[];
   followedIds: string[];
@@ -138,6 +147,9 @@ export async function fetchCoreData(): Promise<CoreData> {
     observanceRows,
     campaignRows,
     promotionRows,
+    lessonRows,
+    submissionRows,
+    classRows,
     cartRows,
     favoriteRows,
     followRows,
@@ -176,6 +188,9 @@ export async function fetchCoreData(): Promise<CoreData> {
     selectAll("official_observances"),
     selectAll("campaigns"),
     selectAll("promotions"),
+    selectAll("lessons"),
+    selectAll("student_submissions"),
+    selectAll("school_classes"),
     userId
       ? supabase.from("cart_items").select("*").eq("user_id", userId).then((r) => (r.error ? [] : r.data ?? []))
       : Promise.resolve([]),
@@ -260,6 +275,9 @@ export async function fetchCoreData(): Promise<CoreData> {
     observances: observanceRows.map(mapObservance),
     campaigns: campaignRows.map(mapCampaign),
     promotions: promotionRows.map(mapPromotion),
+    lessons: lessonRows.map(mapLesson),
+    submissions: submissionRows.map(mapSubmission),
+    schoolClasses: classRows.map(mapSchoolClass),
     cartItems: cartRows.map((row) => ({
       productId: String(row.product_id ?? ""),
       quantity: Number(row.quantity ?? 1),

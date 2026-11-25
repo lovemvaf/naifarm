@@ -18,6 +18,7 @@ import type {
   ExperiencePackage,
   Farm,
   InventoryMovement,
+  LearningLesson,
   LogisticsTrip,
   MemberDelivery,
   ObservanceRecord,
@@ -28,10 +29,12 @@ import type {
   PurchaseOrder,
   ReceivablePayable,
   RfqRequest,
+  SchoolClass,
   SponsorCampaign,
   Supplier,
   SupportRequest,
   SupportTicket,
+  StudentSubmission,
   TraceBatch,
   UserNotification,
   VolunteerMission,
@@ -709,5 +712,60 @@ export function mapLogisticsTrip(row: Row): LogisticsTrip {
     plannedDeparture: str(row.planned_departure),
     status: str(row.status, "scheduled") as LogisticsTrip["status"],
     podNote: row.pod_note ? String(row.pod_note) : undefined,
+  };
+}
+
+export function mapLesson(row: Row): LearningLesson {
+  return {
+    id: str(row.id),
+    slug: str(row.slug),
+    title: str(row.title),
+    titleEn: row.title_en ? String(row.title_en) : undefined,
+    ambassadorLevel: row.ambassador_level
+      ? (str(row.ambassador_level) as LearningLesson["ambassadorLevel"])
+      : undefined,
+    topicTag: str(row.topic_tag),
+    topicTagEn: row.topic_tag_en ? String(row.topic_tag_en) : undefined,
+    durationLabel: str(row.duration_label),
+    durationLabelEn: row.duration_label_en ? String(row.duration_label_en) : undefined,
+    levelLabel: str(row.level_label),
+    levelLabelEn: row.level_label_en ? String(row.level_label_en) : undefined,
+    regionCode: str(row.region_code),
+    regionName: str(row.region_name),
+    summary: str(row.summary),
+    summaryEn: row.summary_en ? String(row.summary_en) : undefined,
+    learningObjectiveEn: row.learning_objective_en ? String(row.learning_objective_en) : undefined,
+    image: str(row.image),
+    anatomyTarget: str(row.anatomy_target) as LearningLesson["anatomyTarget"],
+    sections: Array.isArray(row.sections) ? (row.sections as LearningLesson["sections"]) : [],
+    quizQuestion: row.quiz_question
+      ? (row.quiz_question as LearningLesson["quizQuestion"])
+      : { prompt: "", options: [], correctIndex: 0, explanation: "" },
+  };
+}
+
+export function mapSubmission(row: Row): StudentSubmission {
+  return {
+    id: str(row.id),
+    classId: str(row.class_id),
+    studentName: str(row.student_name),
+    isMinor: bool(row.is_minor),
+    hasGuardianConsent: bool(row.has_guardian_consent),
+    title: str(row.title),
+    rubricScore: row.rubric_score != null ? num(row.rubric_score) : undefined,
+    status: str(row.status, "submitted") as StudentSubmission["status"],
+  };
+}
+
+export function mapSchoolClass(row: Row): SchoolClass {
+  return {
+    id: str(row.id),
+    name: str(row.name),
+    schoolName: str(row.school_name),
+    teacherName: str(row.teacher_name),
+    lessonIds: strArray(row.lesson_ids),
+    enrolledCount: num(row.enrolled_count),
+    minorConsentCount: num(row.minor_consent_count),
+    fieldTripDate: str(row.field_trip_date),
   };
 }

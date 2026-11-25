@@ -885,6 +885,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           campaigns: core.campaigns.length ? core.campaigns : prev.campaigns,
           promotions: core.promotions.length ? core.promotions : prev.promotions,
           officialObservances: core.observances.length ? core.observances : prev.officialObservances,
+          lessons: core.lessons.length ? core.lessons : prev.lessons,
+          studentSubmissions: core.submissions.length ? core.submissions : prev.studentSubmissions,
+          schoolClasses: core.schoolClasses.length ? core.schoolClasses : prev.schoolClasses,
           cart: core.cartItems.length ? core.cartItems : prev.cart,
           favoriteProductIds: core.favoriteIds.length ? core.favoriteIds : prev.favoriteProductIds,
           followedProductIds: core.followedIds.length ? core.followedIds : prev.followedProductIds,
@@ -2638,6 +2641,22 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         ok: false,
         message: "Tài khoản học sinh nhỏ tuổi chưa có xác nhận đồng thuận của phụ huynh/người giám hộ.",
       };
+    }
+    if (supabase && state.session) {
+      void supabase
+        .from("student_submissions")
+        .upsert({
+          id: submissionId,
+          class_id: sub.classId,
+          student_name: sub.studentName,
+          is_minor: sub.isMinor,
+          has_guardian_consent: sub.hasGuardianConsent,
+          title: sub.title,
+          rubric_score: score,
+          status: "graded",
+          user_id: state.session.user.id,
+        })
+        .then(() => {});
     }
     setState((prev) => ({
       ...prev,
