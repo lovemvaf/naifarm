@@ -819,3 +819,35 @@ export interface SponsorCampaign {
 }
 
 export type PeriodKey = "current_month" | "previous_month" | "last_7d" | "last_30d" | "all";
+
+export type AppRole =
+  | "customer"
+  | "farmer"
+  | "volunteer"
+  | "coordinator"
+  | "organization"
+  | "admin";
+
+export interface Profile {
+  id: string;
+  fullName: string;
+  phone: string | null;
+  role: AppRole;
+  farmId: string | null;
+}
+
+export interface AdminUnit {
+  code: string;
+  fullName: string;
+  level: string;
+  lat: number;
+  lng: number;
+}
+
+export interface RfqRequest {
+  id: string;
+  company: string;
+  note: string;
+  status: string;
+  createdAtLabel: string;
+}

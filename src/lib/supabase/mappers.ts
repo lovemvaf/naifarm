@@ -3,20 +3,23 @@ import type {
   AdminUnit,
   AuditLogEntry,
   BatchEvent,
+  DemoGeoPoint,
+  DemoOrder,
+  DemoOrderItem,
   DocumentReviewCase,
+  DongNaiZone,
   ExperienceBooking,
   ExperiencePackage,
   Farm,
-  OrderItem,
   Product,
   Profile,
   RfqRequest,
   SupportRequest,
   TraceBatch,
   VolunteerMission,
-  DemoOrder,
   AppRole,
 } from "@/types/naifarm";
+import { getAdministrativeUnitByCode } from "@/lib/geography/administrative-lookup";
 
 type Row = Record<string, unknown>;
 
@@ -35,6 +38,30 @@ function strArray(value: unknown): string[] {
 
 function bool(value: unknown, fallback = false): boolean {
   return typeof value === "boolean" ? value : fallback;
+}
+
+function zoneFromRegion(region: string): DongNaiZone {
+  if (region.includes("Tân Triều")) return "Tân Triều & Trung tâm";
+  if (region.includes("Long Khánh")) return "Long Khánh & Lân cận";
+  if (region.includes("Xuân Lộc")) return "Xuân Lộc & Đông Nam";
+  if (region.includes("Cẩm Mỹ") || region.includes("Định Quán")) return "Cẩm Mỹ & Định Quán";
+  return "Bắc Đồng Nai";
+}
+
+function unitNameFor(code: string | null | undefined, fallback: string): string {
+  const unit = getAdministrativeUnitByCode(code);
+  return unit?.tenDayDu ?? unit?.ten ?? fallback;
+}
+
+function toGeoPoint(lat: number, lng: number): DemoGeoPoint {
+  return {
+    lat,
+    lng,
+    latLabel: lat.toFixed(4),
+    lngLabel: lng.toFixed(4),
+    isDemoCoordinate: true,
+    note: "Tọa độ minh họa sinh thái",
+  };
 }
 
 export function mapProfile(row: Row | null): Profile | null {
@@ -63,17 +90,21 @@ export function mapExperience(row: Row): ExperiencePackage {
 }
 
 export function mapFarm(row: Row, experiences: ExperiencePackage[]): Farm {
+  const region = str(row.region);
+  const adminUnitCode = row.admin_unit_code ? String(row.admin_unit_code) : "";
+  const addressLabel = str(row.address_label);
   return {
     id: str(row.id),
     slug: str(row.slug),
     name: str(row.name),
     ownerName: str(row.owner_name),
     ownerAgeLabel: str(row.owner_age_label),
-    region: str(row.region) as Farm["region"],
-    addressLabel: str(row.address_label),
-    adminUnitCode: row.admin_unit_code ? String(row.admin_unit_code) : null,
-    lat: num(row.lat),
-    lng: num(row.lng),
+    administrativeUnitCode: adminUnitCode,
+    administrativeUnitName: unitNameFor(adminUnitCode, region),
+    zoneLabel: zoneFromRegion(region),
+    region,
+    detailAddress: addressLabel,
+    addressLabel,
     areaHa: num(row.area_ha),
     mainCrops: strArray(row.main_crops),
     ocopStatus: str(row.ocop_status, "self_declared_unverified") as Farm["ocopStatus"],
@@ -85,12 +116,15 @@ export function mapFarm(row: Row, experiences: ExperiencePackage[]): Farm {
     ownerPortrait: str(row.owner_portrait),
     galleryImages: strArray(row.gallery_images),
     youthSupporters: strArray(row.youth_supporters),
+    coordinates: toGeoPoint(num(row.lat), num(row.lng)),
     experiences,
-    isDemo: bool(row.is_demo),
+    isDemo: true,
   };
 }
 
 export function mapProduct(row: Row): Product {
+  const region = str(row.region);
+  const adminUnitCode = row.admin_unit_code ? String(row.admin_unit_code) : "";
   return {
     id: str(row.id),
     slug: str(row.slug),
@@ -98,7 +132,9 @@ export function mapProduct(row: Row): Product {
     category: str(row.category, "Trái cây tươi") as Product["category"],
     farmId: str(row.farm_id),
     farmName: str(row.farm_name),
-    region: str(row.region),
+    administrativeUnitCode: adminUnitCode,
+    administrativeUnitName: unitNameFor(adminUnitCode, region),
+    region,
     unitLabel: str(row.unit_label, "kg"),
     priceVnd: num(row.price_vnd),
     stockKg: num(row.stock_kg),
@@ -112,8 +148,7 @@ export function mapProduct(row: Row): Product {
     weightOptions: Array.isArray(row.weight_options)
       ? (row.weight_options as Product["weightOptions"])
       : undefined,
-    has3DViewer: bool(row.has_3d_viewer),
-    isDemo: bool(row.is_demo),
+    isDemo: true,
   };
 }
 
@@ -130,24 +165,28 @@ export function mapBatchEvent(row: Row): BatchEvent {
 }
 
 export function mapBatch(row: Row, events: BatchEvent[]): TraceBatch {
+  const region = str(row.region);
+  const adminUnitCode = row.admin_unit_code ? String(row.admin_unit_code) : "";
   return {
     batchCode: str(row.batch_code),
     productId: str(row.product_id),
     productName: str(row.product_name),
     farmId: str(row.farm_id),
     farmName: str(row.farm_name),
-    region: str(row.region),
+    administrativeUnitCode: adminUnitCode,
+    administrativeUnitName: unitNameFor(adminUnitCode, region),
+    region,
     harvestDate: str(row.harvest_date),
     packDate: str(row.pack_date),
     declarationLevel: str(row.declaration_level),
     docStatus: str(row.doc_status),
     summary: str(row.summary),
     events,
-    isDemo: bool(row.is_demo),
+    isDemo: true,
   };
 }
 
-export function mapOrderItem(row: Row): OrderItem {
+export function mapOrderItem(row: Row): DemoOrderItem {
   return {
     productId: str(row.product_id),
     productName: str(row.product_name),
@@ -158,7 +197,7 @@ export function mapOrderItem(row: Row): OrderItem {
   };
 }
 
-export function mapOrder(row: Row, items: OrderItem[]): DemoOrder {
+export function mapOrder(row: Row, items: DemoOrderItem[]): DemoOrder {
   return {
     id: str(row.id),
     customerName: str(row.customer_name),
@@ -178,7 +217,7 @@ export function mapOrder(row: Row, items: OrderItem[]): DemoOrder {
       ? (row.timeline as DemoOrder["timeline"])
       : [],
     cancelReason: row.cancel_reason ? String(row.cancel_reason) : undefined,
-    isDemo: bool(row.is_demo),
+    isDemo: true,
   };
 }
 
@@ -201,7 +240,7 @@ export function mapMission(row: Row): VolunteerMission {
     evidenceImage: row.evidence_image ? String(row.evidence_image) : undefined,
     revisionReason: row.revision_reason ? String(row.revision_reason) : undefined,
     status: str(row.status, "open") as VolunteerMission["status"],
-    isDemo: bool(row.is_demo),
+    isDemo: true,
   };
 }
 
