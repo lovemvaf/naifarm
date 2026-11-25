@@ -518,7 +518,7 @@ export function AppHeader() {
                               ),
                               locale,
                             );
-                            if (pathname !== "/live" && pathname !== "/live/demo") {
+                            if (pathname !== "/live") {
                               router.push(linkHref(WORKSPACE_HOME[acc.workspaceId]));
                             }
                           }}

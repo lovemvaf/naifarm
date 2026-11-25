@@ -35,7 +35,7 @@ Trợ lý tiếng Việt ở góc dưới bên phải trang chủ giúp khách m
 - Ba câu hỏi bấm gửi: tra `NF-DEMO-001`, hướng dẫn đăng bán và cách thanh niên hỗ trợ nhà vườn.
 - Hỗ trợ ảnh đính kèm, xem trước, bỏ ảnh, enter để gửi, shift-enter để xuống dòng, Escape, bẫy focus, trả focus và mở phiên mới.
 - Hiện trạng thái chờ, lỗi, thử lại, nguồn có thể mở và nhãn demo.
-- Chỉ mount widget mới trong trang chủ; không thêm chatbot này hoặc fallback mới vào các route khác.
+- Mount một widget mới duy nhất từ root layout để giữ cùng một hội thoại NaiAI trên các route; không render widget script cũ hoặc bubble thứ hai.
 
 ## API
 
@@ -57,10 +57,10 @@ Jev `TYPESAFE_API_KEY` phân loại mỗi lượt chat tại supervisor node và
 
 ## Tiêu chí chấp nhận
 
-- Trang chủ hiện một bubble. Các trang khác giữ widget theo script hiện tại.
+- Mỗi route hiển thị cùng một bubble NaiFarmHomeChat từ root layout; không render đồng thời chatbot script cũ hoặc bubble thứ hai ở trang chủ.
 - QR demo truy cập đúng hộ chiếu và nguồn mở được.
 - Giá, OCOP và hàng mẫu có nhãn demo.
 - Ảnh không hợp lệ, quá lớn và input trống có thông báo tiếng Việt.
 - API key được truy cập phía server.
 - Thiếu Supabase vẫn trả được câu trả lời từ seed. Thiếu Gemini báo không thể phân tích ảnh.
-- TypeScript, RRF check và ESLint đạt. Provider thật, SQL migration và giao diện trình duyệt cần kiểm tra trên môi trường có kết nối hợp lệ.
+- TypeScript, RRF checks, provider mocks, live Supabase migration/data, vector/FTS retrieval, local chat API and LangSmith trace routing have been checked. Browser interaction and hosted Vercel behavior still require a separate review after deployment.

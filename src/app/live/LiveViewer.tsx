@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LiveKitStage } from "./LiveKitStage";
-import { LiveAuth } from "./LiveAuth";
 import { LiveChat } from "./LiveChat";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { INITIAL_FARMS } from "@/data/demo/farms";
@@ -26,6 +25,8 @@ export function LiveViewer({ sessionId }: { sessionId?: string }) {
   const error = selected.error || directory.error || selected.realtimeError || directory.realtimeError;
   const { products, addToCart } = useDemoStore();
   const product = products.find((item) => item.id === session?.pinned_product_id);
+  const selectedLiveProducts = products.filter((item) => session?.product_ids.includes(item.id));
+  const mockLiveProducts = selectedLiveProducts.length >= 3 ? selectedLiveProducts : products.slice(0, 8);
   const available = !!product && product.seasonStatus === "in_season" && product.stockKg > 0;
   const farm = INITIAL_FARMS.find((item) => item.id === session?.farm_id);
 
@@ -36,7 +37,7 @@ export function LiveViewer({ sessionId }: { sessionId?: string }) {
     else toast.success(result.message);
   }
 
-  return <section className="mx-auto max-w-6xl space-y-6 px-4 py-8 lg:px-8">
+  return <section className="mx-auto max-w-screen-2xl space-y-6 px-4 py-8 lg:px-8">
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div>
         <h1 className="font-editorial text-3xl font-semibold">{sessionId && session ? session.title : "NaiFarm Live"}</h1>
@@ -45,17 +46,16 @@ export function LiveViewer({ sessionId }: { sessionId?: string }) {
       </div>
       <nav className="flex flex-wrap items-center gap-4 text-sm">
         {sessionId && <Link href="/live" className="underline">Danh sách phiên</Link>}
-        <Link href="/live/studio" className="underline">Phòng phát</Link>
-        <Link href="/live/demo" className="underline">Xem minh họa</Link>
-        <LiveAuth token={token} />
+        <Link href="/live/studio" className="underline">Studio phát sóng</Link>
       </nav>
     </header>
     {error && <div role="alert" className="space-y-2 rounded-lg bg-amber-50 p-4 text-amber-900"><p>{error}</p>
       <Button size="sm" onClick={sessionId ? selected.refresh : directory.refresh}>Tải lại</Button></div>}
-    <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,0.85fr)]">
       <Card className="space-y-4 p-4">
         {session && canWatch(session) && session.room_ready
-          ? <LiveKitStage key={session.id} sessionId={session.id} role="viewer" selectedCameraIdentity={session.selected_camera_identity} />
+          ? <LiveKitStage key={session.id} sessionId={session.id} role="viewer" selectedCameraIdentity={session.selected_camera_identity}
+            mockEngagement mockProducts={mockLiveProducts} />
           : <div className="flex aspect-video items-center justify-center rounded-xl bg-[#25352B] p-4 text-center text-white">
             {session?.status === "scheduled" ? session.scheduled_at ? `Lên lịch ${scheduledDate(session.scheduled_at)}` : "Phiên đang chờ nhà vườn lên sóng"
               : session?.status === "ended" ? "Phiên đã kết thúc" : session?.status === "cancelled" ? "Phiên đã hủy"

@@ -55,6 +55,6 @@ export function LiveChat({ id, token, writable, moderate = false }: { id: string
       <input aria-label="Tin nhắn" placeholder="Nhắn với nhà vườn" maxLength={500} className="min-w-0 flex-1 rounded-lg border p-2" value={message} onChange={(event) => { requestId.current = null; setMessage(event.target.value); }} />
       <Button type="submit" disabled={busy || !message.trim()}>Gửi</Button>
     </form>}
-    {writable && !token && <p className="text-sm">Đăng nhập pilot để gửi tin nhắn.</p>}
+    {writable && !token && <p className="text-sm">Đăng nhập bằng tài khoản NaiFarm để gửi tin nhắn.</p>}
   </Card>;
 }

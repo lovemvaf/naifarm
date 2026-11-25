@@ -1,14 +1,14 @@
 # Chạy và nghiệm thu NaiFarm Live
 
-`/live` là trang xem, `/live/studio` là phòng phát và `/live/demo` là phần minh họa. Khách mở phiên bằng đường dẫn `/live/<id>`. Tài khoản pilot được cấp quyền mới có thể chat hoặc mở studio. Catalog, truy xuất QR và giỏ hàng trong phòng phát dùng dữ liệu demo của NaiFarm.
+`/live` là trang xem và `/live/studio` là studio host để tạo lịch, kiểm tra camera/mic, bắt đầu phát, ghép camera phụ và quản lý chat. Khách mở phiên bằng đường dẫn `/live/<id>`. Đăng nhập bằng phiên Supabase chung qua nút **Đăng nhập** trên thanh NaiFarm; tài khoản phải có quyền trong `live_host_permissions` để điều khiển studio. Nút chọn nhanh tài khoản trải nghiệm trên trang đăng nhập không tạo phiên Supabase và không cấp quyền live. Catalog, truy xuất QR và giỏ hàng trong phòng phát vẫn dùng dữ liệu demo của NaiFarm.
 
 Nếu project hosted chưa có migration, xem [cách chạy Supabase local và LiveKit Cloud trên laptop](LOCAL_QA.md). Khi có bộ biến `LIVE_SUPABASE_URL`, `LIVE_SUPABASE_PUBLISHABLE_KEY`, `LIVE_SUPABASE_SECRET_KEY`, livestream dùng bộ này và các module khác tiếp tục dùng `SUPABASE_*`. Chỉ đặt bộ dùng riêng ở môi trường cần tách database.
 
-Xem [đặc tả và luồng sử dụng](SPEC.md), [kiến trúc và cơ sở dữ liệu](ARCHITECTURE.md), [API và quyền truy cập](API_CONTRACT.md), [ma trận nghiệm thu](TEST_PLAN.md) và [kết quả đã xác minh](VERIFICATION_REPORT.md).
+Xem [hướng dẫn chạy và demo từng bước](DEMO_GUIDE.md), [đặc tả và luồng sử dụng](SPEC.md), [kiến trúc và cơ sở dữ liệu](ARCHITECTURE.md), [API và quyền truy cập](API_CONTRACT.md), [ma trận nghiệm thu](TEST_PLAN.md), [runbook deploy staging](DEPLOYMENT.md) và [kết quả đã xác minh](VERIFICATION_REPORT.md).
 
 ## 1. Chuẩn bị project thử nghiệm
 
-1. Mở đúng Supabase project thử nghiệm. Vào **SQL Editor → New query**, chạy [migration tạo bảng](../../supabase/migrations/202611250002_livestream.sql) rồi [migration Realtime và vòng đời phòng](../../supabase/migrations/202611250003_live_realtime.sql), cuối cùng [migration đồng bộ góc camera](../../supabase/migrations/202611250004_live_camera_angle.sql), theo thứ tự. Nếu migration đã được ghi nhận, chỉ chạy phần chưa áp dụng. Supabase CLI có thể chạy migration khi đã link đúng project và có quyền kết nối PostgreSQL.
+1. **Project Supabase hiện có trong `.env`:** migration history đã xác nhận có `202611250002_livestream`, `202611250003_live_realtime`, `202611250004_live_camera_angle`; không chạy lại các migration này. **Project QA mới:** kiểm tra migration history trước, rồi áp dụng đúng ba file trên theo thứ tự qua Supabase CLI hoặc SQL Editor. Không chạy `0001_init.sql`/`0002_seed.sql` trên project đã có dữ liệu nền; hai file này tạo schema chung và tài khoản/dữ liệu demo, không phải migration riêng của livestream.
 2. Trong **Authentication → Users**, tạo một tài khoản email/mật khẩu cho host và một tài khoản cho người gửi chat. Xác nhận email test khi tạo tài khoản. Sao chép UUID từ trang Users, rồi chạy đoạn dưới trong SQL Editor sau khi thay hai UUID mẫu. `farm-ba-tu-demo` tương ứng Nhà vườn Ba Tư. Chuỗi rỗng ở hàng thứ hai cấp chat mà không cấp quyền điều khiển bất kỳ vườn nào.
 
    ```sql
@@ -26,7 +26,7 @@ Xem [đặc tả và luồng sử dụng](SPEC.md), [kiến trúc và cơ sở d
 
 ## 2. Chạy local trên Windows
 
-1. Mở PowerShell trong `F:\naifarm`. Giữ các giá trị hiện có trong `.env`. Khi project thử nghiệm đã sẵn sàng, thêm `NAIFARM_LIVE_ENABLED=1` vào `.env.local`. Dùng `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, và `LIVEKIT_API_SECRET` của môi trường thử. Endpoint cấu hình trình duyệt chỉ trả URL và publishable/anon key. Code vẫn đọc `LIVE_ENABLED` nếu biến mới chưa được đặt.
+1. Mở PowerShell trong `F:\naifarm`. Với project QA riêng, đặt `NAIFARM_LIVE_ENABLED=1` và dùng `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` của đúng môi trường QA. Không chép secret vào mã nguồn hoặc gửi qua chat. Endpoint cấu hình trình duyệt chỉ trả URL và publishable/anon key. Code vẫn đọc `LIVE_ENABLED` nếu biến mới chưa được đặt.
 2. Dừng và khởi động lại Next.js sau khi đổi môi trường. Nếu đã chạy cổng 3000, dùng terminal đang giữ tiến trình để dừng trước.
 
    ```powershell
@@ -41,18 +41,65 @@ Xem [đặc tả và luồng sử dụng](SPEC.md), [kiến trúc và cơ sở d
    Invoke-RestMethod http://localhost:3000/api/live
    ```
 
-4. Mở `http://localhost:3000/live/studio` bằng Chrome hoặc Edge. Dùng localhost cho host trên chính laptop. Nếu điện thoại cần xem hoặc phát, mở ứng dụng qua URL HTTPS thử nghiệm trên cả hai thiết bị. QR ghép camera mang theo tên miền mà studio đang mở. QR tạo từ localhost sẽ trỏ về localhost của điện thoại. [MediaDevices.getUserMedia](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
+4. Mở `http://localhost:3000/live/studio` bằng Chrome hoặc Edge. Dùng nút **Đăng nhập** ở header để đăng nhập tài khoản Supabase/NaiFarm thật; không chọn tài khoản trải nghiệm. Tài khoản host phải có bản ghi `live_host_permissions`. Dùng localhost cho host trên chính laptop. Nếu điện thoại cần xem hoặc phát, mở ứng dụng qua URL HTTPS thử nghiệm trên cả hai thiết bị. QR ghép camera mang theo tên miền mà studio đang mở. QR tạo từ localhost sẽ trỏ về localhost của điện thoại. [MediaDevices.getUserMedia](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
+
+### Chạy local không cần Docker
+
+Sau khi migration đã có trên Supabase hosted, có thể dùng project trong `.env` thay cho Supabase local. Đoạn PowerShell dưới đây chỉ ghi cấu hình vào process hiện tại, không in hoặc lưu secret; `LIVE_SUPABASE_*` được ưu tiên hơn endpoint loopback trong `.env.local`.
+
+```powershell
+$liveEnv = @{}
+foreach ($path in @('.env', '.env.local')) {
+    if (Test-Path -LiteralPath $path) {
+        foreach ($line in Get-Content -LiteralPath $path) {
+            if ($line -match '^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$') {
+                $liveEnv[$matches[1]] = $matches[2].Trim().Trim('"').Trim("'")
+            }
+        }
+    }
+}
+$liveUrl = $liveEnv['LIVE_SUPABASE_URL']
+$liveKey = $liveEnv['LIVE_SUPABASE_PUBLISHABLE_KEY']
+$liveSecret = $liveEnv['LIVE_SUPABASE_SECRET_KEY']
+if (-not $liveUrl) { $liveUrl = $liveEnv['SUPABASE_URL'] }
+if (-not $liveKey) { $liveKey = $liveEnv['SUPABASE_PUBLISHABLE_KEY'] }
+if (-not $liveSecret) { $liveSecret = $liveEnv['SUPABASE_SECRET_KEY'] }
+$env:LIVE_SUPABASE_URL = $liveUrl
+$env:LIVE_SUPABASE_PUBLISHABLE_KEY = $liveKey
+$env:LIVE_SUPABASE_SECRET_KEY = $liveSecret
+$env:NEXT_PUBLIC_SUPABASE_URL = $liveUrl
+$env:NEXT_PUBLIC_SUPABASE_ANON_KEY = $liveKey
+$env:NAIFARM_LIVE_ENABLED = '1'
+npm run dev
+```
+
+Biến `LIVEKIT_*` tiếp tục lấy từ file môi trường. Cấu hình browser auth cùng URL/key với API livestream để header account và API dùng chung một Supabase project. Chỉ dùng project QA/staging nếu thao tác thủ công để tránh ghi dữ liệu livestream vào production. Kiểm tra `GET /api/live` trả 200 trước khi thử studio. Camera laptop hoạt động trên localhost; điện thoại ghép camera vẫn cần HTTPS.
+
+### HTTPS tạm cho điện thoại, không cần Docker hoặc deploy
+
+Chỉ dùng cách này khi `.env` đang trỏ tới Supabase QA/staging. Cloudflare Quick Tunnel tạo URL công khai tới app đang chạy trên máy; người có URL có thể xem các phiên công khai. Các thao tác phát/chat vẫn cần tài khoản Supabase được cấp quyền tương ứng. Không gửi URL hoặc thông tin đăng nhập cho người khác, không dùng tunnel cho production, và dừng bằng `Ctrl+C` sau khi thử.
+
+1. Giữ Next.js chạy trên laptop, ví dụ `http://localhost:3110`, và xác nhận `GET /api/live` trả `200`.
+2. Mở PowerShell thứ hai trong `F:\naifarm`, rồi chạy:
+
+   ```powershell
+   & 'C:\Program Files (x86)\cloudflared\cloudflared.exe' tunnel --url http://localhost:3110 --no-autoupdate
+   ```
+
+3. Mở URL `https://….trycloudflare.com` do lệnh in ra trên laptop và điện thoại. Trên điện thoại, dùng Safari (iPhone) hoặc Chrome (Android), không dùng địa chỉ `localhost`.
+4. Kiểm tra `https://<url>/api/live` trả `200`, mở `/live/studio`, rồi quét QR camera từ cùng URL HTTPS. Khi browser hỏi, chỉ cấp quyền camera/mic nếu bạn đang bắt đầu phiên demo.
+5. Kết thúc phiên trong studio, xác nhận room đã dọn, rồi quay lại cửa sổ tunnel và nhấn `Ctrl+C`. URL Quick Tunnel sẽ không còn dùng được.
 
 ## 3. Thử với laptop và điện thoại
 
-Để có URL HTTPS thử trên điện thoại bằng Vercel, liên kết repo với project staging, vào **Settings → Environment Variables** và đặt các biến ở môi trường **Preview**. Tạo Preview Deployment cho branch livestream rồi mở URL trong mục Deployments. Cả laptop và điện thoại dùng cùng URL đó. Nếu Preview có Deployment Protection, đăng nhập quyền truy cập trên mỗi thiết bị. Kiểm tra LiveKit gọi được endpoint webhook từ bên ngoài trước khi nghiệm thu webhook, vì quyền truy cập của browser không cấp quyền cho LiveKit. [Next.js trên Vercel](https://vercel.com/docs/frameworks/full-stack/nextjs) · [Vercel Deployment Protection](https://vercel.com/docs/deployment-protection)
+Để có URL HTTPS cho điện thoại, dùng Preview Deployment của project staging: đặt các biến server ở **Settings → Environment Variables → Preview**, triển khai branch livestream và mở URL Preview trên cả laptop lẫn điện thoại. Không dùng URL production để thử. Nếu Preview có Deployment Protection, đăng nhập trên từng thiết bị. Kiểm tra LiveKit gọi được webhook từ bên ngoài; quyền truy cập của browser không cấp quyền cho LiveKit. [Next.js trên Vercel](https://vercel.com/docs/frameworks/full-stack/nextjs) · [Vercel Deployment Protection](https://vercel.com/docs/deployment-protection)
 
-1. **Laptop phát.** Vào studio, bấm **Đăng nhập pilot**, nhập email/mật khẩu host đã cấp. Chọn nhà vườn, nhập tiêu đề, mô tả, chọn sản phẩm có sẵn. Điền giờ Việt Nam hoặc để trống nếu sẽ phát ngay. Bấm **Tạo lịch**. Có thể sửa lịch bằng **Lưu lịch** hoặc hủy khi phiên chưa bắt đầu.
+1. **Laptop phát.** Đăng nhập qua nút **Đăng nhập** ở header bằng tài khoản Supabase đã được cấp quyền host. Mở **Studio phát sóng**, chọn nhà vườn, nhập tiêu đề, mô tả, chọn sản phẩm có sẵn. Điền giờ Việt Nam hoặc để trống nếu sẽ phát ngay. Bấm **Tạo lịch**. Có thể sửa lịch bằng **Lưu lịch** hoặc hủy khi phiên chưa bắt đầu.
 2. **Kiểm tra camera và âm thanh.** Bấm **Xem trước camera** và **Kiểm tra mic**, rồi cấp quyền trong trình duyệt. Nói vào mic và xem thanh tín hiệu. Khi có nhiều thiết bị, dùng **Thiết bị camera** hoặc **Thiết bị mic** ở bước chuẩn bị rồi mở lại phần xem trước tương ứng. Bấm **Bắt đầu phát**, chờ **Đang phát** và xem chất lượng kết nối cùng thời gian phát. Nếu mic hệ điều hành bị chặn, dùng **Bật mic** sau khi cấp lại quyền.
 3. **Viewer độc lập.** Mở **Mở trang xem**, sao chép URL sang cửa sổ ẩn danh, laptop khác hoặc trình duyệt trên điện thoại. Bấm **Bật âm thanh** để nghe mic laptop, **Tắt âm thanh** để tắt tiếng và **Toàn màn hình** nếu trình duyệt hỗ trợ. Số người xem đếm kết nối viewer trong LiveKit, mỗi tab là một kết nối. Dùng tai nghe để tránh vọng nếu phát và xem cùng phòng.
 4. **Camera điện thoại.** Mở studio từ chính URL HTTPS mà điện thoại truy cập được. Bấm **Tạo QR ghép camera**, quét trên iPhone bằng Camera rồi mở Safari, hoặc trên Android qua Chrome. Bấm **Cho phép và xem trước**, đổi camera trước/sau nếu cần và bấm **Phát camera phụ**. Điện thoại gửi video, mic vẫn lấy từ host. Khi QR hết hạn hoặc đã sử dụng, chủ phiên tạo QR mới. Nếu thiết bị cũ đã rời trang, chủ phiên bấm **Ngắt camera phụ** để ghép thiết bị khác.
 5. **Đổi góc.** Trên một viewer bấm **Camera điện thoại**. Viewer còn lại phải nhận góc mới qua Realtime. Bấm **Camera chính** ở một viewer để đồng bộ ngược lại cho tất cả. Ngắt camera điện thoại để kiểm tra viewer đang xem góc phụ quay về góc chính. Kiểm tra mic laptop vẫn nghe được sau khi đổi góc.
-6. **Chat và sản phẩm.** Đăng nhập tài khoản chat trên một viewer, gửi tin và kiểm tra trang ẩn danh thấy tin mà không tải lại. Trong studio, bấm **Ẩn tin nhắn** và kiểm tra tin biến mất ở cả hai viewer. Chọn một sản phẩm trong mục **Sản phẩm đang ghim**, kiểm tra hai viewer nhận thay đổi và viewer mới mở thấy đúng sản phẩm. Bấm **Đặt nhanh (COD Demo)** để kiểm tra sản phẩm đã vào checkout demo.
+6. **Chat và sản phẩm.** Đăng nhập tài khoản NaiFarm thứ hai trên một viewer, gửi tin và kiểm tra viewer khác thấy tin mà không tải lại. Trong studio, bấm **Ẩn tin nhắn** và kiểm tra tin biến mất ở cả hai viewer. Chọn một sản phẩm trong mục **Sản phẩm đang ghim**, kiểm tra hai viewer nhận thay đổi và viewer mới mở thấy đúng sản phẩm. Catalog, truy xuất QR và giỏ hàng là dữ liệu demo.
 7. **Kết thúc và khôi phục.** Bấm **Kết thúc phiên** rồi xác nhận. Trang xem riêng phải hiện phiên đã kết thúc. Kiểm tra LiveKit Rooms không còn room của phiên. Thử một phiên khác, ngắt mạng host và kết nối lại trong khoảng 60 giây. Nếu quá hạn, worker sẽ đóng phiên và thử dọn room lại khi provider lỗi.
 
 ## 4. Retry phòng và kiểm tra lỗi

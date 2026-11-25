@@ -2,11 +2,11 @@
 
 ## Phạm vi
 
-Chỉ chatbot bubble góc dưới bên phải trang chủ và API/nguồn dữ liệu trực tiếp phục vụ chatbot. Widget AI hiện hữu trên các trang khác không nằm trong phạm vi thay đổi. Mục tiêu hackathon: khách mua tra lô/QR, nhà vườn nhận hướng dẫn số hóa và đăng bán, thanh niên hỗ trợ số; ưu tiên điện thoại và lời đáp có nguồn.
+Chỉ chatbot bubble góc dưới bên phải dùng thống nhất trên toàn bộ route và API/nguồn dữ liệu trực tiếp phục vụ chatbot. Thay widget script cũ bằng NaiFarmHomeChat; không thay đổi các luồng chức năng khác. Mục tiêu hackathon: khách mua tra lô/QR, nhà vườn nhận hướng dẫn số hóa và đăng bán, thanh niên hỗ trợ số; ưu tiên điện thoại và lời đáp có nguồn.
 
 ## Kiến trúc hiện tại
 
-1. `NaiFarmHomeChat` cung cấp bubble, FAQ gợi ý, upload ảnh, xem trước, sessionStorage, Markdown, nguồn, thẻ ảnh/sản phẩm và ba mức zoom.
+1. `NaiFarmHomeChat`, được mount một lần trong root layout, cung cấp bubble, FAQ gợi ý, upload ảnh, xem trước, sessionStorage, Markdown, nguồn, thẻ ảnh/sản phẩm và ba mức zoom trên các route.
 2. `POST /api/nai-ai/chat` xác thực loại/kích thước ảnh, xử lý QR bằng jsQR, giảm kích thước và dùng Gemini vision để mô tả ảnh. Nội dung ảnh chỉ là gợi ý đối chiếu, không chứng minh xuất xứ/chất lượng.
 3. LangGraph supervisor phân loại qua Jev (`jev-1.14.0`, `TYPESAFE_API_KEY`) rồi định tuyến một nhánh chuyên biệt: traceability, marketplace, farmer guide, volunteer guide, livestream hoặc out-of-scope. Nếu API Jev lỗi, timeout, trả nhãn lạ hoặc confidence dưới 0.35, dùng intent router cục bộ.
 4. Specialist truy vấn seed demo; khi cấu hình Supabase/Gemini, truy xuất vector cosine HNSW và PostgreSQL FTS. Gemini Embedding 2 dùng prefix asymmetric `task: search result | query: ...` và `title: ... | text: ...`; retrieval hợp nhất RRF rồi heuristic rerank theo entity, từ khóa và similarity. Marketplace/livestream tùy chọn tìm bằng Tavily và kèm trang nguồn HTTPS/ảnh tham khảo.
@@ -22,7 +22,7 @@ Chỉ chatbot bubble góc dưới bên phải trang chủ và API/nguồn dữ l
 - Redaction mặc định của LangSmith trace; giới hạn payload Jev; fallback nếu provider ngoài gián đoạn.
 - Catalog demo dùng mã lô riêng cho sản phẩm; không tự tạo nhật ký mùa vụ cho sản phẩm chưa có nhật ký.
 - Đã rà ảnh chính dùng trong product cards: P05 dùng ảnh sầu riêng, P11 dùng ảnh có nhãn Mứt Vỏ Bưởi; mô tả P05 khớp mã lô `NF-DEMO-P05`.
-- Chatbot mới chỉ được mount từ trang chủ; bỏ widget fallback ngoài phạm vi khỏi component mới.
+- Chatbot NaiFarmHomeChat được mount từ root layout để dùng cùng một giao diện và API trên các route; widget script cũ đã được gỡ khỏi layout.
 
 ## Giới hạn và trade-off cần giữ rõ
 
@@ -33,7 +33,7 @@ Chỉ chatbot bubble góc dưới bên phải trang chủ và API/nguồn dữ l
 - Phiên chat lưu trên trình duyệt; chưa có tài khoản/lưu lịch sử server/đồng bộ thiết bị.
 - API chat hiện chưa có xác thực hay rate limit dùng chung. Chỉ nên demo local/được bảo vệ; trước khi public cần thêm throttle phân tán theo user/IP và giới hạn ngân sách provider.
 - Seed chỉ là dữ liệu minh họa. Nội dung người dùng đăng trong localStorage không tự đồng bộ Supabase. Chạy lại catalog sync sau khi thay seed.
-- Supabase key dạng server secret cần quyền tối thiểu, không đưa vào client. Migration phải chạy thủ công ở project Supabase trước khi ingest.
+- Supabase key dạng server secret cần quyền tối thiểu, không đưa vào client. Migration NaiAI 001/005 đã được áp dụng; ingestion cần quyền `service_role` phía server.
 - Khóa LangSmith từng xuất hiện trong output của phiên làm việc trước; người dùng xác nhận đã rotate và cập nhật `.env`. Không in hoặc chia sẻ giá trị khóa trong log, chat hay tài liệu.
 
 ## Todo và tiêu chí chấp nhận
@@ -55,15 +55,15 @@ Chỉ chatbot bubble góc dưới bên phải trang chủ và API/nguồn dữ l
 - [x] LangSmith callback redaction giữ cấu trúc trace nhưng xóa input/output và nội dung lỗi ở mọi run, kể cả tracer con; mock payload kiểm tra marker bí mật ở câu hỏi, lịch sử, câu trả lời và lỗi provider đều vắng mặt.
 - [x] Trình duyệt với API giả: gửi text/ảnh, mô phỏng lỗi 503 rồi retry; câu hỏi không bị nhân đôi, ảnh JPEG được gửi lại và câu trả lời phục hồi hiển thị.
 - [x] `npm run typecheck`, router/RRF/reranker, mocked Jev/Tavily/API smoke và dry-run TXT/Markdown/DOCX/PDF đạt; PDF.js dùng standard fonts local. Trong sandbox, `tsx` bị `spawn EPERM`, nên dry-run bốn định dạng dùng Node native TypeScript. Lint chatbot 0 lỗi, 2 cảnh báo `<img>`.
-- [x] Rà ảnh chính và mã lô trong seed; sửa hai ảnh không khớp sản phẩm và nội dung P05 còn dùng mã cũ. Cần chạy lại catalog sync khi Supabase khả dụng.
+- [x] Rà ảnh chính và mã lô trong seed; sửa hai ảnh không khớp sản phẩm và nội dung P05 còn dùng mã cũ; đã chạy lại catalog sync sau khi cập nhật.
 - [x] Trình duyệt local: mở bubble desktop/mobile; ở 390×844 đo panel 390×680/768/810 không tràn ngang; API trả 400 cho input trống/quá dài và 415 cho SVG; launcher có ở `/` và không xuất hiện tại `/marketplace`.
 - [x] Sau khi rotate key, API local nhận truy vấn lô và ảnh nông sản với HTTP 200; ảnh hỏi chung được định tuyến marketplace. DeepSeek trả câu trả lời live; probe trực tiếp Jev HTTP 200, Gemini vision thành công, embedding 768 chiều và Tavily HTTP 200 (3 kết quả, 5 ảnh).
 - [x] `npm run build` hoàn tất ngoài sandbox với Next.js 16.4.6: TypeScript, thu thập dữ liệu trang và prerender 30 trang đều đạt. Trong sandbox, worker bị `spawn EPERM`; build production đã được xác nhận bằng executable npm cục bộ ngoài sandbox.
 
 ### Môi trường có credentials và trình duyệt
 
-- [x] Người dùng xác nhận rotate LangSmith key đã lộ. DeepSeek, Gemini, Tavily, Jev và Supabase REST credentials đã được probe live; Supabase chưa có bảng chatbot và chưa có RPC.
-- [ ] Chạy migration và seed catalog trên Supabase; đối chiếu schema vector 768 với model/dimensions.
+- [x] Người dùng xác nhận rotate LangSmith key đã lộ. DeepSeek, Gemini, Tavily, Jev và Supabase REST credentials đã được probe live.
+- [x] Chạy migration NaiAI 001/005 trên Supabase và seed 425 tài liệu catalog; xác minh vector 768 chiều và RPC truy hồi.
 - [x] Jev live harness 14 fixture đạt 14/14 sau khi làm rõ tiêu chí nhãn; confidence trung bình 0.938. LangSmith agent environment `naifarm/local` đã nhận 22 runs trong cửa sổ 5 phút gần nhất qua API; tất cả run trả về đều rỗng input/output/error.
 - [x] Browser thật trên home: câu hỏi “Bạn là ai?” mở đầu bằng “Mình là NaiAI, trợ lý ảo của NaiFarm”; câu hỏi tra lô hiển thị nguồn và sản phẩm demo. Zoom in/out lần lượt đổi khung từ 390×620 lên 500×760.
 - [x] Ảnh PNG QR gửi qua API local được đọc thành mã `NF-DEMO-001`, route `traceability`, source `/trace/NF-DEMO-001` và một product card.
@@ -84,10 +84,13 @@ Xem [RUNBOOK.md](./RUNBOOK.md). Người dùng đã xác nhận rotate khóa Lan
 - [x] Fix LangSmith routing to honor `LANGSMITH_AGENT_ID` plus `LANGSMITH_AGENT_ENVIRONMENT`; remove the legacy project override. Offline trace contract confirms destination `naifarm/local` and redacted payload.
 - [x] Apply the document migration to a disposable network-disabled local Supabase PostgreSQL instance; vector and FTS RPC smoke queries each returned one row.
 - [x] After rotation, graph-routed requests created live traces at `naifarm/local`; the latest read-only LangSmith API query found 22 runs in five minutes, including the live W03 `volunteer_agent`, and confirmed every run has empty inputs/outputs and no error text. A separate live query-refinement request produced a `query_refinement_agent` run.
-- [ ] Live Supabase REST credentials authenticate, but PostgREST returns `PGRST205` for `nai_documents` and `PGRST202` for both retrieval RPCs. The user selected the SQL Editor path and will run the migration; no live schema/data has been changed by this implementation.
+- [x] Live Supabase: migration NaiAI 001/005 hiện diện; `nai_documents` có 425 tài liệu catalog, mọi vector 768 chiều. Smoke test Gemini + vector RPC trả các sản phẩm bưởi Tân Triều đứng đầu; FTS RPC cũng trả hồ sơ liên quan.
+- [x] Live chat API tra `NF-DEMO-001` trả HTTP 200, đúng sản phẩm P01, hộ chiếu, nguồn và ảnh sản phẩm; LangSmith có trace các node `supervisor`, `traceability_agent`, `evidence_critic`, `synthesize` với input/output đã redacted.
+- [x] Chạy lại sync catalog sau khi thay seed; xác nhận lượt thứ hai không tạo embedding hoặc xóa bản ghi nào.
+- [ ] Dữ liệu người dùng đăng trong `localStorage` chưa đồng bộ Supabase.
 
 ### Kiểm tra hồi quy danh tính (2026-11-25)
 
 - [x] Chuẩn hóa tiền tố chào hỏi và câu dẫn lịch sự trước khi nhận diện câu hỏi danh tính, vì vậy “hello bạn là ai”, “Hi, bạn là ai vậy?” và “Xin chào, bạn là ai?” đều được giới thiệu là NaiAI; câu hỏi tìm sản phẩm có lời chào vẫn đi qua router marketplace.
 - [x] API production local tại `127.0.0.1:3100` trả HTTP 200 cho “hello bạn là ai”, với câu trả lời mở đầu “Mình là NaiAI, trợ lý ảo của NaiFarm…”, không gọi provider và không kèm nguồn/card không liên quan.
-- [ ] Không thể chạy lại bộ flow test và typecheck trên working tree hiện tại: các merge-conflict marker đang tồn tại trong `src/data/demo/batches.ts`, `src/data/demo/products.ts`, `src/app/layout.tsx`, `src/app/live/page.tsx`, `src/components/navigation/AppHeader.tsx`, `package.json` và `package-lock.json`. Lint riêng hai file chatbot đã đạt; cần xử lý các conflict này để khôi phục kiểm tra toàn dự án.
+- [x] Đã chạy lại sync catalog lên Supabase sau khi xác minh nội dung demo; các cập nhật tiếp theo có thể dùng `npm run nai:sync:catalog -- --dry-run` rồi `npm run nai:sync:catalog`.
