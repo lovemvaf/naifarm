@@ -15,7 +15,7 @@ Thư mục này chứa các file kiểm tra toàn diện API key DeepSeek, theo 
 File `.env` nằm tại thư mục gốc `naifarm/.env`:
 
 ```env
-DEEPSEEK_API_KEY=sk-your-deepseek-api-key-here
+DEEPSEEK_API_KEY=env.DEEPSEEK_API_KEY
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 ```
 
