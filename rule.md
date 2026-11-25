@@ -1,6 +1,6 @@
 # NaiFarm — FE Rulebook (`rule.md`)
 
-> Tài liệu quy ước FE của dự án NaiFarm, tổng hợp từ toàn bộ code FE hiện có (bản Supabase ở nhánh `ngoctan` + bản V2 UI ở nhánh `main`). Dùng lại khi phát triển, review, onboarding người/agent mới, hoặc rebuild. Cập nhật: 25/11/2026.
+> Tài liệu quy ước FE của dự án NaiFarm, tổng hợp từ toàn bộ code FE hiện có (bản Supabase ở nhánh `ngoctan` + bản V2 UI ở nhánh `main`). Dùng lại khi phát triển, review, onboarding người/agent mới, hoặc rebuild. Cập nhật: 26/11/2026.
 
 ---
 
@@ -82,7 +82,7 @@ Quy tắc guard (`src/proxy.ts`):
 
 - **Một store duy nhất**: `src/context/DemoStoreContext.tsx`. Component KHÔNG tự gọi Supabase rải rác — mọi đọc/ghi đi qua store (`useDemoStore()`), trừ auth (`useAuth()`).
 - **Hai lớp dữ liệu**:
-  1. **Lớp Supabase (core) — ĐÃ WIRE qua `src/lib/supabase/hydrate.ts`** (`fetchCoreData()` → merge vào `DemoStoreContext` khi có session): profiles, farms, products, batches + batch_events, orders + order_items, cart_items, favorites, season_follows, missions, support_requests, rfq_requests (chỉ fetch, chưa có UI write), experience_bookings, document_review_cases, admin_grants, audit_logs, calendar_events, official_observances, campaigns, promotions, lessons, school_classes, student_submissions, seasons, diary_entries, credentials, notifications, tickets, address_book, partner_orgs, sponsor_campaigns, warehouses, warehouse_stocks, inventory_movements, suppliers, purchase_orders, coop_pools, member_deliveries, expenses, receivables_payables, logistics_trips. Có env → load thật; mất env → fallback demo data, không crash.
+  1. **Lớp Supabase (core) — ĐÃ WIRE qua `src/lib/supabase/hydrate.ts`** (`fetchCoreData()` → merge vào `DemoStoreContext` khi có session): profiles, farms, products, batches + batch_events, orders + order_items, cart_items, favorites, season_follows, missions, support_requests, rfq_requests (chỉ fetch, chưa có UI write), experiences (seed 9 bản ghi: 4 từ 0002 + 5 tour mới), experience_bookings, document_review_cases, admin_grants, audit_logs, calendar_events, official_observances, campaigns, promotions, lessons, school_classes, student_submissions, seasons, diary_entries, credentials, notifications, tickets, address_book, partner_orgs, sponsor_campaigns, warehouses, warehouse_stocks, inventory_movements, suppliers, purchase_orders, coop_pools, member_deliveries, expenses, receivables_payables, logistics_trips, product_reviews, mentor_cases, international_inquiries, volunteer_hours, refund_requests. Có env → load thật; mất env → fallback demo data, không crash.
   2. **Lớp demo (localStorage)**: credentials, seasons/diary, warehouses/inventory/suppliers/purchase orders, notifications, tickets, address book… — chỉ mang tính trình diễn, KHÔNG tạo bảng cho tới khi có chỉ đạo.
 - **Mapper bắt buộc**: row Supabase → type domain phải qua `src/lib/supabase/mappers.ts` (`mapProduct`, `mapFarm`, `mapProfile`…). Cột DB snake_case, field TS camelCase. Không dùng raw row ngoài mapper.
 - **CRUD pattern chuẩn**: hàm async trong provider → try/catch → lỗi hiển thị toast (`notifySuccess`/toast.error), xong gọi reload helper tương ứng (`reloadProducts`, `reloadOrders`…). Không bao giờ mutate state cục bộ rồi mong DB tự đổi.
@@ -138,6 +138,7 @@ Quy tắc guard (`src/proxy.ts`):
 - ~~Wire các slice core sang Supabase~~ — **XONG** (25/11): đọc qua `src/lib/supabase/hydrate.ts`, ghi qua store theo pattern mục 5 (orders + order_items, cart_items, favorites, season_follows, missions, products, experience_bookings, support_requests, document_review_cases, admin_grants).
 - ~~Wire calendar/events (NaiCalendar + campaigns + promotions + observances)~~ — **XONG** (25/11): bảng mới `calendar_events`, `official_observances`, `campaigns`, `promotions` (+ RPC `increment_promo_redemption`); mapper/hydrate/store/actions đã wire; `/events` lấy dữ liệu từ store.
 - ~~Wire calendar/events~~ XONG; ~~academy~~ **XONG** (25/11): lessons, school_classes, student_submissions; ~~seasons/diary~~ **XONG**: seasons, diary_entries, batch_events; ~~credentials~~ **XONG**: credentials (+2 action lifecycle/renewal); ~~community~~ **XONG**: notifications, tickets, address_book, partner_orgs, sponsor_campaigns; ~~ERP~~ **XONG**: 10 bảng (warehouses→logistics_trips).
+- ~~Seed farms/products + small tables~~ — **XONG** (26/11): 40 farms, 168 products, 5 tour (experiences → 9 bản ghi), 10 product_reviews, 5 mentor_cases, 2 international_inquiries, 10 volunteer_hours, 4 refund_requests (migration `202611280001`→`202611280007`); credential records + refund_requests đã wire qua store.
 - Còn wire tiên theo yêu cầu: learningProgress (jsonb per-user), lesson_progress table, credential_evidence UI slice.
 - ~~Map `/explore` dùng `public/geo`~~ — **XONG** (25/11): fetch `/geo/dong-nai-wards.json` + `/geo/dong-nai-province.json`, UI giữ nguyên V2.
 - Tích hợp cổng thanh toán thật, SMTP email thật — chưa làm, chỉ ghi nhận.

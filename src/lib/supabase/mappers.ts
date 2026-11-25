@@ -7,6 +7,7 @@ import type {
   BatchEvent,
   CalendarEvent,
   CampaignRecord,
+  CertificationStatus,
   CoopPool,
   CredentialEvidence,
   CredentialRecord,
@@ -19,6 +20,7 @@ import type {
   ExperienceBooking,
   ExperiencePackage,
   Farm,
+  FarmCertification,
   InventoryMovement,
   LearningLesson,
   LogisticsTrip,
@@ -32,6 +34,7 @@ import type {
   PromotionRecord,
   PurchaseOrder,
   ReceivablePayable,
+  RefundRequest,
   RfqRequest,
   SchoolClass,
   SponsorCampaign,
@@ -41,6 +44,7 @@ import type {
   StudentSubmission,
   TraceBatch,
   UserNotification,
+  VolunteerHourRecord,
   VolunteerMission,
   Warehouse,
   WarehouseStock,
@@ -267,6 +271,20 @@ export function mapMission(row: Row): VolunteerMission {
     revisionReason: row.revision_reason ? String(row.revision_reason) : undefined,
     status: str(row.status, "open") as VolunteerMission["status"],
     isDemo: true,
+  };
+}
+
+export function mapVolunteerHour(row: Row): VolunteerHourRecord {
+  return {
+    id: str(row.id),
+    missionId: str(row.mission_id),
+    volunteerName: str(row.volunteer_name),
+    farmId: str(row.farm_id),
+    farmName: str(row.farm_name),
+    hours: num(row.hours),
+    status: str(row.status, "approved") as VolunteerHourRecord["status"],
+    recordedDate: str(row.recorded_date),
+    note: str(row.note),
   };
 }
 
@@ -584,6 +602,98 @@ export function mapCredentialEvidence(row: Row): CredentialEvidence {
   };
 }
 
+function credentialTypeIdFor(standardType: FarmCertification["standardType"]): string {
+  if (standardType === "VietGAP") return "Q15";
+  if (standardType === "OCOP") return "Q03";
+  if (standardType === "Mã số vùng trồng") return "Q04";
+  return "Q08";
+}
+
+function credentialLifecycleFor(status: CertificationStatus): CredentialRecord["lifecycleStatus"] {
+  if (status === "expired_demo") return "expired";
+  if (status === "pending_review" || status === "needs_revision") return "pending_verification";
+  if (status === "coop_checked_demo") return "document_matched";
+  if (status === "unverified") return "not_provided";
+  return "self_declared";
+}
+
+function credentialVerificationFor(status: CertificationStatus): CredentialRecord["verificationLevel"] {
+  return status === "coop_checked_demo" ? "doc_matched" : "self_declared";
+}
+
+function isoDateFromLabel(label: string): string | null {
+  const parts = label.split("/");
+  if (parts.length !== 3) return null;
+  const [day, month, year] = parts;
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+}
+
+export interface CredentialInsertRow {
+  id: string;
+  type_id: string;
+  holder_id: string;
+  holder_legal_name: string;
+  product_ids: string[];
+  site_ids: string[];
+  facility_ids: string[];
+  lot_ids: string[] | null;
+  issuer: string;
+  certificate_number: string | null;
+  decision_number: string | null;
+  standard_version: string | null;
+  issue_date: string | null;
+  valid_from: string | null;
+  valid_to: string | null;
+  evidence_ids: string[];
+  source_url: string | null;
+  source_published_at: string | null;
+  checked_at: string | null;
+  verification_level: CredentialRecord["verificationLevel"];
+  lifecycle_status: CredentialRecord["lifecycleStatus"];
+  scope_description: string;
+  origin: CredentialRecord["origin"];
+  permission_to_publish: boolean;
+  notes_internal: string | null;
+  renewed_from_id: string | null;
+  eligible_category_hint: string;
+}
+
+export function mapFarmCertificationToCredential(
+  certification: FarmCertification,
+  farm: Farm,
+): CredentialInsertRow {
+  const issueIso = isoDateFromLabel(certification.issuedDateDemo);
+  return {
+    id: certification.id,
+    type_id: credentialTypeIdFor(certification.standardType),
+    holder_id: farm.id,
+    holder_legal_name: farm.name,
+    product_ids: [],
+    site_ids: [],
+    facility_ids: [],
+    lot_ids: null,
+    issuer: certification.issuerLabel,
+    certificate_number: certification.certificateCode,
+    decision_number: null,
+    standard_version: null,
+    issue_date: issueIso,
+    valid_from: issueIso,
+    valid_to: isoDateFromLabel(certification.validUntilDemo),
+    evidence_ids: [],
+    source_url: null,
+    source_published_at: null,
+    checked_at: null,
+    verification_level: credentialVerificationFor(certification.status),
+    lifecycle_status: credentialLifecycleFor(certification.status),
+    scope_description: certification.scopeSummary,
+    origin: "synthetic",
+    permission_to_publish: true,
+    notes_internal: null,
+    renewed_from_id: null,
+    eligible_category_hint: "",
+  };
+}
+
 export function mapAdminUnit(row: Row): AdminUnit {
   return {
     code: str(row.code),
@@ -793,6 +903,22 @@ export function mapReceivablePayable(row: Row): ReceivablePayable {
     paidVnd: num(row.paid_vnd),
     dueDateIso: str(row.due_date_iso),
     status: str(row.status, "open") as ReceivablePayable["status"],
+  };
+}
+
+export function mapRefundRequest(row: Row): RefundRequest {
+  return {
+    id: str(row.id),
+    orderId: str(row.order_id),
+    farmId: str(row.farm_id),
+    requesterName: str(row.requester_name),
+    reason: str(row.reason),
+    amountVnd: num(row.amount_vnd),
+    restockQty: num(row.restock_qty),
+    status: str(row.status, "pending_maker") as RefundRequest["status"],
+    makerName: str(row.maker_name),
+    checkerName: row.checker_name ? String(row.checker_name) : undefined,
+    requestedDateIso: str(row.requested_date_iso),
   };
 }
 

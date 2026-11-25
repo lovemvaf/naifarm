@@ -30,6 +30,7 @@ import {
   mapPurchaseOrder,
   mapPromotion,
   mapReceivablePayable,
+  mapRefundRequest,
   mapRfqRequest,
   mapSchoolClass,
   mapSeason,
@@ -38,6 +39,7 @@ import {
   mapSupplier,
   mapSupportRequest,
   mapTicket,
+  mapVolunteerHour,
   mapWarehouse,
   mapWarehouseStock,
 } from "@/lib/supabase/mappers";
@@ -68,6 +70,7 @@ import type {
   PromotionRecord,
   PurchaseOrder,
   ReceivablePayable,
+  RefundRequest,
   RfqRequest,
   SchoolClass,
   SponsorCampaign,
@@ -77,6 +80,7 @@ import type {
   SupportTicket,
   TraceBatch,
   UserNotification,
+  VolunteerHourRecord,
   VolunteerMission,
   Warehouse,
   WarehouseStock,
@@ -122,6 +126,8 @@ export interface CoreData {
   memberDeliveries: MemberDelivery[];
   expenses: ExpenseEntry[];
   receivablesPayables: ReceivablePayable[];
+  refundRequests: RefundRequest[];
+  volunteerHours: VolunteerHourRecord[];
   logisticsTrips: LogisticsTrip[];
 }
 
@@ -179,6 +185,8 @@ export async function fetchCoreData(): Promise<CoreData> {
     memberDeliveryRows,
     expenseRows,
     receivableRows,
+    refundRows,
+    volunteerHourRows,
     logisticsTripRows,
   ] = await Promise.all([
     selectAll("farms"),
@@ -235,6 +243,8 @@ export async function fetchCoreData(): Promise<CoreData> {
     selectAll("member_deliveries"),
     selectAll("expenses"),
     selectAll("receivables_payables"),
+    selectAll("refund_requests"),
+    selectAll("volunteer_hours"),
     selectAll("logistics_trips"),
   ]);
 
@@ -320,6 +330,8 @@ export async function fetchCoreData(): Promise<CoreData> {
     memberDeliveries: memberDeliveryRows.map(mapMemberDelivery),
     expenses: expenseRows.map(mapExpense),
     receivablesPayables: receivableRows.map(mapReceivablePayable),
+    refundRequests: refundRows.map(mapRefundRequest),
+    volunteerHours: volunteerHourRows.map(mapVolunteerHour),
     logisticsTrips: logisticsTripRows.map(mapLogisticsTrip),
   };
 }

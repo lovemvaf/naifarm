@@ -132,7 +132,7 @@ import type {
 } from "@/types/naifarm";
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { mapProfile } from "@/lib/supabase/mappers";
+import { mapFarmCertificationToCredential, mapProfile } from "@/lib/supabase/mappers";
 import { fetchCoreData } from "@/lib/supabase/hydrate";
 
 const STORAGE_KEY = "naifarm_demo_state_v4";
@@ -908,6 +908,8 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           memberDeliveries: core.memberDeliveries.length ? core.memberDeliveries : prev.memberDeliveries,
           expenses: core.expenses.length ? core.expenses : prev.expenses,
           receivablesPayables: core.receivablesPayables.length ? core.receivablesPayables : prev.receivablesPayables,
+          refundRequests: core.refundRequests.length ? core.refundRequests : prev.refundRequests,
+          volunteerHours: core.volunteerHours.length ? core.volunteerHours : prev.volunteerHours,
           logisticsTrips: core.logisticsTrips.length ? core.logisticsTrips : prev.logisticsTrips,
         }));
       })
@@ -2049,6 +2051,23 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         ...prev.auditLogs,
       ],
     }));
+    if (supabase) {
+      void supabase
+        .from("refund_requests")
+        .insert({
+          id: created.id,
+          order_id: created.orderId,
+          farm_id: created.farmId,
+          requester_name: created.requesterName,
+          reason: created.reason,
+          amount_vnd: created.amountVnd,
+          restock_qty: created.restockQty,
+          status: created.status,
+          maker_name: created.makerName,
+          requested_date_iso: created.requestedDateIso,
+        })
+        .then(() => {});
+    }
     return { ok: true, message: `Đã gửi đề xuất hoàn tiền ${created.id} vào hàng chờ duyệt độc lập.` };
   };
 
@@ -2100,6 +2119,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         ...prev.auditLogs,
       ],
     }));
+    if (supabase) {
+      void supabase
+        .from("refund_requests")
+        .update({ status: decision, checker_name: checkerName })
+        .eq("id", refundId)
+        .then(() => {});
+    }
     return {
       ok: true,
       message:
@@ -2423,6 +2449,12 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       ...prev,
       certifications: [created, ...prev.certifications],
     }));
+    if (supabase) {
+      void supabase
+        .from("credentials")
+        .upsert(mapFarmCertificationToCredential(created, farm), { onConflict: "id" })
+        .then(() => {});
+    }
     return created;
   };
 

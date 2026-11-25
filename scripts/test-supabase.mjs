@@ -72,6 +72,11 @@ const TABLES = [
   "expenses",
   "receivables_payables",
   "logistics_trips",
+  "product_reviews",
+  "mentor_cases",
+  "international_inquiries",
+  "volunteer_hours",
+  "refund_requests",
 ];
 
 const ACCOUNTS = [
