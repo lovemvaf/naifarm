@@ -138,7 +138,7 @@ export const INITIAL_LESSONS: LearningLesson[] = [
     levelLabel: "Tất cả người dùng",
     regionCode: "26041",
     regionName: "Phường Trấn Biên",
-    summary: "Nắm vững ranh giới giữa tự khai nội bộ, đối chiếu HTX (Demo) và chứng nhận chính thức.",
+    summary: "Nắm vững ranh giới giữa tự khai nội bộ, đối chiếu HTX và chứng nhận chính thức.",
     image: "/images/stitch/stitch-31.jpg",
     anatomyTarget: "pomelo",
     sections: [

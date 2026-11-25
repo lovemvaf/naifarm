@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
+import { notifyError, notifySuccess } from "@/lib/toast";
 import {
   ArrowLeft,
   Camera,
@@ -56,7 +56,7 @@ const SAMPLE_PHOTOS = [
     label: "Hạt điều rang củi đóng hộp",
     src: "/images/stitch/stitch-39.jpg",
     defaultName: "Hạt điều rang củi vỏ lụa đóng gói mới",
-    defaultCategory: "Hạt & Cà phê" as Product["category"],
+    defaultCategory: "Hạt điều & Rang củi" as Product["category"],
     defaultPrice: 145000,
     defaultStock: 20,
     defaultTranscript: "Tôi vừa rang 20 hộp hạt điều vỏ lụa 500 gam, bán 145 nghìn một hộp.",
@@ -135,7 +135,7 @@ export default function FarmerPublishWizardPage() {
     reader.onload = () => {
       if (typeof reader.result === "string") {
         setCustomPhotoData(reader.result);
-        toast.success(`Đã chọn ảnh "${file.name}".`);
+        notifySuccess(`Đã chọn ảnh "${file.name}".`);
       }
     };
     reader.readAsDataURL(file);
@@ -197,7 +197,7 @@ export default function FarmerPublishWizardPage() {
     const numericPrice = Number(draftPrice);
     const numericStock = Number(draftStock);
     if (!draftName.trim() || !numericPrice || numericPrice <= 0 || !numericStock || numericStock <= 0) {
-      toast.error("Bác vui lòng kiểm tra lại tên sản phẩm, giá bán và số lượng lớn hơn 0.");
+      notifyError("Bác vui lòng kiểm tra lại tên sản phẩm, giá bán và số lượng lớn hơn 0.");
       return;
     }
 
@@ -215,7 +215,7 @@ export default function FarmerPublishWizardPage() {
 
     setPublishedProduct(created);
     setHideAiChatOnSubflow(false);
-    toast.success(`Đã đăng "${created.name}" lên Chợ OCOP NaiFarm!`);
+    notifySuccess(`Đã đăng "${created.name}" lên Chợ OCOP NaiFarm!`);
   };
 
   return (
@@ -299,7 +299,7 @@ export default function FarmerPublishWizardPage() {
                 className="h-44 w-full rounded-[16px] object-cover md:w-56"
               />
               <div className="space-y-3">
-                <Badge tone="success">Đã đăng bán thành công trên Chợ Demo</Badge>
+                <Badge tone="success">Đã đăng bán thành công lên Chợ OCOP</Badge>
                 <h2 className="text-2xl font-bold text-[#25352B]">{publishedProduct.name}</h2>
                 <p className="text-lg font-bold text-[#245B3D] tabular-nums">
                   {formatVnd(publishedProduct.priceVnd)} / {publishedProduct.unitLabel} · Sẵn có{" "}
@@ -452,7 +452,7 @@ export default function FarmerPublishWizardPage() {
               {isRecording ? (
                 <>
                   <p className="text-lg font-bold text-[#A32D2D] tabular-nums">
-                    Đang ghi âm mô phỏng: 00:{String(recordSeconds).padStart(2, "0")}
+                    Đang ghi âm: 00:{String(recordSeconds).padStart(2, "0")}
                   </p>
                   <p className="mx-auto max-w-xl rounded-[12px] bg-white px-4 py-3 text-base italic text-[#25352B]">
                     &ldquo;{transcript}&rdquo;
@@ -464,7 +464,7 @@ export default function FarmerPublishWizardPage() {
                     onClick={handleStopRecordingAndGenerate}
                   >
                     <Square className="h-5 w-5 fill-current" aria-hidden="true" />
-                    <span>Dừng ghi âm & Tạo bản nháp</span>
+                    <span>Dừng ghi âm &amp; Tạo bản nháp</span>
                   </Button>
                 </>
               ) : (
@@ -478,13 +478,13 @@ export default function FarmerPublishWizardPage() {
                     }}
                   >
                     <Mic className="h-6 w-6" aria-hidden="true" />
-                    <span>Bấm để nói mô tả sản phẩm (Demo)</span>
+                    <span>Bấm để nói mô tả sản phẩm</span>
                   </Button>
                   <button
                     type="button"
                     onClick={() => {
                       setTranscript("Tôi có 30 ký chôm chôm Java hái sáng nay, bán 35 nghìn một ký.");
-                      toast.success("Đã điền câu mẫu Chú Ba Tư Long Khánh.");
+                      notifySuccess("Đã điền câu mẫu Chú Ba Tư Long Khánh.");
                     }}
                     className="min-h-[44px] rounded-full border border-[#245B3D] bg-white px-4 text-sm font-semibold text-[#245B3D] hover:bg-[#EAF0E5] cursor-pointer"
                   >
@@ -536,8 +536,8 @@ export default function FarmerPublishWizardPage() {
             ) : (
               <>
                 <DemoBanner
-                  title="AI gợi ý minh họa — vui lòng kiểm tra lại"
-                  detail="Hệ thống điền sẵn từ câu mô tả demo. Bác có thể sửa trực tiếp tên hàng, giá bán, số lượng trước khi bấm Đăng."
+                  title="AI gợi ý bản nháp — bác vui lòng kiểm tra lại"
+                  detail="Hệ thống điền sẵn từ câu mô tả vừa nhập. Bác có thể sửa trực tiếp tên hàng, giá bán, số lượng trước khi bấm Đăng."
                 />
 
                 <form onSubmit={handlePublish} className="space-y-4">

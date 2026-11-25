@@ -21,7 +21,7 @@ export function MapLocationCard({ farm, distanceKm }: MapLocationCardProps) {
             {farm.administrativeUnitName} ({farm.administrativeUnitCode})
           </Badge>
           <span className="tabular-nums text-xs text-[#52645A]">
-            {farm.coordinates.latLabel} · {farm.coordinates.lngLabel} (Minh họa)
+            Vị trí gần đúng theo vùng ({farm.coordinates.latLabel} · {farm.coordinates.lngLabel})
           </span>
         </div>
 

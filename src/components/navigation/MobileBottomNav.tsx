@@ -61,7 +61,7 @@ export function MobileBottomNav() {
       { href: "/coordinator", label: "Điều phối", icon: Users },
       { href: "/organization", label: "Tổ chức", icon: Store },
       { href: "/admin", label: "Quản trị", icon: Shield },
-      { href: "/demo", label: "Demo", icon: Compass },
+      { href: "/demo", label: "Truy cập", icon: Compass },
     ];
   }
 

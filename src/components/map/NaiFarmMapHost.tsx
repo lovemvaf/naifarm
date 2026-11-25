@@ -10,7 +10,7 @@ const DynamicLeafletMap = dynamic(() => import("./NaiFarmMap"), {
   ssr: false,
   loading: () => (
     <div className="flex h-[440px] w-full items-center justify-center rounded-[16px] border border-[#D6DED2] bg-[#EAF0E5]/70 text-xs font-medium text-[#52645A]">
-      Đang tải bản đồ OpenStreetMap Thành phố Đồng Nai...
+      Đang tải bản đồ nhà vườn Thành phố Đồng Nai...
     </div>
   ),
 });

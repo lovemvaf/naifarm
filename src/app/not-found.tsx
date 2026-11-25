@@ -13,8 +13,8 @@ export default function NotFound() {
         Đường dẫn này chưa có trên Chợ NaiFarm
       </h1>
       <p className="mt-2 text-sm text-[#52645A]">
-        Bạn có thể quay về Trang chủ Chợ OCOP Thanh niên hoặc mở Trung tâm Trình diễn Giám khảo để
-        chọn nhanh toàn bộ 16 tuyến màn hình hợp lệ.
+        Bạn có thể quay về Trang chủ Chợ OCOP Thanh niên hoặc mở trang Truy cập nhanh để chọn tuyến
+        màn hình phù hợp.
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Link
@@ -29,7 +29,7 @@ export default function NotFound() {
           className="inline-flex min-h-[46px] items-center gap-2 rounded-[12px] border border-[#245B3D] bg-white px-5 text-sm font-semibold text-[#245B3D] hover:bg-[#EAF0E5]"
         >
           <Compass className="h-4 w-4" aria-hidden="true" />
-          <span>Mở Trung tâm Trình diễn</span>
+          <span>Truy cập nhanh</span>
         </Link>
       </div>
     </div>

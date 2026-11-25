@@ -9,7 +9,7 @@ interface MapErrorStateProps {
 }
 
 export function MapErrorState({
-  message = "Không tải được lớp bản đồ OpenStreetMap (có thể do mạng ngoại tuyến hoặc giới hạn tile). Bạn vẫn có thể dùng danh sách 24 nhà vườn & 95 Phường/Xã đầy đủ ở bên cạnh.",
+  message = "Không tải được lớp bản đồ nền (có thể do mạng ngoại tuyến hoặc giới hạn tải tạm thời). Bạn vẫn có thể tra cứu đầy đủ nhà vườn & Phường/Xã ở danh sách bên cạnh.",
   onRetry,
 }: MapErrorStateProps) {
   return (

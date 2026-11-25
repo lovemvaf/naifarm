@@ -8,7 +8,7 @@ import type {
 
 const EXTRA_BOOKING_FARMS = INITIAL_FARMS.filter((f) => f.experiences.length > 0);
 const GUEST_NAMES = [
-  "Ngọc Linh & gia đình (Demo)",
+  "Ngọc Linh & gia đình",
   "Nhóm Sinh viên ĐH Đồng Nai",
   "Gia đình anh Minh Khang",
   "Đoàn Trường THPT Trấn Biên",
@@ -22,7 +22,7 @@ export const INITIAL_EXPERIENCE_BOOKINGS: ExperienceBooking[] = [
     farmId: "farm-ba-minh-tan-trieu",
     farmName: "Vườn Bưởi Chú Ba Minh",
     packageTitle: "Một ngày làm nông dân cù lao cùng Chú Ba Minh",
-    guestName: "Ngọc Linh & gia đình (Demo)",
+    guestName: "Ngọc Linh & gia đình",
     guestCount: 4,
     dateLabel: "06/12/2026 · 08:30",
     note: "Muốn trải nghiệm cắt bưởi và tìm hiểu cách dán tem QR.",
@@ -39,7 +39,7 @@ export const INITIAL_EXPERIENCE_BOOKINGS: ExperienceBooking[] = [
       guestName: GUEST_NAMES[(idx + 1) % GUEST_NAMES.length],
       guestCount: 2 + (idx % 6),
       dateLabel: `${String(5 + (idx % 20)).padStart(2, "0")}/12/2026 · 08:30`,
-      note: `Đăng ký tham quan vườn tại ${farm.administrativeUnitName} (dữ liệu mô phỏng).`,
+      note: `Đăng ký tham quan vườn tại ${farm.administrativeUnitName} .`,
       status: "Chờ nhà vườn xác nhận" as const,
     };
   }),
@@ -71,7 +71,7 @@ export const INITIAL_DOC_CASES: DocumentReviewCase[] = [
     documentTitle: "Bộ hồ sơ vùng bưởi Phường Tân Triều & Nhật ký lô NF-TT-2026-01",
     submittedAt: "21/11/2026 · 10:00",
     scopeNote: "Đã đối chiếu đầy đủ bản scan minh họa từ chủ vườn và TNV Nguyễn Văn An.",
-    status: "Hồ sơ đã đối chiếu (Demo)",
+    status: "Hồ sơ đã đối chiếu",
     reviewerNote: "Hồ sơ rõ ràng, tách biệt dữ liệu tự khai và văn bản đối chiếu.",
   },
   ...INITIAL_FARMS.slice(3, 12).map((farm, idx) => ({
@@ -83,7 +83,7 @@ export const INITIAL_DOC_CASES: DocumentReviewCase[] = [
     scopeNote: `Kiểm tra khớp địa chỉ chuẩn ${farm.administrativeUnitName} và ảnh nhật ký mùa vụ.`,
     status: (
       idx % 3 === 0
-        ? "Hồ sơ đã đối chiếu (Demo)"
+        ? "Hồ sơ đã đối chiếu"
         : idx % 3 === 1
         ? "Chờ đối chiếu"
         : "Yêu cầu bổ sung"
@@ -107,7 +107,7 @@ export const INITIAL_ADMIN_GRANTS: AdminGrant[] = [
     unitScope: "Phường Long Khánh (Giới hạn đơn vị)",
     expiresAt: "31/12/2026",
     active: true,
-    lastReason: "Phân công điều phối chiến dịch hỗ trợ nhà vườn quý IV (Demo).",
+    lastReason: "Phân công điều phối chiến dịch hỗ trợ nhà vườn quý IV.",
   },
   {
     id: "GR-02",
@@ -129,14 +129,14 @@ export const INITIAL_ADMIN_GRANTS: AdminGrant[] = [
     unitScope: "Cụm xã viên Phường Tân Triều",
     expiresAt: "30/06/2027",
     active: true,
-    lastReason: "Quản lý lịch gom hàng và điều phối chuyến xe mát nội tỉnh (Demo).",
+    lastReason: "Quản lý lịch gom hàng và điều phối chuyến xe mát nội tỉnh.",
   },
   {
     id: "GR-04",
     accountName: "Đại diện Trường THPT / ĐH Đồng Nai",
     organizationName: "CLB Học tập Thực hành Nông nghiệp",
     workspaceScope: "W05",
-    capability: "academy.class_manage (chế độ Roadmap)",
+    capability: "academy.class_manage (tính năng mở rộng)",
     unitScope: "Khối lớp thực hành Nông học Đồng Nai",
     expiresAt: "30/05/2027",
     active: false,
@@ -151,7 +151,7 @@ export const INITIAL_ADMIN_GRANTS: AdminGrant[] = [
     unitScope: "Phường Bình Phước – Đồng Xoài – Phước Long",
     expiresAt: "31/03/2027",
     active: true,
-    lastReason: "Phân quyền duyệt giờ hỗ trợ TNV cụm vùng điều bazan phía Bắc (Demo).",
+    lastReason: "Phân quyền duyệt giờ hỗ trợ TNV cụm vùng điều bazan phía Bắc.",
   },
   {
     id: "GR-06",
@@ -186,18 +186,18 @@ export const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
   {
     id: "AUD-103",
     time: "24/11/2026 09:20",
-    actor: "Platform Admin (Demo W06)",
-    action: "PROTOTYPE_AUDIT_INIT",
+    actor: "Quản trị Hệ thống (W06)",
+    action: "SYSTEM_AUDIT_INIT",
     target: "W01–W06",
-    note: "Khởi tạo chế độ trình diễn an toàn — không kết nối cơ sở dữ liệu thật.",
+    note: "Khởi tạo không gian trải nghiệm cục bộ — không kết nối cơ sở dữ liệu thật.",
   },
   ...Array.from({ length: 13 }, (_, idx) => ({
     id: `AUD-${104 + idx}`,
     time: `${String(11 + (idx % 13)).padStart(2, "0")}/11/2026 ${String(8 + (idx % 9)).padStart(2, "0")}:30`,
-    actor: idx % 2 === 0 ? "Thu Hà (W04)" : "Platform Admin (Demo W06)",
+    actor: idx % 2 === 0 ? "Thu Hà (W04)" : "Quản trị Hệ thống (W06)",
     action: idx % 3 === 0 ? "ADMIN_DATASET_SYNC" : idx % 3 === 1 ? "CERT_DISCLAIMER_CHECK" : "GRANT_SCOPE_VERIFY",
-    target: idx % 3 === 0 ? "95 ĐVHC Đồng Nai (25/11/2026)" : `CERT-0${(idx % 9) + 1}`,
-    note: "Kiểm tra nhật ký bất biến chế độ mô phỏng phục vụ đối chiếu minh bạch.",
+    target: idx % 3 === 0 ? "95 ĐVHC Đồng Nai" : `CERT-0${(idx % 9) + 1}`,
+    note: "Kiểm tra nhật ký đối chiếu trong không gian trải nghiệm.",
   })),
 ];
 

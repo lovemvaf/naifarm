@@ -200,7 +200,7 @@ function SearchPageInner() {
         <EmptyState
           icon={<Search className="h-6 w-6" aria-hidden="true" />}
           title="Nhập từ khóa để tra cứu toàn hệ sinh thái NaiFarm"
-          description="Tìm kiếm nông sản Đồng Nai, hồ sơ 24 nhà vườn, 95 Phường/Xã theo dữ liệu 25/11/2026, mã lô QR, bài học 2D và nhiệm vụ thanh niên."
+          description="Tìm kiếm nông sản Đồng Nai, hồ sơ 30 nhà vườn, 95 Phường/Xã Đồng Nai, mã lô QR, bài học 2D và nhiệm vụ thanh niên."
           action={
             <Link
               href="/explore"

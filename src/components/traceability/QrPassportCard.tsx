@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   UserCheck,
 } from "lucide-react";
-import { toast } from "sonner";
+import { notifyInfo, notifySuccess } from "@/lib/toast";
 import { buildTraceUrl } from "@/lib/qr/trace-url";
 import { Badge, Card } from "@/components/ui/Primitives";
 import type { TraceBatch } from "@/types/naifarm";
@@ -73,10 +73,10 @@ export function QrPassportCard({
     try {
       await navigator.clipboard.writeText(traceUrl);
       setCopied(true);
-      toast.success("Đã sao chép liên kết truy xuất QR.");
+      notifySuccess("Đã sao chép liên kết truy xuất QR.");
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
-      toast.info(`Liên kết truy xuất: ${traceUrl}`);
+      notifyInfo(`Liên kết truy xuất: ${traceUrl}`);
     }
   };
 
@@ -85,7 +85,7 @@ export function QrPassportCard({
       <div className="border-b border-[#D6DED2] bg-[#EAF0E5] px-5 py-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-xs font-semibold text-[#245B3D]">Hộ chiếu Nông sản Số (Demo)</p>
+            <p className="text-xs font-semibold text-[#245B3D]">Hộ chiếu Nông sản Số</p>
             <h2 className="text-lg font-bold text-[#25352B]">
               Mã lô: <span className="tabular-nums text-[#245B3D]">{batch.batchCode}</span>
             </h2>
@@ -167,7 +167,7 @@ export function QrPassportCard({
               </p>
             </div>
             <div className="rounded-[12px] bg-[#F5F3E9] p-3">
-              <p className="text-xs text-[#52645A]">Mốc thời gian lô (Demo)</p>
+              <p className="text-xs text-[#52645A]">Mốc thời gian lô</p>
               <p className="tabular-nums text-sm font-semibold text-[#25352B]">
                 Thu hoạch: {batch.harvestDate}
               </p>

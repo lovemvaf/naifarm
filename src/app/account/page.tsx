@@ -29,10 +29,10 @@ export default function AccountWorkspacePage() {
       title={
         authUser
           ? `Không gian Cá nhân · ${authUser.name}`
-          : "Không gian Cá nhân · Khách mua & Thành viên Demo"
+          : "Không gian Cá nhân · Khách mua & Thành viên"
       }
-      subtitle="Theo dõi đơn hàng COD demo, sổ địa chỉ 95 Phường/Xã Đồng Nai, nông sản yêu thích và lịch trải nghiệm"
-      scopeBadge={authUser ? `${authUser.roleLabel} · ${authUser.unitName}` : "Chế độ Xem trước W01 (Demo)"}
+      subtitle="Theo dõi đơn hàng, sổ địa chỉ, nông sản yêu thích và lịch trải nghiệm"
+      scopeBadge={authUser ? `${authUser.roleLabel} · ${authUser.unitName}` : "Chế độ Khách · W01"}
       navItems={[
         { label: "Tổng quan cá nhân", href: "/account", icon: <User className="h-4 w-4" />, active: true },
         { label: `Đơn hàng (${orders.length})`, href: "/account/orders", icon: <PackageCheck className="h-4 w-4" /> },
@@ -44,23 +44,23 @@ export default function AccountWorkspacePage() {
         {!authUser ? (
           <Card className="flex flex-wrap items-center justify-between gap-3 border-[#D7A34D] bg-[#FFF2D8]/50 p-4">
             <div className="text-xs text-[#25352B]">
-              <p className="font-bold">Bạn đang xem không gian W01 dưới chế độ Khách vãng lai.</p>
+              <p className="font-bold">Bạn đang xem dưới chế độ Khách vãng lai.</p>
               <p className="mt-0.5 text-[#52645A]">
-                Đăng nhập 1 chạm vào tài khoản Ngọc Linh hoặc chuyển giữa 6 vai trò để trình diễn đầy đủ.
+                Chọn nhanh một tài khoản để đồng bộ giỏ hàng, lịch sử đơn và quyền không gian làm việc.
               </p>
             </div>
             <Link
               href="/sign-in"
               className="inline-flex min-h-[38px] items-center rounded-[10px] bg-[#245B3D] px-4 text-xs font-semibold text-white hover:bg-[#19472E]"
             >
-              Đăng nhập tài khoản Demo
+              Đăng nhập / Truy cập nhanh
             </Link>
           </Card>
         ) : null}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="p-4">
-            <p className="text-xs text-[#52645A]">Đơn hàng Demo</p>
+            <p className="text-xs text-[#52645A]">Đơn hàng đã ghi nhận</p>
             <p className="mt-1 tabular-nums text-2xl font-bold text-[#245B3D]">{orders.length}</p>
             <Link href="/account/orders" className="mt-2 inline-block text-xs font-semibold text-[#245B3D] underline">
               Xem chi tiết &amp; chuỗi vận chuyển →
@@ -72,7 +72,7 @@ export default function AccountWorkspacePage() {
             <p className="mt-2 text-xs text-[#52645A]">Lưu cục bộ trong trình duyệt</p>
           </Card>
           <Card className="p-4">
-            <p className="text-xs text-[#52645A]">Sổ địa chỉ Đồng Nai</p>
+            <p className="text-xs text-[#52645A]">Sổ địa chỉ nhận hàng</p>
             <p className="mt-1 tabular-nums text-2xl font-bold text-[#245B3D]">{addressBook.length}</p>
             <Link href="/account/settings" className="mt-2 inline-block text-xs font-semibold text-[#245B3D] underline">
               Quản lý địa chỉ nhận hàng →
@@ -91,7 +91,7 @@ export default function AccountWorkspacePage() {
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-lg font-bold text-[#25352B]">
               <PackageCheck className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
-              <span>Đơn hàng gần nhất (Đồng bộ W01 ↔ W02)</span>
+              <span>Đơn hàng gần nhất</span>
             </h2>
             <Link href="/account/orders" className="text-sm font-semibold text-[#245B3D] hover:underline">
               Xem tất cả ({orders.length}) →
@@ -125,7 +125,7 @@ export default function AccountWorkspacePage() {
             <div className="flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-base font-bold text-[#25352B]">
                 <MapPin className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
-                <span>Sổ địa chỉ nhận hàng (95 ĐVHC)</span>
+                <span>Sổ địa chỉ nhận hàng</span>
               </h2>
               <Link href="/account/settings" className="text-xs font-semibold text-[#245B3D] hover:underline">
                 Thêm địa chỉ →

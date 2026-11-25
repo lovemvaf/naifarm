@@ -37,12 +37,12 @@ export function MapControls({
 }: MapControlsProps) {
   const errorMessages: Partial<Record<GpsStatus, string>> = {
     denied:
-      "Trình duyệt đang từ chối quyền định vị GPS. Vui lòng cấp quyền vị trí hoặc chọn trực tiếp Phường/Xã trong bộ lọc.",
+      "Trình duyệt đang từ chối quyền truy cập vị trí. Hãy cấp quyền vị trí hoặc chọn trực tiếp Phường/Xã trong bộ lọc.",
     unavailable:
-      "Thiết bị hiện không xác định được vị trí GPS. Bạn vẫn có thể chọn nhà vườn từ danh sách bên trái.",
-    timeout: "Hết thời gian chờ tín hiệu GPS. Vui lòng thử bấm 'Vị trí của tôi' lại.",
-    unsupported: "Trình duyệt hiện tại không hỗ trợ Geolocation API.",
-    insecure: "Định vị GPS trình duyệt chỉ hoạt động trên kết nối HTTPS an toàn hoặc localhost.",
+      "Thiết bị hiện không xác định được vị trí hiện tại. Bạn vẫn có thể chọn nhà vườn từ danh sách bên trái.",
+    timeout: "Hết thời gian chờ tín hiệu vị trí. Hãy thử bấm 'Vị trí của tôi' lại.",
+    unsupported: "Trình duyệt hiện tại không hỗ trợ tính năng định vị vị trí.",
+    insecure: "Tính năng định vị trên trình duyệt chỉ hoạt động trên kết nối HTTPS an toàn hoặc localhost.",
   };
 
   return (

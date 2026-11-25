@@ -10,67 +10,66 @@ const STATUS_DETAILS: {
 }[] = [
   {
     status: "coop_checked_demo",
-    statusLabel: "HTX đã đối chiếu nội bộ (Demo)",
+    statusLabel: "HTX đã đối chiếu nội bộ",
     standardType: "OCOP",
-    prefix: "DEMO-OCOP",
-    starLevelLabel: "Gợi ý phân hạng 3–4 sao (Mẫu tham khảo — không phải chứng nhận pháp lý)",
+    prefix: "MAU-OCOP",
+    starLevelLabel: "Hồ sơ mẫu tham khảo — không phải chứng nhận pháp lý",
   },
   {
     status: "vietgap_declared_demo",
-    statusLabel: "Tự khai VietGAP (Demo)",
+    statusLabel: "Tự khai quy trình VietGAP",
     standardType: "VietGAP",
-    prefix: "DEMO-VG",
+    prefix: "MAU-VG",
   },
   {
     status: "ocop_declared_demo",
-    statusLabel: "Tự khai OCOP (Demo)",
+    statusLabel: "Hồ sơ tự khai OCOP",
     standardType: "OCOP",
-    prefix: "DEMO-OCOP",
-    starLevelLabel: "Hồ sơ tự khai chờ đánh giá phân hạng (Mẫu Demo)",
+    prefix: "MAU-OCOP",
+    starLevelLabel: "Hồ sơ mẫu chờ đánh giá phân hạng",
   },
   {
     status: "pending_review",
-    statusLabel: "Đang chờ đối chiếu hồ sơ (Demo)",
+    statusLabel: "Đang chờ đối chiếu hồ sơ",
     standardType: "Mã số vùng trồng",
-    prefix: "DEMO-MSVT",
+    prefix: "MAU-MSVT",
   },
   {
     status: "needs_revision",
-    statusLabel: "Cần bổ sung chứng từ (Demo)",
+    statusLabel: "Cần bổ sung chứng từ",
     standardType: "ATTP cơ sở",
-    prefix: "DEMO-ATTP",
+    prefix: "MAU-ATTP",
   },
   {
     status: "expired_demo",
-    statusLabel: "Hồ sơ mẫu đã hết hạn (Demo)",
+    statusLabel: "Hồ sơ mẫu đã hết hạn",
     standardType: "VietGAP",
-    prefix: "DEMO-VG",
+    prefix: "MAU-VG",
   },
   {
     status: "unverified",
-    statusLabel: "Chưa có chứng nhận chính thức",
+    statusLabel: "Chưa đối chiếu hồ sơ",
     standardType: "Mã số vùng trồng",
-    prefix: "DEMO-MSVT",
+    prefix: "MAU-MSVT",
   },
 ];
 
 export const INITIAL_CERTIFICATIONS: FarmCertification[] = INITIAL_FARMS.map((farm, index) => {
-  // Preserve specific authentic statuses for Golden & key farms
   let pick = STATUS_DETAILS[index % STATUS_DETAILS.length];
   if (farm.id === "farm-ba-minh-tan-trieu") {
-    pick = STATUS_DETAILS[0]; // coop_checked_demo OCOP demo
+    pick = STATUS_DETAILS[0];
   } else if (farm.id === "farm-ba-tu-demo") {
-    pick = STATUS_DETAILS[1]; // vietgap_declared_demo for Ba Tư
+    pick = STATUS_DETAILS[1];
   } else if (farm.id === "farm-co-tu-cam-my") {
-    pick = STATUS_DETAILS[3]; // pending_review
+    pick = STATUS_DETAILS[3];
   } else if (farm.id === "farm-htx-xuan-loc") {
     pick = STATUS_DETAILS[0];
   } else if (index === 8) {
-    pick = STATUS_DETAILS[4]; // needs_revision
+    pick = STATUS_DETAILS[4];
   } else if (index === 13) {
-    pick = STATUS_DETAILS[5]; // expired_demo
+    pick = STATUS_DETAILS[5];
   } else if (index === 16) {
-    pick = STATUS_DETAILS[6]; // unverified
+    pick = STATUS_DETAILS[6];
   }
 
   const codeNumber = String(index + 1).padStart(3, "0");
@@ -88,13 +87,13 @@ export const INITIAL_CERTIFICATIONS: FarmCertification[] = INITIAL_FARMS.map((fa
     starLevelLabel: pick.starLevelLabel,
     status: pick.status,
     statusLabel: pick.statusLabel,
-    scopeSummary: `Áp dụng minh họa cho nhóm nông sản: ${farm.mainCrops.slice(0, 2).join(", ")} tại ${farm.administrativeUnitName} (${farm.areaHa} ha).`,
+    scopeSummary: `Hồ sơ mẫu áp dụng cho nhóm nông sản: ${farm.mainCrops.slice(0, 2).join(", ")} tại ${farm.administrativeUnitName} (${farm.areaHa} ha).`,
     issuerLabel:
       pick.status === "coop_checked_demo"
-        ? "HTX & Điều phối viên đối chiếu nội bộ (Dữ liệu mô phỏng)"
-        : "Nhà vườn & Thanh niên hỗ trợ ghi nhận (Tự khai Demo)",
+        ? "HTX & Điều phối viên đối chiếu nội bộ (Hồ sơ mẫu)"
+        : "Nhà vườn & Thanh niên hỗ trợ ghi nhận (Hồ sơ mẫu)",
     issuedDateDemo: isExpired ? "15/05/2024" : "10/08/2026",
-    validUntilDemo: isExpired ? "15/05/2026 (Hết hạn mẫu)" : "10/08/2028",
+    validUntilDemo: isExpired ? "15/05/2026 (Hết hạn)" : "10/08/2028",
     qrBatchCode:
       farm.id === "farm-ba-tu-demo"
         ? "NF-DEMO-001"
@@ -103,7 +102,7 @@ export const INITIAL_CERTIFICATIONS: FarmCertification[] = INITIAL_FARMS.map((fa
         : farm.id === "farm-htx-xuan-loc"
         ? "NF-XL-2026-03"
         : `NF-DN-${codeNumber}`,
-    disclaimer: "Hồ sơ chứng nhận minh họa — không có giá trị chứng nhận pháp lý.",
+    disclaimer: "Hồ sơ mẫu trong không gian trải nghiệm — không có giá trị chứng nhận pháp lý.",
     isDemo: true,
   };
 });

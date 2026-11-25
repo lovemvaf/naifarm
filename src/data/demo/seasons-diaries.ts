@@ -42,6 +42,11 @@ export const INITIAL_SEASONS: ProductionSeason[] = [
       "đã kết thúc",
     ];
 
+    const expectedYieldKg = Math.round(farm.areaHa * 1200);
+    const actualYieldKg = Math.round(expectedYieldKg * (0.9 + (index % 3) * 0.06));
+    const estimatedCostVnd = Math.round(farm.areaHa * 18500000);
+    const actualCostVnd = Math.round(estimatedCostVnd * (0.94 + (index % 4) * 0.04));
+
     return {
       id: `SEASON-${num}`,
       farmId: farm.id,
@@ -54,16 +59,19 @@ export const INITIAL_SEASONS: ProductionSeason[] = [
       startDate: "05/08/2026",
       expectedHarvestDate: "28/11/2026",
       areaHa: farm.areaHa,
-      growingZoneCode: farm.growingZoneCode ?? `DEMO-MSVT-${farm.administrativeUnitCode}-01`,
+      growingZoneCode: farm.growingZoneCode ?? `MAU-MSVT-${farm.administrativeUnitCode}-01`,
       status: statuses[index % statuses.length],
       summary: `Theo dõi toàn bộ quy trình chăm sóc, kiểm soát sinh học và thu hoạch ${farm.mainCrops[0]} tại ${farm.administrativeUnitName}.`,
       batchCodes: [defaultBatch],
+      expectedYieldKg,
+      actualYieldKg,
+      estimatedCostVnd,
+      actualCostVnd,
       isDemo: true as const,
     };
   }),
-  // 6 additional winter-spring 2027 pre-season cycles = 30 ProductionSeasons total
   ...INITIAL_FARMS.slice(0, 6).map((farm, index) => {
-    const num = String(25 + index).padStart(2, "0");
+    const num = String(31 + index).padStart(2, "0");
     return {
       id: `SEASON-${num}`,
       farmId: farm.id,
@@ -76,10 +84,12 @@ export const INITIAL_SEASONS: ProductionSeason[] = [
       startDate: "10/11/2026",
       expectedHarvestDate: "20/01/2027",
       areaHa: Number((farm.areaHa * 0.6).toFixed(1)),
-      growingZoneCode: farm.growingZoneCode ?? `DEMO-MSVT-${farm.administrativeUnitCode}-02`,
+      growingZoneCode: farm.growingZoneCode ?? `MAU-MSVT-${farm.administrativeUnitCode}-02`,
       status: "đang chăm sóc" as const,
       summary: `Chuẩn bị lứa trái vụ Đông Xuân phục vụ giỏ quà Tết Thanh niên tại ${farm.administrativeUnitName}.`,
-      batchCodes: [`NF-DN-${String(25 + index).padStart(3, "0")}`],
+      batchCodes: [`NF-DN-${String(31 + index).padStart(3, "0")}`],
+      expectedYieldKg: Math.round(farm.areaHa * 750),
+      estimatedCostVnd: Math.round(farm.areaHa * 12000000),
       isDemo: true as const,
     };
   }),
@@ -88,22 +98,21 @@ export const INITIAL_SEASONS: ProductionSeason[] = [
 const BUILT_DIARIES: DiaryEntry[] = [];
 let seq = 1;
 
-// Generate 11 detailed diary entries per first 24 seasons + 8 per remaining 6 = 312 DiaryEntries total
 for (const season of INITIAL_SEASONS) {
-  const count = Number(season.id.replace("SEASON-", "")) <= 24 ? 11 : 8;
+  const count = Number(season.id.replace("SEASON-", "")) <= 30 ? 10 : 8;
   for (let step = 0; step < count; step += 1) {
     const id = `DIARY-${String(seq).padStart(3, "0")}`;
     seq += 1;
     const stage = STAGES[step % STAGES.length];
     const day = String(1 + ((step * 3) % 27)).padStart(2, "0");
-    const month = step < 5 ? "09" : step < 9 ? "10" : "11";
+    const month = step < 4 ? "09" : step < 7 ? "10" : "11";
     const batchCode = season.batchCodes[0] ?? "NF-DEMO-001";
     const sourceDeclaration: DiaryEntry["sourceDeclaration"] =
       step % 3 === 0
         ? "Nhà vườn tự khai"
         : step % 3 === 1
         ? "Thanh niên hỗ trợ ghi nhận"
-        : "HTX đối chiếu (Demo)";
+        : "HTX đối chiếu";
 
     BUILT_DIARIES.push({
       id,
@@ -118,11 +127,14 @@ for (const season of INITIAL_SEASONS) {
       actorName:
         sourceDeclaration === "Thanh niên hỗ trợ ghi nhận"
           ? "Đoàn viên TNV & Chủ vườn"
-          : sourceDeclaration === "HTX đối chiếu (Demo)"
-          ? "Ban Kiểm tra HTX (Demo)"
+          : sourceDeclaration === "HTX đối chiếu"
+          ? "Ban Kiểm tra HTX"
           : season.farmName,
       sourceDeclaration,
       photo: PHOTOS[(step + seq) % PHOTOS.length],
+      visibility: step === 2 ? "internal" : "public",
+      materialsUsed: step % 2 === 0 ? "Phân hữu cơ vi sinh + túi lưới bao trái" : "Nước tưới tiết kiệm",
+      version: 1,
       isDemo: true,
     });
   }

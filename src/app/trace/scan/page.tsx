@@ -14,9 +14,9 @@ import {
   Search,
   Upload,
 } from "lucide-react";
-import { toast } from "sonner";
 import { extractBatchCodeFromScan } from "@/lib/qr/trace-url";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { notifyError, notifySuccess } from "@/lib/toast";
 import { Badge, Card, DemoBanner } from "@/components/ui/Primitives";
 
 async function decodeImageFallbackWithJsQr(file: File): Promise<string> {
@@ -36,7 +36,7 @@ async function decodeImageFallbackWithJsQr(file: File): Promise<string> {
   canvas.width = img.naturalWidth || img.width;
   canvas.height = img.naturalHeight || img.height;
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Trình duyệt không hỗ trợ xử lý canvas.");
+  if (!ctx) throw new Error("Trình duyệt không hỗ trợ xử lý ảnh.");
   ctx.drawImage(img, 0, 0);
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const decoded = jsQR(imageData.data, imageData.width, imageData.height);
@@ -65,15 +65,25 @@ export default function TraceScanPage() {
       scannerRef.current.destroy();
       scannerRef.current = null;
     }
+    const stream = videoRef.current?.srcObject;
+    if (stream && stream instanceof MediaStream) {
+      stream.getTracks().forEach((track) => track.stop());
+      if (videoRef.current) videoRef.current.srcObject = null;
+    }
     setCameraActive(false);
   };
 
   useEffect(() => {
+    const videoEl = videoRef.current;
     return () => {
       if (scannerRef.current) {
         scannerRef.current.stop();
         scannerRef.current.destroy();
         scannerRef.current = null;
+      }
+      const stream = videoEl?.srcObject;
+      if (stream && stream instanceof MediaStream) {
+        stream.getTracks().forEach((track) => track.stop());
       }
     };
   }, []);
@@ -83,19 +93,19 @@ export default function TraceScanPage() {
     const parsed = extractBatchCodeFromScan(rawText);
     if (!parsed.ok || !parsed.batchCode) {
       setUploadError(parsed.reason ?? "Nội dung mã QR không hợp lệ.");
-      toast.error(parsed.reason ?? "Không hợp lệ");
+      notifyError(parsed.reason ?? "Mã QR không hợp lệ.");
       return;
     }
     const found = batches.find((b) => b.batchCode.toUpperCase() === parsed.batchCode);
     if (!found) {
       setUploadError(
-        `Đã đọc được mã lô "${parsed.batchCode}" nhưng mã này chưa có trong hệ thống demo. Hãy thử NF-DEMO-001 hoặc NF-TT-2026-01.`,
+        `Đã đọc được mã lô "${parsed.batchCode}" nhưng mã này chưa có trên hệ thống. Hãy thử NF-DEMO-001 hoặc NF-TT-2026-01.`,
       );
       return;
     }
     setUploadError(null);
     stopCamera();
-    toast.success(`Đã quét thành công lô ${found.batchCode}!`);
+    notifySuccess(`Đã nhận diện mã lô ${found.batchCode}.`);
     router.push(`/trace/${encodeURIComponent(found.batchCode)}`);
   };
 
@@ -156,7 +166,7 @@ export default function TraceScanPage() {
             ? err.message
             : "Không giải mã được QR từ ảnh đã chọn. Hãy chọn ảnh rõ nét hơn.";
         setUploadError(msg);
-        toast.error(msg);
+        notifyError(msg);
       }
     } finally {
       e.target.value = "";
@@ -166,23 +176,22 @@ export default function TraceScanPage() {
   return (
     <div className="mx-auto max-w-[980px] space-y-6 px-4 py-8 lg:px-8">
       <div>
-        <Badge tone="success">Trình quét QR Thực tế · Camera &amp; Tải ảnh PNG/JPG</Badge>
+        <Badge tone="success">Quét tem truy xuất nguồn gốc · Camera &amp; Ảnh</Badge>
         <h1 className="mt-2 font-editorial text-3xl font-semibold text-[#25352B]">
           Quét &amp; Kiểm tra Hộ chiếu Nông sản QR
         </h1>
         <p className="mt-1 text-sm text-[#52645A]">
-          Hỗ trợ bật camera trực tiếp, tải lên tệp ảnh mã QR (PNG/JPG) hoặc nhập mã lô thủ công với
-          bộ lọc bảo mật chống liên kết độc hại.
+          Hỗ trợ bật camera trực tiếp sau khi xin phép, tải lên tệp ảnh mã QR (PNG/JPG) hoặc nhập mã
+          lô thủ công với bộ lọc bảo mật liên kết.
         </p>
       </div>
 
       <DemoBanner
         title="An toàn quét mã & Quyền riêng tư"
-        detail="Camera chỉ bật khi bạn nhấn nút 'Bật camera quét QR' và xử lý trực tiếp trên trình duyệt. Mọi URL ngoài hệ thống hoặc giao thức javascript:/data: đều bị chặn tự động."
+        detail="Camera chỉ bật khi bạn nhấn 'Bật camera quét QR' và tự tắt luồng khi đóng trang. Mọi liên kết ngoài tên miền NaiFarm hoặc giao thức bất thường đều bị chặn."
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        {/* Camera Scanner */}
         <Card className="space-y-4 p-5 lg:col-span-6">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-base font-bold text-[#25352B]">
@@ -222,7 +231,7 @@ export default function TraceScanPage() {
               <button
                 type="button"
                 onClick={handleStartCamera}
-                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-[10px] bg-[#245B3D] px-4 text-xs font-semibold text-white hover:bg-[#19472E]"
+                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-[10px] bg-[#245B3D] px-4 text-xs font-semibold text-white hover:bg-[#19472E] cursor-pointer"
               >
                 <Camera className="h-4 w-4" aria-hidden="true" />
                 <span>Bật camera quét QR</span>
@@ -231,7 +240,7 @@ export default function TraceScanPage() {
               <button
                 type="button"
                 onClick={stopCamera}
-                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-[10px] bg-[#A32D2D] px-4 text-xs font-semibold text-white hover:bg-[#822222]"
+                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-[10px] bg-[#A32D2D] px-4 text-xs font-semibold text-white hover:bg-[#822222] cursor-pointer"
               >
                 <CameraOff className="h-4 w-4" aria-hidden="true" />
                 <span>Tắt camera</span>
@@ -240,7 +249,6 @@ export default function TraceScanPage() {
           </div>
         </Card>
 
-        {/* Image Upload & Manual Entry */}
         <div className="space-y-4 lg:col-span-6">
           <Card className="space-y-3 p-5">
             <h2 className="flex items-center gap-2 text-base font-bold text-[#25352B]">
@@ -248,8 +256,7 @@ export default function TraceScanPage() {
               <span>Tải ảnh mã QR từ thiết bị (PNG / JPG)</span>
             </h2>
             <p className="text-xs text-[#52645A]">
-              Phù hợp khi bạn tải xuống tem PNG từ Hộ chiếu sản phẩm hoặc test giải mã không cần
-              camera.
+              Phù hợp khi bạn tải tem PNG từ trang Hộ chiếu nông sản hoặc kiểm tra ảnh tem trên máy.
             </p>
             <label
               htmlFor="qr-file-upload"
@@ -311,15 +318,15 @@ export default function TraceScanPage() {
               />
               <button
                 type="submit"
-                className="min-h-[44px] rounded-[10px] bg-[#245B3D] px-5 text-xs font-semibold text-white hover:bg-[#19472E]"
+                className="min-h-[44px] cursor-pointer rounded-[10px] bg-[#245B3D] px-5 text-xs font-semibold text-white hover:bg-[#19472E]"
               >
                 Kiểm tra &amp; Mở
               </button>
             </form>
 
             <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-              <span className="text-[#52645A]">Mã mẫu nhanh:</span>
-              {["NF-DEMO-001", "NF-TT-2026-01", "NF-XL-2026-03"].map((sample) => (
+              <span className="text-[#52645A]">Mã tiêu biểu:</span>
+              {["NF-DEMO-001", "NF-TT-2026-01", "NF-XL-2026-03", "NF-DN-099"].map((sample) => (
                 <Link
                   key={sample}
                   href={`/trace/${sample}`}

@@ -15,10 +15,16 @@ const GOLDEN_BATCHES: TraceBatch[] = [
     seasonId: "SEASON-02",
     harvestDate: "23/11/2026",
     packDate: "24/11/2026",
+    expiryDate: "29/11/2026",
+    quantityKg: 120,
+    remainingKg: 30,
+    storageCondition: "Giỏ tre thoáng mát 14–18°C, tránh ánh nắng trực tiếp",
+    childBatchCodes: ["NF-DN-050"],
+    lotStatus: "active",
     declarationLevel: "Nhà vườn tự khai · Thanh niên hỗ trợ ghi nhận (Chưa xác minh OCOP chính thức)",
-    docStatus: "Đang hoàn thiện hồ sơ tự khai (Demo)",
+    docStatus: "Hồ sơ mẫu đang hoàn thiện",
     summary:
-      "Lô NF-DEMO-001 gồm 30 kg chôm chôm Java và sầu riêng thu hoạch tại Nhà vườn Ba Tư (2,5 ha). Dữ liệu nhật ký hiển thị trung thực theo nguồn khai báo nội bộ.",
+      "Lô NF-DEMO-001 gồm chôm chôm Java và sầu riêng thu hoạch tại Nhà vườn Ba Tư (2,5 ha). Dữ liệu nhật ký hiển thị minh bạch nguồn khai báo.",
     events: [
       {
         id: "ev-01",
@@ -29,26 +35,47 @@ const GOLDEN_BATCHES: TraceBatch[] = [
         actorCategory: "Chủ vườn Ba Tư",
         sourceDeclaration: "Nhà vườn tự khai",
         photo: "/images/stitch/stitch-40.jpg",
+        visibility: "public",
+        eventType: "care",
       },
       {
         id: "ev-02",
         dateLabel: "23/11/2026 · 06:15",
         stage: "Thu hoạch & Đóng gói",
-        title: "Thu hoạch 30 kg đợt đầu sáng sớm",
+        title: "Thu hoạch 120 kg đợt đầu sáng sớm",
         detail: "Cắt chùm khi trái chuyển đỏ đều, tránh nắng gắt để giữ độ giòn và màu vỏ tươi.",
         actorCategory: "Chủ vườn Ba Tư & Đoàn viên Minh Anh",
         sourceDeclaration: "Thanh niên hỗ trợ ghi nhận",
         photo: "/images/stitch/stitch-07.jpg",
+        visibility: "public",
+        eventType: "harvest",
+        quantityKg: 120,
+        unitLabel: "kg",
       },
       {
         id: "ev-03",
         dateLabel: "24/11/2026 · 08:00",
         stage: "Thu hoạch & Đóng gói",
-        title: "Phân loại, đóng giỏ rơm & gắn mã QR lô NF-DEMO-001",
-        detail: "Đoàn viên Tuấn hỗ trợ kiểm tra trọng lượng, chụp ảnh thực tế và dán nhãn truy xuất demo lên từng giỏ.",
+        title: "Phân loại, đóng giỏ & gắn mã QR lô NF-DEMO-001",
+        detail: "Đoàn viên Tuấn hỗ trợ cân kiểm tra (60 kg bán lẻ trực tiếp + 60 kg góp lô gom HTX NF-DN-050).",
         actorCategory: "Đoàn viên Tuấn & Minh Anh",
         sourceDeclaration: "Thanh niên hỗ trợ ghi nhận",
         photo: "/images/stitch/stitch-32.jpg",
+        visibility: "public",
+        eventType: "pack",
+        quantityKg: 120,
+        unitLabel: "kg",
+      },
+      {
+        id: "ev-04-internal",
+        dateLabel: "24/11/2026 · 08:45",
+        stage: "Đo độ Brix & Khảo sát",
+        title: "Ghi chú giá vốn & phân bổ nội bộ HTX",
+        detail: "Thông tin chi phí thu gom nội bộ của tổ hợp tác (ẩn trên trang truy xuất công khai).",
+        actorCategory: "Kế toán tổ hợp tác",
+        sourceDeclaration: "HTX đối chiếu",
+        visibility: "internal",
+        eventType: "inspection",
       },
     ],
     isDemo: true,
@@ -65,40 +92,54 @@ const GOLDEN_BATCHES: TraceBatch[] = [
     seasonId: "SEASON-01",
     harvestDate: "22/11/2026",
     packDate: "23/11/2026",
-    declarationLevel: "Nhà vườn tự khai · HTX Tân Triều đã đối chiếu chứng từ (Demo)",
-    docStatus: "Hồ sơ đã đối chiếu (Demo — không phải chứng nhận pháp lý)",
+    expiryDate: "15/12/2026",
+    quantityKg: 260,
+    remainingKg: 42,
+    storageCondition: "Kho mát khô ráo 16–20°C, thông gió tốt",
+    childBatchCodes: ["NF-DN-050"],
+    lotStatus: "active",
+    declarationLevel: "Nhà vườn tự khai · HTX Tân Triều đối chiếu chứng từ (Hồ sơ mẫu)",
+    docStatus: "Hồ sơ đã đối chiếu (mẫu nội bộ — không thay thế chứng nhận pháp lý)",
     summary:
-      "Lô bưởi Tân Triều được cắt tại liếp, đo độ ngọt Brix tham khảo và đóng thùng rơm bảo vệ cuống tươi.",
+      "Lô bưởi Tân Triều cắt tại liếp, đo độ ngọt Brix tham khảo và đóng thùng bảo vệ cuống tươi.",
     events: [
       {
         id: "ev-tt-01",
         dateLabel: "05/11/2026 · 08:00",
         stage: "Kiểm soát sinh học",
         title: "Bọc trái sinh học chống ruồi đục quả",
-        detail: "Chú Ba Minh thực hiện bao trái bằng túi lưới thoáng khí tại liếp A3.",
+        detail: "Chú Ba Minh bao trái bằng túi lưới thoáng khí tại liếp A3.",
         actorCategory: "Chủ vườn Ba Minh",
         sourceDeclaration: "Nhà vườn tự khai",
         photo: "/images/stitch/stitch-28.jpg",
+        visibility: "public",
+        eventType: "care",
       },
       {
         id: "ev-tt-02",
         dateLabel: "22/11/2026 · 06:30",
         stage: "Đo độ Brix & Khảo sát",
         title: "Thu hoạch tại liếp & kiểm tra độ ngọt Brix",
-        detail: "Cắt trái đạt độ tuổi thu hoạch, độ ngọt mẫu đo tham khảo đạt 11.8° Brix.",
+        detail: "Cắt trái đạt độ tuổi thu hoạch, độ ngọt đo tham khảo đạt 11,8° Brix.",
         actorCategory: "Chú Ba Minh & TNV Nguyễn Văn An",
         sourceDeclaration: "Thanh niên hỗ trợ ghi nhận",
         photo: "/images/stitch/stitch-26.jpg",
+        visibility: "public",
+        eventType: "harvest",
+        quantityKg: 260,
+        unitLabel: "kg",
       },
       {
         id: "ev-tt-03",
         dateLabel: "23/11/2026 · 09:00",
         stage: "Thu hoạch & Đóng gói",
         title: "Cân trọng lượng, lót rơm & dán tem QR tại vườn",
-        detail: "HTX Tân Triều đối chiếu chứng từ lô và bàn giao đơn vị vận chuyển mát.",
+        detail: "HTX Tân Triều đối chiếu chứng từ lô và bàn giao chuyến xe mát.",
         actorCategory: "HTX Tân Triều & TNV Nguyễn Văn An",
-        sourceDeclaration: "HTX đối chiếu (Demo)",
+        sourceDeclaration: "HTX đối chiếu",
         photo: "/images/stitch/stitch-27.jpg",
+        visibility: "public",
+        eventType: "pack",
       },
     ],
     isDemo: true,
@@ -115,40 +156,51 @@ const GOLDEN_BATCHES: TraceBatch[] = [
     seasonId: "SEASON-04",
     harvestDate: "18/11/2026",
     packDate: "20/11/2026",
-    declarationLevel: "HTX đối chiếu nội bộ & Nhật ký chế biến củi truyền thống (Demo)",
-    docStatus: "Hồ sơ đã đối chiếu (Demo)",
+    expiryDate: "20/05/2027",
+    quantityKg: 400,
+    remainingKg: 145,
+    storageCondition: "Hộp kín chống ẩm dưới 25°C, tránh ánh sáng trực tiếp",
+    lotStatus: "active",
+    declarationLevel: "HTX đối chiếu nội bộ & Nhật ký rang củi truyền thống (Hồ sơ mẫu)",
+    docStatus: "Hồ sơ đã đối chiếu",
     summary:
-      "Mẻ hạt điều rang củi truyền thống giữ nguyên vỏ lụa giòn thơm tại Phường Xuân Lộc.",
+      "Lô điều rang củi thu mua từ xã viên Phường Xuân Lộc, tách cỡ W240 và đóng hũ kín.",
     events: [
       {
         id: "ev-xl-01",
-        dateLabel: "15/11/2026 · 09:00",
-        stage: "Làm đất & Tỉa cành",
-        title: "Phân loại hạt điều thô & phơi nắng 2 lượt",
-        detail: "Kiểm tra độ ẩm nguyên liệu đầu vào trước khi đưa vào chảo rang.",
-        actorCategory: "Tổ sơ chế HTX Xuân Lộc",
-        sourceDeclaration: "Nhà vườn tự khai",
-        photo: "/images/stitch/stitch-39.jpg",
+        dateLabel: "15/11/2026 · 08:00",
+        stage: "Thu hoạch & Đóng gói",
+        title: "Phân loại điều thô đạt độ ẩm chuẩn tại kho HTX",
+        detail: "Kiểm tra độ ẩm trước khi đưa vào lò rang củi truyền thống.",
+        actorCategory: "Tổ kiểm tra HTX Xuân Lộc",
+        sourceDeclaration: "HTX đối chiếu",
+        photo: "/images/stitch/stitch-34.jpg",
+        visibility: "public",
+        eventType: "receive",
       },
       {
         id: "ev-xl-02",
-        dateLabel: "19/11/2026 · 14:30",
+        dateLabel: "20/11/2026 · 14:00",
         stage: "Thu hoạch & Đóng gói",
-        title: "Rang muối bằng củi tự nhiên giữ vỏ lụa",
-        detail: "Rang đều tay với muối hạt tinh nhằm giữ độ bùi không cháy xém.",
-        actorCategory: "Nghệ nhân rang HTX Xuân Lộc",
-        sourceDeclaration: "HTX đối chiếu (Demo)",
-        photo: "/images/stitch/stitch-50.jpg",
+        title: "Rang củi vừa lửa & đóng hũ gắn tem NF-XL-2026-03",
+        detail: "Hoàn tất đóng gói 400 kg (800 hũ 500g) kèm tem QR truy xuất.",
+        actorCategory: "Xưởng HTX & TNV Xuân Lộc",
+        sourceDeclaration: "HTX đối chiếu",
+        photo: "/images/stitch/stitch-39.jpg",
+        visibility: "public",
+        eventType: "pack",
       },
       {
         id: "ev-xl-03",
-        dateLabel: "20/11/2026 · 10:00",
+        dateLabel: "21/11/2026 · 08:30",
         stage: "Thu hoạch & Đóng gói",
-        title: "Hút chân không & dán tem QR lô NF-XL-2026-03",
-        detail: "Nhóm TNV Số hóa Xuân Lộc gắn mã QR truy xuất cho từng hộp 500g.",
-        actorCategory: "TNV Xuân Lộc",
-        sourceDeclaration: "Thanh niên hỗ trợ ghi nhận",
-        photo: "/images/stitch/stitch-05.jpg",
+        title: "Kiểm tra độ kín nắp hút chân không & xuất kho đợt 1",
+        detail: "Niêm phong nắp hũ, đối chiếu hồ sơ xưởng và chuyển lên điểm tập kết Đồng Nai.",
+        actorCategory: "Tổ đóng gói HTX Xuân Lộc",
+        sourceDeclaration: "HTX đối chiếu",
+        photo: "/images/stitch/stitch-39.jpg",
+        visibility: "public",
+        eventType: "release",
       },
     ],
     isDemo: true,
@@ -172,6 +224,8 @@ function buildEventsForBatch(
       actorCategory: farmName,
       sourceDeclaration: "Nhà vườn tự khai",
       photo,
+      visibility: "public",
+      eventType: "care",
     },
     {
       id: `${code}-ev2`,
@@ -182,16 +236,20 @@ function buildEventsForBatch(
       actorCategory: `TNV & ${farmName}`,
       sourceDeclaration: "Thanh niên hỗ trợ ghi nhận",
       photo,
+      visibility: "public",
+      eventType: "inspection",
     },
     {
       id: `${code}-ev3`,
       dateLabel: "24/11/2026 · 08:30",
       stage: "Thu hoạch & Đóng gói",
       title: `Đóng gói & dán tem QR lô ${code}`,
-      detail: `Hoàn tất đóng gói theo tiêu chuẩn demo, sẵn sàng tra cứu hộ chiếu QR công khai.`,
+      detail: `Hoàn tất đóng gói theo quy chuẩn hồ sơ mẫu, sẵn sàng tra cứu hộ chiếu QR công khai.`,
       actorCategory: `HTX & ${farmName}`,
-      sourceDeclaration: "HTX đối chiếu (Demo)",
+      sourceDeclaration: "HTX đối chiếu",
       photo,
+      visibility: "public",
+      eventType: "pack",
     },
   ];
 }
@@ -199,7 +257,6 @@ function buildEventsForBatch(
 const EXISTING_CODES = new Set(GOLDEN_BATCHES.map((b) => b.batchCode));
 const EXTRA_BATCHES: TraceBatch[] = [];
 
-// Ensure every NF-DN-001..NF-DN-0XX exists covering all products & certifications
 for (let i = 1; i <= INITIAL_PRODUCTS.length; i += 1) {
   const code = `NF-DN-${String(i).padStart(3, "0")}`;
   if (EXISTING_CODES.has(code)) continue;
@@ -209,6 +266,42 @@ for (let i = 1; i <= INITIAL_PRODUCTS.length; i += 1) {
   const linkedFarm =
     INITIAL_FARMS.find((f) => f.id === linkedProduct.farmId) ??
     INITIAL_FARMS[(i - 1) % INITIAL_FARMS.length];
+
+  const isPoolingChild = code === "NF-DN-050";
+  const isQuarantine = code === "NF-DN-098";
+  const isRecalledRoot = code === "NF-DN-099";
+  const isRecalledChild = code === "NF-DN-100";
+  const isExpired = code === "NF-DN-101";
+
+  const lotStatus: TraceBatch["lotStatus"] = isQuarantine
+    ? "quarantine"
+    : isRecalledRoot || isRecalledChild
+    ? "recalled"
+    : isExpired
+    ? "expired"
+    : "active";
+
+  const events = buildEventsForBatch(
+    code,
+    linkedProduct.name,
+    linkedFarm.name,
+    linkedFarm.administrativeUnitName,
+    linkedProduct.image,
+  );
+
+  if (isRecalledRoot || isRecalledChild) {
+    events.push({
+      id: `${code}-recall-ev`,
+      dateLabel: "25/11/2026 · 09:10",
+      stage: "Thu hoạch & Đóng gói",
+      title: `Cảnh báo giữ lô / thu hồi kiểm thử (${code})`,
+      detail: "Bộ phận QC tạm giữ lô và ngưng mở bán trên chợ do kiểm tra chênh lệch độ ẩm/bảo quản.",
+      actorCategory: "Kiểm soát chất lượng HTX",
+      sourceDeclaration: "HTX đối chiếu",
+      visibility: "public",
+      eventType: "recall",
+    });
+  }
 
   EXTRA_BATCHES.push({
     batchCode: code,
@@ -220,21 +313,32 @@ for (let i = 1; i <= INITIAL_PRODUCTS.length; i += 1) {
     administrativeUnitName: linkedFarm.administrativeUnitName,
     region: `${linkedFarm.administrativeUnitName}, Thành phố Đồng Nai, Việt Nam`,
     seasonId: linkedProduct.seasonId,
-    harvestDate: "21/11/2026",
-    packDate: "24/11/2026",
+    harvestDate: isExpired ? "01/11/2026" : "21/11/2026",
+    packDate: isExpired ? "02/11/2026" : "24/11/2026",
+    expiryDate: isExpired ? "15/11/2026" : "05/12/2026",
+    quantityKg: 100 + (i % 6) * 20,
+    remainingKg: isRecalledRoot || isQuarantine || isExpired ? 0 : 35,
+    storageCondition: "Bảo quản mát 12–18°C theo khuyến nghị đóng gói",
+    parentBatchCodes: isPoolingChild
+      ? ["NF-DEMO-001", "NF-TT-2026-01"]
+      : isRecalledChild
+      ? ["NF-DN-099"]
+      : undefined,
+    childBatchCodes: isRecalledRoot ? ["NF-DN-100"] : undefined,
+    lotStatus,
     declarationLevel:
       linkedFarm.ocopStatus === "coop_checked_demo"
-        ? "Nhà vườn tự khai · HTX đối chiếu chứng từ (Demo)"
-        : "Nhà vườn tự khai · Thanh niên hỗ trợ ghi nhận (Demo)",
-    docStatus: linkedFarm.ocopLabel,
-    summary: `Lô ${code} (${linkedProduct.name}) thu hoạch tại ${linkedFarm.name}, ${linkedFarm.administrativeUnitName}. Dữ liệu mô phỏng đồng bộ với Nhật ký mùa vụ.`,
-    events: buildEventsForBatch(
-      code,
-      linkedProduct.name,
-      linkedFarm.name,
-      linkedFarm.administrativeUnitName,
-      linkedProduct.image,
-    ),
+        ? "Nhà vườn tự khai · HTX đối chiếu chứng từ"
+        : "Nhà vườn tự khai · Thanh niên hỗ trợ ghi nhận",
+    docStatus: isRecalledRoot || isRecalledChild
+      ? "Đã tạm thu hồi kiểm tra"
+      : isQuarantine
+      ? "Đang tạm giữ chờ kiểm tra QC"
+      : isExpired
+      ? "Lô đã qua hạn sử dụng khuyến nghị"
+      : linkedFarm.ocopLabel,
+    summary: `Lô ${code} (${linkedProduct.name}) thu hoạch tại ${linkedFarm.name}, ${linkedFarm.administrativeUnitName}. Dữ liệu đồng bộ với Nhật ký mùa vụ.`,
+    events,
     isDemo: true,
   });
 }

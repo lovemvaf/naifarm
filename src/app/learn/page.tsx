@@ -228,8 +228,8 @@ function OpenLearningInner() {
 
             {isAnswered && pickedOption === activeLesson.quizQuestion.correctIndex ? (
               <DemoBanner
-                title="Hoàn thành chính xác bài học mở (Demo)"
-                detail="Bạn có thể khám phá thêm cấu tạo nông sản 2D bên dưới hoặc xem mặt hàng thực tế ngoài Chợ OCOP."
+                title="Hoàn thành chính xác bài học mở"
+                detail="Bạn có thể khám phá thêm cấu tạo nông sản 2D bên dưới hoặc xem mặt hàng đang mở bán ngoài Chợ OCOP."
               />
             ) : null}
           </Card>

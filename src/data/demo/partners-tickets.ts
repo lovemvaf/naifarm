@@ -10,7 +10,7 @@ export const DEMO_AUTH_ACCOUNTS: DemoAuthAccount[] = [
   {
     id: "demo-w01-ngoc-linh",
     name: "Ngọc Linh",
-    emailDemo: "ngoclinh.buyer@naifarm-demo.local",
+    emailDemo: "ngoclinh.buyer@example.com",
     roleLabel: "W01 · Cá nhân & Khách mua",
     workspaceId: "W01",
     avatarText: "NL",
@@ -23,7 +23,7 @@ export const DEMO_AUTH_ACCOUNTS: DemoAuthAccount[] = [
   {
     id: "demo-w02-chu-ba-tu",
     name: "Chú Ba Tư",
-    emailDemo: "chubatu.vuon@naifarm-demo.local",
+    emailDemo: "chubatu.vuon@example.com",
     roleLabel: "W02 · Nhà nông (Nhà vườn Ba Tư)",
     workspaceId: "W02",
     farmId: "farm-ba-tu-demo",
@@ -31,13 +31,13 @@ export const DEMO_AUTH_ACCOUNTS: DemoAuthAccount[] = [
     avatarBg: "#80520C",
     unitCode: "26080",
     unitName: "Phường Long Khánh",
-    bio: "Chủ vườn 2,5 ha chôm chôm Java & sầu riêng Ri6 tại Phường Long Khánh, làm quen chợ số với sự hỗ trợ của TNV.",
+    bio: "Chủ vườn 2,5 ha chôm chôm Java & sầu riêng Ri6 tại Phường Long Khánh, làm quen chợ số với sự hỗ trợ của thanh niên.",
     canPublicSignUp: true,
   },
   {
     id: "demo-w03-minh-anh",
     name: "Minh Anh",
-    emailDemo: "minhanh.tnv@naifarm-demo.local",
+    emailDemo: "minhanh.tnv@example.com",
     roleLabel: "W03 · Thanh niên Tình nguyện",
     workspaceId: "W03",
     avatarText: "MA",
@@ -50,7 +50,7 @@ export const DEMO_AUTH_ACCOUNTS: DemoAuthAccount[] = [
   {
     id: "demo-w04-thu-ha",
     name: "Thu Hà",
-    emailDemo: "thuha.dieuphoi@naifarm-demo.local",
+    emailDemo: "thuha.dieuphoi@example.com",
     roleLabel: "W04 · Điều phối cộng đồng",
     workspaceId: "W04",
     avatarText: "TH",
@@ -63,7 +63,7 @@ export const DEMO_AUTH_ACCOUNTS: DemoAuthAccount[] = [
   {
     id: "demo-w05-htx-tan-trieu",
     name: "Ban Chủ nhiệm HTX Tân Triều",
-    emailDemo: "htxtantrieu@naifarm-demo.local",
+    emailDemo: "htxtantrieu@example.com",
     roleLabel: "W05 · Tổ chức & HTX",
     workspaceId: "W05",
     farmId: "farm-ba-minh-tan-trieu",
@@ -76,8 +76,8 @@ export const DEMO_AUTH_ACCOUNTS: DemoAuthAccount[] = [
   },
   {
     id: "demo-w06-admin",
-    name: "Quản trị Nền tảng (Demo)",
-    emailDemo: "admin.demo@naifarm-demo.local",
+    name: "Quản trị Hệ thống",
+    emailDemo: "admin.quantri@example.com",
     roleLabel: "W06 · Quản trị & Vận hành",
     workspaceId: "W06",
     avatarText: "AD",
@@ -94,40 +94,40 @@ export const INITIAL_ADDRESS_BOOK: AddressBookEntry[] = [
     id: "ADDR-01",
     label: "Nhà riêng (Mặc định)",
     recipientName: "Ngọc Linh",
-    phoneDemo: "090x xxx 128 (Demo)",
+    phoneDemo: "090x xxx 128",
     detailAddress: "Số 45/2 Đường Nguyễn Ái Quốc",
     administrativeUnitCode: "26041",
-    fullAddress: "Số 45/2 Đường Nguyễn Ái Quốc, Phường Trấn Biên, Thành phố Đồng Nai, Việt Nam (Địa chỉ minh họa)",
+    fullAddress: "Số 45/2 Đường Nguyễn Ái Quốc, Phường Trấn Biên, Thành phố Đồng Nai, Việt Nam",
     isDefault: true,
   },
   {
     id: "ADDR-02",
     label: "Văn phòng Câu lạc bộ",
     recipientName: "Ngọc Linh",
-    phoneDemo: "090x xxx 128 (Demo)",
+    phoneDemo: "090x xxx 128",
     detailAddress: "Số 18 Đường Hùng Vương",
     administrativeUnitCode: "26080",
-    fullAddress: "Số 18 Đường Hùng Vương, Phường Long Khánh, Thành phố Đồng Nai, Việt Nam (Địa chỉ minh họa)",
+    fullAddress: "Số 18 Đường Hùng Vương, Phường Long Khánh, Thành phố Đồng Nai, Việt Nam",
     isDefault: false,
   },
   {
     id: "ADDR-03",
     label: "Nhà người thân",
     recipientName: "Cô Lan",
-    phoneDemo: "091x xxx 409 (Demo)",
+    phoneDemo: "091x xxx 409",
     detailAddress: "Tổ 6, Cù lao Tân Triều",
     administrativeUnitCode: "26188",
-    fullAddress: "Tổ 6, Cù lao Tân Triều, Phường Tân Triều, Thành phố Đồng Nai, Việt Nam (Địa chỉ minh họa)",
+    fullAddress: "Tổ 6, Cù lao Tân Triều, Phường Tân Triều, Thành phố Đồng Nai, Việt Nam",
     isDefault: false,
   },
   {
     id: "ADDR-04",
     label: "Điểm nhận HTX Xuân Lộc",
     recipientName: "Anh Hùng",
-    phoneDemo: "098x xxx 215 (Demo)",
+    phoneDemo: "098x xxx 215",
     detailAddress: "Số 102 Khu phố Gia Ray",
     administrativeUnitCode: "26425",
-    fullAddress: "Số 102 Khu phố Gia Ray, Phường Xuân Lộc, Thành phố Đồng Nai, Việt Nam (Địa chỉ minh họa)",
+    fullAddress: "Số 102 Khu phố Gia Ray, Phường Xuân Lộc, Thành phố Đồng Nai, Việt Nam",
     isDefault: false,
   },
 ];
@@ -140,7 +140,7 @@ export const INITIAL_PARTNER_ORGS: PartnerOrganization[] = [
     administrativeUnitCode: "26188",
     administrativeUnitName: "Phường Tân Triều",
     linkedFarmsCount: 28,
-    contactRoleDemo: "Chủ nhiệm HTX (Demo)",
+    contactRoleDemo: "Chủ nhiệm HTX",
     focusArea: "Chuẩn hóa tem QR bưởi da xanh & gom chuyến xe mát nội tỉnh",
     statusLabel: "Đang phối hợp tích cực",
   },
@@ -162,7 +162,7 @@ export const INITIAL_PARTNER_ORGS: PartnerOrganization[] = [
     administrativeUnitCode: "26041",
     administrativeUnitName: "Phường Trấn Biên",
     linkedFarmsCount: 16,
-    contactRoleDemo: "Bí thư Đoàn khoa (Demo)",
+    contactRoleDemo: "Bí thư Đoàn khoa",
     focusArea: "Cung ứng đội TNV chụp ảnh, lập nhật ký QR & tổ chức OCOP Live",
     statusLabel: "Đang phối hợp tích cực",
   },
@@ -201,14 +201,14 @@ export const INITIAL_PARTNER_ORGS: PartnerOrganization[] = [
   },
   {
     id: "ORG-07",
-    name: "Chuỗi Cửa hàng Đặc sản Sạch Đồng Nai (Demo)",
+    name: "Chuỗi Cửa hàng Đặc sản Sạch Đồng Nai",
     type: "Doanh nghiệp phân phối",
     administrativeUnitCode: "26068",
     administrativeUnitName: "Phường Biên Hòa",
     linkedFarmsCount: 14,
     contactRoleDemo: "Bộ phận Thu mua",
     focusArea: "Đặt hàng combo quà tặng doanh nghiệp cuối tuần",
-    statusLabel: "Thử nghiệm kết nối",
+    statusLabel: "Đang kết nối B2B",
   },
   {
     id: "ORG-08",
@@ -234,14 +234,14 @@ export const INITIAL_PARTNER_ORGS: PartnerOrganization[] = [
   },
   {
     id: "ORG-10",
-    name: "Trung tâm Hợp tác Du lịch Sinh thái Trị An (Demo)",
+    name: "Trung tâm Hợp tác Du lịch Sinh thái Trị An",
     type: "Doanh nghiệp phân phối",
     administrativeUnitCode: "26170",
     administrativeUnitName: "Phường Trị An",
     linkedFarmsCount: 9,
     contactRoleDemo: "Điều phối tour",
     focusArea: "Kết nối tour trải nghiệm cuối tuần cho sinh viên & gia đình",
-    statusLabel: "Thử nghiệm kết nối",
+    statusLabel: "Đang phối hợp",
   },
 ];
 
@@ -250,10 +250,10 @@ export const INITIAL_NOTIFICATIONS: UserNotification[] = Array.from({ length: 30
   const cats: UserNotification["category"][] = ["order", "season", "mission", "system"];
   const cat = cats[idx % cats.length];
   const titles: Record<UserNotification["category"], string> = {
-    order: `Cập nhật đơn demo #NF-ORD-DEMO-${String((idx % 5) + 1).padStart(2, "0")}`,
+    order: `Cập nhật đơn hàng #NF-ORD-DEMO-${String((idx % 5) + 1).padStart(2, "0")}`,
     season: `Nhật ký mùa vụ mới từ ${idx % 2 === 0 ? "Nhà vườn Ba Tư" : "Vườn Bưởi Chú Ba Minh"}`,
     mission: `Nhiệm vụ số hóa #NF-MIS-${String((idx % 5) + 1).padStart(2, "0")} có cập nhật`,
-    system: "Cập nhật danh mục 95 Phường/Xã Thành phố Đồng Nai (25/11/2026)",
+    system: "Đồng bộ danh mục 95 Phường/Xã Thành phố Đồng Nai",
   };
   const hrefs: Record<UserNotification["category"], string> = {
     order: "/account/orders",
@@ -267,8 +267,8 @@ export const INITIAL_NOTIFICATIONS: UserNotification[] = Array.from({ length: 30
     title: titles[cat],
     message:
       cat === "system"
-        ? "Dữ liệu bản đồ & địa chỉ chuẩn 95 ĐVHC Đồng Nai đã đồng bộ minh bạch (chế độ Demo)."
-        : `Hoạt động mô phỏng #${num} đã được ghi nhận trên hệ thống demo NaiFarm.`,
+        ? "Dữ liệu bản đồ & địa chỉ chuẩn 95 ĐVHC Đồng Nai đã đồng bộ."
+        : `Thông báo nghiệp vụ #${num} đã được cập nhật trong hệ thống.`,
     category: cat,
     createdAtLabel: `${String(24 - (idx % 10)).padStart(2, "0")}/11/2026 · ${String(8 + (idx % 12)).padStart(2, "0")}:00`,
     read: idx >= 6,
@@ -301,9 +301,9 @@ export const INITIAL_TICKETS: SupportTicket[] = [
     status: "Đã phản hồi",
     priority: "Thường",
     createdAtLabel: "23/11/2026 · 14:20",
-    note: "Hướng dẫn chọn hình thức Nhận tại vườn (0đ) tại bước Checkout.",
+    note: "Hướng dẫn chọn hình thức Nhận tại vườn (0đ) tại bước Đặt hàng.",
   },
-  ...Array.from({ length: 10 }, (_, idx) => {
+  ...Array.from({ length: 22 }, (_, idx) => {
     const num = idx + 3;
     const codes = ["25420", "25195", "26425", "26341", "26170", "26041", "26206", "25217", "26326", "25399"];
     const names = [
@@ -318,15 +318,15 @@ export const INITIAL_TICKETS: SupportTicket[] = [
       "Phường Dầu Giây",
       "Xã Đak Nhau",
     ];
-    const code = codes[idx];
-    const name = names[idx];
-    const statuses: SupportTicket["status"][] = ["Mới tiếp nhận (Demo)", "Đang xử lý", "Đã phản hồi"];
+    const code = codes[idx % codes.length];
+    const name = names[idx % names.length];
+    const statuses: SupportTicket["status"][] = ["Mới tiếp nhận", "Đang xử lý", "Đã phản hồi"];
     return {
       id: `TKT-${String(num).padStart(2, "0")}`,
       requesterName: idx % 2 === 0 ? `Đại diện vườn tại ${name}` : `Tình nguyện viên khu vực ${name}`,
       roleLabel: idx % 2 === 0 ? "W02 · Nhà nông" : "W03 · Tình nguyện viên",
       category: idx % 3 === 0 ? "Chuẩn hóa địa giới & bản đồ" : "Đối chiếu hồ sơ VietGAP/OCOP",
-      subject: `Yêu cầu hỗ trợ kiểm tra hồ sơ mẫu #${num} tại ${name}`,
+      subject: `Yêu cầu hỗ trợ kiểm tra hồ sơ #${num} tại ${name}`,
       administrativeUnitCode: code,
       administrativeUnitName: name,
       status: statuses[idx % statuses.length],
@@ -335,7 +335,7 @@ export const INITIAL_TICKETS: SupportTicket[] = [
       note:
         code === "25420"
           ? "Lưu ý cập nhật hiển thị 386,56 km² hiện trạng cho Xã Phước Sơn (chờ quyết định điều chỉnh 659,163 km²)."
-          : `Yêu cầu hỗ trợ kiểm thử nghiệp vụ tại ${name}.`,
+          : `Yêu cầu hỗ trợ kiểm tra nghiệp vụ tại ${name}.`,
     };
   }),
 ];

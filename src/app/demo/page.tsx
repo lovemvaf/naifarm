@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import { toast } from "sonner";
 import {
   ArrowRight,
   CheckCircle2,
@@ -14,113 +13,115 @@ import {
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { STITCH_SCREEN_COVERAGE } from "@/data/demo/stitch-registry";
+import { notifySuccess } from "@/lib/toast";
 import { Badge, Button, Card, DemoBanner } from "@/components/ui/Primitives";
 
-const DEMO_FLOWS = [
+const QUICK_FLOWS = [
   {
-    code: "Flow A",
-    title: "Khám phá Chợ → Nhà vườn Ba Tư / Chú Ba Minh → Sản phẩm → Quét QR & Giải phẫu 2D",
-    desc: "Kiểm chứng bố cục 60/40, tách biệt tự khai vs đối chiếu, QR PNG/SVG thật trên lô NF-DEMO-001, trình quét /trace/scan và sơ đồ 2D Bưởi Tân Triều.",
+    code: "Hành trình A",
+    title: "Chợ nông sản → Nhà vườn Ba Tư → Chi tiết sản phẩm → Quét QR & Giải phẫu 2D",
+    desc: "Khám phá gian hàng theo mùa, phân biệt hồ sơ tự khai với đối chiếu, sinh mã QR thật, kiểm tra hợp lệ khi quét và xem sơ đồ 2D sản phẩm.",
     links: [
       { label: "Trang chủ (/)", href: "/" },
       { label: "Vườn Ba Tư", href: "/farms/nha-vuon-ba-tu-long-khanh" },
       { label: "Bưởi Tân Triều + 2D", href: "/products/buoi-da-xanh-tan-trieu" },
       { label: "Quét mã QR (/trace/scan)", href: "/trace/scan" },
-      { label: "Truy xuất NF-DEMO-001", href: "/trace/NF-DEMO-001" },
+      { label: "Hộ chiếu NF-DEMO-001", href: "/trace/NF-DEMO-001" },
     ],
   },
   {
-    code: "Flow B",
-    title: "Giỏ hàng → Thanh toán COD Demo ↔ Nhà vườn Xử lý đơn & Mùa vụ (W01 ↔ W02)",
-    desc: "Thêm sản phẩm vào giỏ, đặt hàng tại /checkout, chuyển trạng thái ở /farmer, ghi nhật ký mùa vụ đồng bộ QR và xem tại /account/orders.",
+    code: "Hành trình B",
+    title: "Giỏ hàng → Đặt hàng → Nhà vườn xử lý đơn & Nhật ký mùa vụ",
+    desc: "Thêm giỏ hàng nhiều nhà vườn, đặt hàng tại /checkout, cập nhật trạng thái đơn và ghi nhật ký mùa vụ tại /farmer đồng bộ ngay sang tem QR.",
     links: [
-      { label: "Đăng nhập Demo 6 vai trò (/sign-in)", href: "/sign-in" },
+      { label: "Truy cập nhanh 6 tài khoản (/sign-in)", href: "/sign-in" },
       { label: "Giỏ hàng (/cart)", href: "/cart" },
-      { label: "Thanh toán (/checkout)", href: "/checkout" },
-      { label: "Xử lý đơn & Mùa vụ W02 (/farmer)", href: "/farmer" },
+      { label: "Đặt hàng (/checkout)", href: "/checkout" },
+      { label: "Nhà nông & HTX (/farmer)", href: "/farmer" },
     ],
   },
   {
-    code: "Flow C",
-    title: "Nhà nông U50+ Đăng bán 3 bước bằng ảnh & giọng nói mô phỏng",
-    desc: "Nút 56px dễ bấm, chế độ lỗi mic dự phòng, AI gợi ý bản nháp có cảnh báo minh họa, đăng bán lên ngay Chợ /marketplace.",
+    code: "Hành trình C",
+    title: "Nhà nông đăng bán nhanh 3 bước bằng ảnh & giọng nói",
+    desc: "Nút thao tác cỡ lớn dễ đọc cho nhà vườn, gợi ý nội dung soạn sẵn có thể chỉnh sửa và đăng thẳng lên Chợ OCOP.",
     links: [
-      { label: "Mở Wizard 3 bước (/farmer/publish)", href: "/farmer/publish" },
-      { label: "Xem Chợ 103 sản phẩm (/marketplace)", href: "/marketplace" },
+      { label: "Đăng bán nhanh 3 bước (/farmer/publish)", href: "/farmer/publish" },
+      { label: "Chợ OCOP (/marketplace)", href: "/marketplace" },
     ],
   },
   {
-    code: "Flow D",
-    title: "Chuỗi 2 lớp Thanh niên Tình nguyện: TNV Nộp → W02 Xác nhận → W04 Duyệt giờ",
-    desc: "Bảo đảm tính liêm chính giờ công: W04 bị khóa duyệt cho tới khi chủ vườn xác nhận đã nhận bàn giao tại W02.",
+    code: "Hành trình D",
+    title: "Tình nguyện số 2 lớp xác nhận: Thanh niên nộp → Nhà vườn xác nhận → Điều phối duyệt giờ",
+    desc: "Bảo đảm tách quyền phê duyệt: điều phối viên chỉ duyệt giờ công sau khi nhà vườn đã xác nhận đầu ra thực tế.",
     links: [
-      { label: "Bảng nhiệm vụ W03 (/volunteer)", href: "/volunteer" },
-      { label: "Chủ vườn xác nhận W02 (/farmer)", href: "/farmer" },
-      { label: "Điều phối duyệt giờ W04 (/coordinator)", href: "/coordinator" },
+      { label: "Thanh niên tình nguyện (/volunteer)", href: "/volunteer" },
+      { label: "Nhà vườn xác nhận (/farmer)", href: "/farmer" },
+      { label: "Điều phối cộng đồng (/coordinator)", href: "/coordinator" },
     ],
   },
   {
-    code: "Flow E–G",
-    title: "Bản đồ OpenStreetMap + GPS thực, Livestream Replay & Góc học mở 2D",
-    desc: "Bản đồ OSM thực 95 Phường/Xã + đo khoảng cách đường chim bay GPS (/explore), phòng replay (/live), 12 chuyên đề & 2D (/learn).",
+    code: "Hành trình E–G",
+    title: "Bản đồ nhà vườn & GPS, Trung tâm Chất lượng 26 loại, Livestream & Học tập 2D",
+    desc: "Định vị các nhà vườn trên bản đồ, lọc 95 phường/xã Đồng Nai, tra cứu 26 loại tiêu chuẩn chất lượng, phòng phát lại và 12 bài học 2D.",
     links: [
-      { label: "Bản đồ OSM & GPS (/explore)", href: "/explore" },
-      { label: "Tìm kiếm toàn cục (/search)", href: "/search?q=Phuoc+Son" },
-      { label: "Livestream OCOP (/live)", href: "/live" },
-      { label: "Góc học mở 2D (/learn)", href: "/learn" },
+      { label: "Bản đồ nhà vườn (/explore)", href: "/explore" },
+      { label: "Trung tâm chất lượng 26 loại (/quality)", href: "/quality" },
+      { label: "Tìm kiếm toàn trang (/search)", href: "/search?q=Phuoc+Son" },
+      { label: "Phòng OCOP Live (/live)", href: "/live" },
+      { label: "Học tập 2D (/learn)", href: "/learn" },
     ],
   },
   {
-    code: "Flow H",
-    title: "Tổ chức HTX / Roadmap (W05) & Quản trị Phân quyền Kiểm toán (W06)",
-    desc: "Một shell thống nhất cho HTX/B2B/Trường học (/organization) và cấp/thu hồi quyền ghi Audit Log (/admin).",
+    code: "Hành trình H",
+    title: "Tổ chức & Đối tác (6 loại hình) & Quản trị hệ thống phân quyền",
+    desc: "Một khung điều hành thống nhất cho HTX, Doanh nghiệp mua, Trường học, Tài trợ, Logistics, Chuyên gia (/organization) và Quản trị (/admin).",
     links: [
-      { label: "Hợp tác xã & Đối tác W05 (/organization)", href: "/organization" },
-      { label: "Quản trị RBAC Demo W06 (/admin)", href: "/admin" },
+      { label: "Tổ chức & Đối tác (/organization)", href: "/organization" },
+      { label: "Quản trị & Kiểm toán (/admin)", href: "/admin" },
+      { label: "Chính sách & Minh bạch (/policies)", href: "/policies" },
     ],
   },
 ];
 
-export default function JudgeDemoHubPage() {
+export default function QuickAccessHubPage() {
   const { resetDemoState, orders, products, missions } = useDemoStore();
 
   const handleReset = () => {
     resetDemoState();
-    toast.success("Đã khôi phục toàn bộ dữ liệu mẫu NaiFarm về trạng thái ban đầu!");
+    notifySuccess("Đã khôi phục toàn bộ dữ liệu trải nghiệm về mặc định.");
   };
 
   return (
-    <div className="mx-auto max-w-[1280px] px-4 py-8 lg:px-8 space-y-8">
+    <div className="mx-auto max-w-[1280px] space-y-8 px-4 py-8 lg:px-8">
       <div className="rounded-[20px] border border-[#D6DED2] bg-gradient-to-br from-white to-[#EAF0E5] p-6 sm:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-2 max-w-2xl">
+          <div className="max-w-2xl space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge tone="success">Hackathon TP. Đồng Nai 2026 · Group 8</Badge>
-              <Badge tone="info">Frontend-Only High-Fidelity Prototype</Badge>
+              <Badge tone="success">Chợ OCOP Thanh niên · Đồng Nai</Badge>
+              <Badge tone="info">Không gian trải nghiệm · Không lập chỉ mục tìm kiếm</Badge>
             </div>
             <h1 className="font-[family-name:var(--font-lora)] text-3xl font-bold text-[#25352B] sm:text-4xl">
-              Trung tâm Trình diễn & Kiểm chứng (Judge Demo Hub)
+              Truy cập nhanh các luồng nghiệp vụ NaiFarm
             </h1>
             <p className="text-sm text-[#52645A] sm:text-base">
-              Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị. Toàn bộ 12 màn hình trích xuất từ
-              Google Stitch (<span className="font-mono font-semibold">12256474506032242478</span>)
-              và 6 không gian W01–W06 vận hành đồng bộ trên bộ nhớ trình duyệt.
+              Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị. Lối tắt điều hướng tới toàn bộ các
+              phân hệ thương mại, truy xuất nguồn gốc, quản trị HTX và cộng đồng trên bộ nhớ trình duyệt.
             </p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
             <Button variant="gold" size="lg" onClick={handleReset}>
               <RefreshCcw className="h-5 w-5" aria-hidden="true" />
-              <span>Khôi phục Dữ liệu Mẫu (Reset Demo)</span>
+              <span>Khôi phục dữ liệu trải nghiệm</span>
             </Button>
             <div className="flex flex-wrap gap-2 text-xs font-semibold text-[#245B3D]">
-              <span className="rounded-full bg-white px-3 py-1 border border-[#D6DED2] tabular-nums">
-                {products.length} sản phẩm
+              <span className="rounded-full border border-[#D6DED2] bg-white px-3 py-1 tabular-nums">
+                {products.length} sản phẩm thực hành
               </span>
-              <span className="rounded-full bg-white px-3 py-1 border border-[#D6DED2] tabular-nums">
-                {orders.length} đơn demo
+              <span className="rounded-full border border-[#D6DED2] bg-white px-3 py-1 tabular-nums">
+                {orders.length} đơn hàng
               </span>
-              <span className="rounded-full bg-white px-3 py-1 border border-[#D6DED2] tabular-nums">
+              <span className="rounded-full border border-[#D6DED2] bg-white px-3 py-1 tabular-nums">
                 {missions.length} nhiệm vụ TNV
               </span>
             </div>
@@ -129,33 +130,32 @@ export default function JudgeDemoHubPage() {
       </div>
 
       <DemoBanner
-        title="Cam kết Trung thực Dữ liệu & Phạm vi Frontend"
-        detail="Prototype không sử dụng cơ sở dữ liệu, API backend, thanh toán hay AI key runtime. Dữ liệu gắn nhãn minh bạch giữa 'Nhà vườn tự khai' và 'Hồ sơ đã đối chiếu (Demo)' — không giả mạo chứng nhận OCOP pháp lý."
+        title="Lưu ý không gian trải nghiệm"
+        detail="Các thao tác đặt hàng, thanh toán, nhật ký hay cấp quyền tại đây chỉ chạy cục bộ để trình diễn quy trình — không phát sinh giao dịch tài chính thật hoặc chứng nhận pháp lý."
       />
 
-      {/* Interactive Demo Flows */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
           <Compass className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
           <h2 className="text-2xl font-bold text-[#25352B]">
-            8 Luồng Trình diễn Liên hoàn cho Ban Giám khảo
+            Lộ trình kiểm tra nhanh theo vai trò
           </h2>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {DEMO_FLOWS.map((flow) => (
-            <Card key={flow.code} className="p-5 flex flex-col justify-between space-y-4">
+          {QUICK_FLOWS.map((flow) => (
+            <Card key={flow.code} className="flex flex-col justify-between space-y-4 p-5">
               <div className="space-y-2">
                 <Badge tone="neutral">{flow.code}</Badge>
                 <h3 className="text-lg font-bold text-[#25352B]">{flow.title}</h3>
                 <p className="text-sm text-[#52645A]">{flow.desc}</p>
               </div>
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-[#EAF0E5]">
+              <div className="flex flex-wrap gap-2 border-t border-[#EAF0E5] pt-2">
                 {flow.links.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="inline-flex min-h-[38px] items-center gap-1 rounded-[10px] border border-[#245B3D]/35 bg-[#F5F3E9] px-3 py-1.5 text-xs font-semibold text-[#245B3D] hover:bg-[#245B3D] hover:text-white transition"
+                    className="inline-flex min-h-[38px] items-center gap-1 rounded-[10px] border border-[#245B3D]/35 bg-[#F5F3E9] px-3 py-1.5 text-xs font-semibold text-[#245B3D] transition hover:bg-[#245B3D] hover:text-white"
                   >
                     <span>{link.label}</span>
                     <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -167,18 +167,17 @@ export default function JudgeDemoHubPage() {
         </div>
       </section>
 
-      {/* Stitch Export Coverage Table */}
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Layers className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
             <h2 className="text-2xl font-bold text-[#25352B]">
-              Đối chiếu 12 Màn hình Stitch Gốc & Blueprint V3
+              Bản đồ màn hình &amp; đường dẫn hệ thống
             </h2>
           </div>
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#24603B]">
             <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-            12/12 export cục bộ + 4 màn hình tái dựng Blueprint đều đã ánh xạ route thật
+            Toàn bộ tuyến màn hình đều kết nối trực tiếp
           </span>
         </div>
 
@@ -188,11 +187,11 @@ export default function JudgeDemoHubPage() {
               <thead className="bg-[#EAF0E5] text-xs font-semibold text-[#245B3D]">
                 <tr>
                   <th className="px-4 py-3">Mã</th>
-                  <th className="px-4 py-3">Blueprint IDs</th>
+                  <th className="px-4 py-3">Phân hệ</th>
                   <th className="px-4 py-3">Tên màn hình</th>
                   <th className="px-4 py-3">Không gian</th>
-                  <th className="px-4 py-3">Nguồn chuẩn</th>
-                  <th className="px-4 py-3">Đường dẫn kiểm thử</th>
+                  <th className="px-4 py-3">Trạng thái</th>
+                  <th className="px-4 py-3">Đường dẫn</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EAF0E5]">
@@ -201,7 +200,7 @@ export default function JudgeDemoHubPage() {
                     <td className="px-4 py-3 font-bold text-[#245B3D] tabular-nums">
                       {row.stitchId}
                     </td>
-                    <td className="px-4 py-3 text-xs font-mono text-[#52645A]">
+                    <td className="px-4 py-3 font-mono text-xs text-[#52645A]">
                       {row.blueprintIds}
                     </td>
                     <td className="px-4 py-3">
@@ -214,7 +213,7 @@ export default function JudgeDemoHubPage() {
                     <td className="px-4 py-3">
                       <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#24603B]">
                         <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                        {row.kind === "verified-stitch" ? "Stitch PNG + HTML" : "Blueprint V3"}
+                        Sẵn sàng
                       </span>
                     </td>
                     <td className="px-4 py-3">

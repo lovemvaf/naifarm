@@ -1,63 +1,108 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
+  BarChart3,
+  Briefcase,
   Building2,
-  ClipboardList,
+  CheckCircle2,
+  Download,
   GraduationCap,
-  MapPin,
-  Package,
-  QrCode,
+  HeartHandshake,
   ShieldCheck,
+  ShoppingBag,
   Truck,
+  Users,
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
-import { Badge, Button, Card, DemoBanner } from "@/components/ui/Primitives";
+import { ScopeSelector } from "@/components/permissions/ScopeSelector";
+import { QualityCenterPanel } from "@/components/quality/QualityCenterPanel";
+import { OCOP_PUBLIC_REFERENCE_CATALOG } from "@/data/reference/ocop-public-reference";
+import { buildScopedCsvContent, triggerCsvDownload } from "@/lib/export/csv-export";
 import { formatVnd } from "@/lib/format";
+import { notifyError, notifySuccess } from "@/lib/toast";
+import { Badge, Button, Card } from "@/components/ui/Primitives";
+import type { OrganizationKind } from "@/types/naifarm";
 
-type OrgViewMode = "coop" | "b2b" | "school";
+type OrgTab = "overview" | "work" | "members" | "approvals" | "reports";
 
-const B2B_RFQ_SAMPLES = [
-  {
-    id: "RFQ-DN-01",
-    buyer: "Hệ thống Siêu thị Xanh Biên Hòa (Demo)",
-    product: "Bưởi da xanh Tân Triều & Chôm chôm Java",
-    volume: "450 kg / tuần",
-    note: "Yêu cầu gắn tem QR lô hàng theo từng xã viên giao.",
-  },
-  {
-    id: "RFQ-DN-02",
-    buyer: "Bếp ăn Khu công nghiệp Amata (Demo)",
-    product: "Trái cây theo mùa đóng sọt tiêu chuẩn",
-    volume: "600 kg / đợt",
-    note: "Đề xuất đặt trước 5 ngày để chủ vườn cắt đồng loạt.",
-  },
+const ORG_KINDS: { id: OrganizationKind; label: string; badge: string }[] = [
+  { id: "coop", label: "Hợp tác xã / Hội Nông dân", badge: "Gom lô & Xã viên" },
+  { id: "school", label: "Trường học & CLB Sinh viên", badge: "Giáo dục & Thực tế" },
+  { id: "b2b", label: "Doanh nghiệp thu mua B2B", badge: "Thu mua & Truy xuất" },
+  { id: "sponsor", label: "Nhà tài trợ & Dự án", badge: "Ngân sách & Kết quả" },
+  { id: "logistics", label: "Đối tác Vận chuyển", badge: "Chuyến gom & POD" },
+  { id: "mentor", label: "Chuyên gia / Giảng viên", badge: "Tư vấn & Phản hồi" },
+  { id: "authority", label: "Cơ quan chuyên môn", badge: "Đối chiếu chứng nhận" },
 ];
 
-export default function OrganizationWorkspacePage() {
-  const { hydrated, farms, products, batches, organizations, setActiveWorkspace } = useDemoStore();
-  const [mode, setMode] = useState<OrgViewMode>("coop");
-  const [rfqCompany, setRfqCompany] = useState("Chuỗi Cửa hàng Đặc sản Miền Đông (Demo)");
-  const [rfqNote, setRfqNote] = useState(
-    "Quan tâm đặt sỉ Bưởi da xanh Tân Triều và Hạt điều vỏ lụa theo tháng."
-  );
+function OrganizationWorkspaceContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const {
+    hydrated,
+    setActiveWorkspace,
+    activeOrgKind,
+    setActiveOrgKind,
+    activeScopeUnitCode,
+    organizations,
+    coopPools,
+    memberDeliveries,
+    schoolClasses,
+    studentSubmissions,
+    logisticsTrips,
+    mentorCases,
+    sponsorCampaigns,
+    products,
+    credentialRecords,
+    settleMemberDelivery,
+    gradeStudentSubmission,
+    updateLogisticsTripStatus,
+    updateCredentialLifecycle,
+    renewCredentialRecord,
+  } = useDemoStore();
+
+  const urlOrg = searchParams.get("org") as OrganizationKind | null;
+  const currentOrg: OrganizationKind =
+    urlOrg && ORG_KINDS.some((o) => o.id === urlOrg) ? urlOrg : activeOrgKind;
+
+  const [tab, setTab] = useState<OrgTab>("overview");
+  const [checkerName, setCheckerName] = useState("Kế toán trưởng HTX Minh Châu");
 
   useEffect(() => {
     setActiveWorkspace("W05");
   }, [setActiveWorkspace]);
 
-  const handleSubmitRfq = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success(`Đã ghi nhận yêu cầu báo giá minh họa từ "${rfqCompany}" (Chế độ Roadmap).`);
+  const handleSelectOrgKind = (kind: OrganizationKind) => {
+    setActiveOrgKind(kind);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("org", kind);
+    router.replace(`/organization?${params.toString()}`, { scroll: false });
+  };
+
+  const activeOrgMeta = ORG_KINDS.find((k) => k.id === currentOrg) ?? ORG_KINDS[0];
+
+  const exportOrgCsv = () => {
+    const csv = buildScopedCsvContent(
+      ["Khối tổ chức", "Đơn vị", "Tóm tắt", "Trạng thái"],
+      organizations.map((o) => [o.type, o.name, o.focusArea, o.statusLabel]),
+      {
+        reportTitle: `Báo cáo đối tác tổ chức — ${activeOrgMeta.label}`,
+        periodLabel: "Tháng 11/2026",
+        scopeLabel: activeScopeUnitCode === "ALL" ? "Toàn tỉnh Đồng Nai" : activeScopeUnitCode,
+      },
+    );
+    triggerCsvDownload(`naifarm-to-chuc-${currentOrg}.csv`, csv);
+    notifySuccess("Đã xuất báo cáo tổ chức theo phạm vi CSV.");
   };
 
   if (!hydrated) {
     return (
       <div className="mx-auto max-w-[1280px] px-4 py-12 text-sm text-[#52645A]">
-        Đang mở Không gian Tổ chức Đối tác...
+        Đang mở Không gian Tổ chức &amp; Đối tác...
       </div>
     );
   }
@@ -66,322 +111,425 @@ export default function OrganizationWorkspacePage() {
     <WorkspaceShell
       workspaceId="W05"
       title="Không gian Tổ chức & Đối tác"
-      subtitle="Một shell thống nhất cho Hợp tác xã xã viên (Active MVP), Doanh nghiệp B2B (Roadmap) và Nhà trường (Roadmap)"
-      scopeBadge={
-        mode === "coop"
-          ? "HTX Nông nghiệp Tân Triều (Active MVP)"
-          : "Chế độ Minh họa Lộ trình (Roadmap)"
-      }
       navItems={[
         {
-          label: "HTX Nông nghiệp & Gom lô",
-          href: "#coop",
-          active: mode === "coop",
-          onClick: () => setMode("coop"),
+          label: "Tổng quan",
+          href: "#overview",
+          active: tab === "overview",
+          onClick: () => setTab("overview"),
           icon: <Building2 className="h-4 w-4" aria-hidden="true" />,
         },
         {
-          label: "Doanh nghiệp B2B (Roadmap)",
-          href: "#b2b",
-          active: mode === "b2b",
-          onClick: () => setMode("b2b"),
-          icon: <ClipboardList className="h-4 w-4" aria-hidden="true" />,
+          label: "Công việc chuyên môn",
+          href: "#work",
+          active: tab === "work",
+          onClick: () => setTab("work"),
+          icon: <Briefcase className="h-4 w-4" aria-hidden="true" />,
         },
         {
-          label: "Nhà trường — Lớp học Vườn",
-          href: "#school",
-          active: mode === "school",
-          onClick: () => setMode("school"),
-          icon: <GraduationCap className="h-4 w-4" aria-hidden="true" />,
+          label: "Thành viên & Địa bàn",
+          href: "#members",
+          active: tab === "members",
+          onClick: () => setTab("members"),
+          icon: <Users className="h-4 w-4" aria-hidden="true" />,
+        },
+        {
+          label: "Phê duyệt & Bảo vệ dữ liệu",
+          href: "#approvals",
+          active: tab === "approvals",
+          onClick: () => setTab("approvals"),
+          icon: <ShieldCheck className="h-4 w-4" aria-hidden="true" />,
+        },
+        {
+          label: "Báo cáo & Xuất CSV",
+          href: "#reports",
+          active: tab === "reports",
+          onClick: () => setTab("reports"),
+          icon: <BarChart3 className="h-4 w-4" aria-hidden="true" />,
         },
       ]}
     >
       <div className="space-y-6">
-        {/* Org Role Selector */}
-        <Card className="p-4">
-          <p className="mb-2 text-xs font-semibold text-[#52645A]">
-            Chọn loại hình tổ chức trong W05 (Hạn chế phân mảnh shell):
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setMode("coop")}
-              className={`min-h-[44px] rounded-[12px] px-4 text-sm font-semibold transition cursor-pointer ${
-                mode === "coop"
-                  ? "bg-[#245B3D] text-white"
-                  : "border border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#EAF0E5]"
-              }`}
-            >
-              HTX Nông nghiệp (Active MVP)
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("b2b")}
-              className={`min-h-[44px] rounded-[12px] px-4 text-sm font-semibold transition cursor-pointer ${
-                mode === "b2b"
-                  ? "bg-[#245B3D] text-white"
-                  : "border border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#EAF0E5]"
-              }`}
-            >
-              Doanh nghiệp B2B · RFQ (Roadmap)
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("school")}
-              className={`min-h-[44px] rounded-[12px] px-4 text-sm font-semibold transition cursor-pointer ${
-                mode === "school"
-                  ? "bg-[#245B3D] text-white"
-                  : "border border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#EAF0E5]"
-              }`}
-            >
-              Nhà trường · Farm as a Classroom (Roadmap)
-            </button>
+        {/* Organization Type Switcher */}
+        <Card className="space-y-4 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold text-[#52645A]">Loại hình tổ chức đang hoạt động (W05)</p>
+              <h2 className="text-lg font-bold text-[#25352B]">{activeOrgMeta.label}</h2>
+            </div>
+            <ScopeSelector compact label="Phạm vi địa bàn" />
+          </div>
+
+          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Chọn loại hình tổ chức W05">
+            {ORG_KINDS.map((kind) => {
+              const active = currentOrg === kind.id;
+              return (
+                <button
+                  key={kind.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => handleSelectOrgKind(kind.id)}
+                  className={`inline-flex min-h-[38px] cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-xs font-semibold transition ${
+                    active
+                      ? "border-[#245B3D] bg-[#245B3D] text-white"
+                      : "border-[#D6DED2] bg-[#FAF8F1] text-[#25352B] hover:bg-[#EAF0E5]"
+                  }`}
+                >
+                  <span>{kind.label}</span>
+                </button>
+              );
+            })}
           </div>
         </Card>
 
-        {/* MODE 1: COOPERATIVE ACTIVE MVP (S37-S40) */}
-        {mode === "coop" ? (
-          <div id="coop" className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <Card className="p-4">
-                <p className="text-xs font-semibold text-[#52645A]">Nhà vườn thành viên kết nối</p>
-                <p className="mt-1 tabular-nums text-2xl font-bold text-[#245B3D]">{farms.length} vườn</p>
-                <p className="text-xs text-[#52645A]">Tân Triều, Long Khánh, Xuân Lộc, Cẩm Mỹ</p>
-              </Card>
-              <Card className="p-4">
-                <p className="text-xs font-semibold text-[#52645A]">Mã lô truy xuất đang theo dõi</p>
-                <p className="mt-1 tabular-nums text-2xl font-bold text-[#245B3D]">
-                  {batches.length} mã lô QR
+        {/* Tab 1: Overview */}
+        {tab === "overview" ? (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {organizations.map((org) => (
+              <Card key={org.id} className="space-y-2 p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <Badge tone="info">{org.type}</Badge>
+                  <span className="text-xs font-semibold text-[#52645A]">{org.administrativeUnitName}</span>
+                </div>
+                <h3 className="text-base font-bold text-[#25352B]">{org.name}</h3>
+                <p className="text-xs text-[#52645A]">{org.focusArea}</p>
+                <p className="text-xs font-semibold text-[#245B3D]">
+                  Liên kết {org.linkedFarmsCount} nhà vườn · {org.statusLabel}
                 </p>
-                <p className="text-xs text-[#52645A]">Chuẩn tách biệt tự khai & đối chiếu</p>
               </Card>
-              <Card className="p-4">
-                <p className="text-xs font-semibold text-[#52645A]">Mặt hàng sẵn sàng gom đơn</p>
-                <p className="mt-1 tabular-nums text-2xl font-bold text-[#245B3D]">
-                  {products.length} sản phẩm
-                </p>
-                <p className="text-xs text-[#52645A]">Đồng bộ tồn kho từ W02</p>
-              </Card>
-            </div>
+            ))}
+          </div>
+        ) : null}
 
-            <Card className="p-5 space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-bold text-[#25352B]">
-                  Danh sách Nhà vườn & Lô hàng HTX quản lý (S37–S40)
-                </h2>
-                <Badge tone="success">HTX đối chiếu minh họa</Badge>
-              </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {farms.map((farm) => {
-                  const fBatches = batches.filter((b) => b.farmId === farm.id);
-                  return (
-                    <div
-                      key={farm.id}
-                      className="rounded-[14px] border border-[#D6DED2] bg-[#F5F3E9] p-4 space-y-2.5"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-bold text-[#25352B]">{farm.name}</h3>
-                          <p className="inline-flex items-center gap-1 text-xs text-[#52645A]">
-                            <MapPin className="h-3.5 w-3.5 text-[#245B3D]" aria-hidden="true" />
-                            {farm.addressLabel} · {farm.areaHa} ha
-                          </p>
+        {/* Tab 2 & Tab 4 adapt specifically to all 6+ organization types */}
+        {(tab === "work" || tab === "approvals") ? (
+          <>
+            {currentOrg === "coop" ? (
+              <Card className="space-y-4 p-5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-base font-bold text-[#25352B]">
+                    Gom lô HTX &amp; Đối soát phiếu giao xã viên ({coopPools.length} lô gom)
+                  </h3>
+                  <select
+                    value={checkerName}
+                    onChange={(e) => setCheckerName(e.target.value)}
+                    aria-label="Chọn người duyệt chi trả HTX"
+                    className="min-h-[36px] rounded-[8px] border border-[#788A7B] bg-white px-2.5 text-xs"
+                  >
+                    <option value="Kế toán trưởng HTX Minh Châu">Kế toán trưởng HTX Minh Châu (Hợp lệ)</option>
+                    <option value="Thủ kho Hai Hùng">Thủ kho Hai Hùng (Thử tự duyệt — chặn)</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  {coopPools.map((pool) => (
+                    <div key={pool.id} className="rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] p-3.5 text-xs">
+                      <p className="font-bold text-[#25352B]">{pool.title}</p>
+                      <p className="mt-1 text-[#52645A]">
+                        Lô tổng:{" "}
+                        <Link href={`/trace/${pool.mixedBatchCode}`} className="font-mono font-bold text-[#245B3D] underline">
+                          {pool.mixedBatchCode}
+                        </Link>{" "}
+                        · {pool.totalCommittedQty} {pool.unitLabel}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-2">
+                  {memberDeliveries.map((md) => (
+                    <div key={md.id} className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-[#EAEFE6] p-3 text-xs">
+                      <div>
+                        <p className="font-bold text-[#25352B]">
+                          {md.id} · {md.memberFarmName} ({md.deliveredQty} {md.unitLabel} {md.productName})
+                        </p>
+                        <p className="text-[#52645A]">
+                          Thực nhận: <strong className="tabular-nums text-[#245B3D]">{formatVnd(md.netPayableVnd)}</strong> ·
+                          Lập phiếu: {md.makerName}
+                        </p>
+                      </div>
+                      {md.settlementStatus === "da_duyet_thanh_toan" ? (
+                        <Badge tone="success">Đã duyệt chi trả</Badge>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={() => {
+                            const res = settleMemberDelivery(md.id, checkerName);
+                            if (res.ok) notifySuccess(res.message);
+                            else notifyError(res.message);
+                          }}
+                        >
+                          Duyệt đối soát
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            ) : null}
+
+            {currentOrg === "school" ? (
+              <Card className="space-y-4 p-5">
+                <h3 className="flex items-center gap-2 text-base font-bold text-[#25352B]">
+                  <GraduationCap className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
+                  <span>Lớp học nông nghiệp thực hành &amp; Kiểm soát đồng thuận phụ huynh</span>
+                </h3>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  {schoolClasses.map((cls) => (
+                    <div key={cls.id} className="rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] p-4 text-xs">
+                      <p className="font-bold text-[#25352B]">{cls.name}</p>
+                      <p className="text-[#245B3D]">{cls.schoolName} · GV: {cls.teacherName}</p>
+                      <p className="mt-1 text-[#52645A]">
+                        Sĩ số: {cls.enrolledCount} · Đồng thuận phụ huynh: {cls.minorConsentCount}/{cls.enrolledCount} ·{" "}
+                        {cls.fieldTripDate}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-2.5">
+                  <p className="text-sm font-bold text-[#25352B]">Bài nộp học sinh / sinh viên &amp; chấm điểm</p>
+                  {studentSubmissions.map((sub) => (
+                    <div key={sub.id} className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#EAEFE6] p-3 text-xs">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-bold text-[#25352B]">{sub.studentName}</span>
+                          {sub.isMinor ? (
+                            <Badge tone={sub.hasGuardianConsent ? "success" : "danger"}>
+                              {sub.hasGuardianConsent ? "Đủ đồng thuận phụ huynh" : "Thiếu đồng thuận (< 18t)"}
+                            </Badge>
+                          ) : null}
                         </div>
-                        <Badge tone={farm.ocopStatus === "coop_checked_demo" ? "success" : "warning"}>
-                          {farm.ocopLabel}
+                        <p className="mt-1 text-[#52645A]">{sub.title}</p>
+                      </div>
+                      {sub.status === "graded" ? (
+                        <Badge tone="success">Điểm: {sub.rubricScore}/10</Badge>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={() => {
+                            const res = gradeStudentSubmission(sub.id, 8.5);
+                            if (res.ok) notifySuccess(res.message);
+                            else notifyError(res.message);
+                          }}
+                        >
+                          Chấm điểm (8.5/10)
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            ) : null}
+
+            {currentOrg === "b2b" ? (
+              <Card className="space-y-4 p-5">
+                <h3 className="flex items-center gap-2 text-base font-bold text-[#25352B]">
+                  <ShoppingBag className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
+                  <span>Nguồn cung B2B &amp; Gói truy xuất theo lô</span>
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[540px] border-collapse text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-[#D6DED2] text-[#52645A]">
+                        <th className="py-2 pr-3 font-semibold">Mặt hàng</th>
+                        <th className="py-2 px-3 font-semibold">Nhà vườn / Xã</th>
+                        <th className="py-2 px-3 text-right font-semibold">Khả dụng</th>
+                        <th className="py-2 pl-3 font-semibold">Truy xuất</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#EAEFE6]">
+                      {products.slice(0, 10).map((p) => (
+                        <tr key={p.id}>
+                          <td className="py-2 pr-3 font-bold text-[#25352B]">{p.name}</td>
+                          <td className="py-2 px-3 text-[#52645A]">
+                            {p.farmName} ({p.administrativeUnitName})
+                          </td>
+                          <td className="py-2 px-3 text-right tabular-nums">
+                            {p.stockKg} {p.unitLabel}
+                          </td>
+                          <td className="py-2 pl-3">
+                            <Link href={`/trace/${p.batchCode}`} className="font-mono font-bold text-[#245B3D] underline">
+                              {p.batchCode}
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            ) : null}
+
+            {currentOrg === "sponsor" ? (
+              <Card className="space-y-4 p-5">
+                <h3 className="flex items-center gap-2 text-base font-bold text-[#25352B]">
+                  <HeartHandshake className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
+                  <span>Tài trợ cộng đồng — Tách bạch ngân sách dự kiến &amp; đã duyệt</span>
+                </h3>
+                <div className="space-y-3 text-xs">
+                  {sponsorCampaigns.map((sp) => (
+                    <div key={sp.id} className="rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] p-4">
+                      <p className="font-bold text-[#245B3D]">{sp.sponsorName}</p>
+                      <h4 className="mt-1 text-base font-bold text-[#25352B]">{sp.title}</h4>
+                      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <div className="rounded-lg bg-white p-2.5">
+                          <span className="text-[#52645A]">Ngân sách dự kiến</span>
+                          <p className="tabular-nums font-bold text-[#25352B]">{formatVnd(sp.plannedBudgetVnd)}</p>
+                        </div>
+                        <div className="rounded-lg bg-white p-2.5">
+                          <span className="text-[#52645A]">Đã phê duyệt giải ngân</span>
+                          <p className="tabular-nums font-bold text-[#24603B]">{formatVnd(sp.approvedBudgetVnd)}</p>
+                        </div>
+                        <div className="rounded-lg bg-white p-2.5">
+                          <span className="text-[#52645A]">Đầu ra được nghiệm thu</span>
+                          <p className="tabular-nums font-bold text-[#25352B]">{sp.outputsAcceptedCount} nhà vườn</p>
+                        </div>
+                      </div>
+                      <p className="mt-2 text-[#52645A]">{sp.milestoneSummary}</p>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            ) : null}
+
+            {currentOrg === "logistics" ? (
+              <Card className="space-y-4 p-5">
+                <h3 className="flex items-center gap-2 text-base font-bold text-[#25352B]">
+                  <Truck className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
+                  <span>Quản lý chuyến gom &amp; Biên bản bàn giao POD ({logisticsTrips.length})</span>
+                </h3>
+                <div className="space-y-3 text-xs">
+                  {logisticsTrips.map((trip) => (
+                    <div key={trip.id} className="rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-mono font-bold text-[#245B3D]">{trip.id}</span>
+                        <Badge tone={trip.status === "delivered_pod" ? "success" : trip.status === "failed_reschedule" ? "danger" : "info"}>
+                          {trip.status}
                         </Badge>
                       </div>
-                      <p className="text-xs text-[#52645A]">
-                        Cây trồng chính: {farm.mainCrops.join(", ")}
+                      <p className="mt-1 text-sm font-bold text-[#25352B]">{trip.routeLabel}</p>
+                      <p className="text-[#52645A]">
+                        Tài xế: {trip.driverName} · {trip.parcelCount} kiện · {trip.plannedDeparture}
                       </p>
-                      <div className="flex flex-wrap items-center gap-2 pt-1">
-                        {fBatches.map((b) => (
-                          <Link
-                            key={b.batchCode}
-                            href={`/trace/${b.batchCode}`}
-                            className="inline-flex items-center gap-1 rounded-full border border-[#245B3D] bg-white px-3 py-1 text-xs font-semibold text-[#245B3D]"
-                          >
-                            <QrCode className="h-3 w-3" aria-hidden="true" />
-                            {b.batchCode}
-                          </Link>
-                        ))}
-                        <Link
-                          href={`/farms/${farm.slug}`}
-                          className="text-xs font-bold text-[#245B3D] underline ml-auto"
+                      {trip.podNote ? <p className="mt-1 text-[#24603B]">{trip.podNote}</p> : null}
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={() => {
+                            updateLogisticsTripStatus(trip.id, "delivered_pod", "Đã bàn giao đủ kèm chữ ký điểm nhận.");
+                            notifySuccess(`Đã hoàn tất POD chuyến ${trip.id}.`);
+                          }}
                         >
-                          Xem hồ sơ vườn
-                        </Link>
+                          <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>Hoàn tất POD</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => {
+                            updateLogisticsTripStatus(trip.id, "failed_reschedule", "Khách hẹn giao lại khung chiều.");
+                            notifySuccess(`Đã ghi nhận hẹn lại chuyến ${trip.id}.`);
+                          }}
+                        >
+                          Hẹn giao lại
+                        </Button>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </Card>
-
-            <Card className="p-5 space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-bold text-[#25352B]">
-                  Mạng lưới 10 Tổ chức, HTX &amp; Đoàn trường đối tác ({organizations.length})
-                </h2>
-                <Badge tone="info">Thành phố Đồng Nai (25/11/2026)</Badge>
-              </div>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {organizations.map((org) => (
-                  <div
-                    key={org.id}
-                    className="rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] p-3.5 text-xs space-y-1.5"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="rounded-full bg-[#EAF0E5] px-2.5 py-0.5 font-bold text-[#245B3D]">
-                        {org.type}
-                      </span>
-                      <span className="font-semibold text-[#52645A]">
-                        {org.linkedFarmsCount} hộ liên kết
-                      </span>
-                    </div>
-                    <p className="text-sm font-bold text-[#25352B]">{org.name}</p>
-                    <p className="text-[#52645A]">
-                      {org.administrativeUnitName} ({org.administrativeUnitCode}) · {org.contactRoleDemo}
-                    </p>
-                    <p className="text-[#25352B]">{org.focusArea}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-        ) : null}
-
-        {/* MODE 2: B2B RFQ ROADMAP PREVIEW (S48) */}
-        {mode === "b2b" ? (
-          <div id="b2b" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <Card className="p-5 space-y-4">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="text-lg font-bold text-[#25352B]">
-                  Kết nối Thu mua Doanh nghiệp B2B (Roadmap S48)
-                </h2>
-                <Badge tone="warning">Phiên bản Lộ trình</Badge>
-              </div>
-              <DemoBanner
-                title="Chức năng minh họa Lộ trình giai đoạn sau"
-                detail="Thể hiện cách doanh nghiệp bếp ăn / siêu thị gửi nhu cầu thu mua định kỳ theo lô QR từ HTX. Không phát sinh hợp đồng hay thanh toán B2B thật."
-              />
-
-              <div className="space-y-3">
-                {B2B_RFQ_SAMPLES.map((rfq) => (
-                  <div
-                    key={rfq.id}
-                    className="rounded-[12px] border border-[#D6DED2] bg-[#F5F3E9] p-4 space-y-1"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="tabular-nums text-xs font-bold text-[#245B3D]">
-                        {rfq.id}
-                      </span>
-                      <span className="text-xs font-bold text-[#25352B]">{rfq.volume}</span>
-                    </div>
-                    <p className="font-bold text-[#25352B]">{rfq.buyer}</p>
-                    <p className="text-sm text-[#245B3D]">{rfq.product}</p>
-                    <p className="text-xs text-[#52645A]">{rfq.note}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="p-5 space-y-4">
-              <h3 className="text-lg font-bold text-[#25352B]">Gửi đề nghị báo giá mẫu (RFQ Demo)</h3>
-              <form onSubmit={handleSubmitRfq} className="space-y-3">
-                <div>
-                  <label htmlFor="rfq-company" className="mb-1 block text-xs font-semibold">
-                    Tên đơn vị thu mua
-                  </label>
-                  <input
-                    id="rfq-company"
-                    value={rfqCompany}
-                    onChange={(e) => setRfqCompany(e.target.value)}
-                    className="min-h-[44px] w-full rounded-[10px] border border-[#D6DED2] bg-white px-3 text-sm"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="rfq-note" className="mb-1 block text-xs font-semibold">
-                    Nhu cầu sản phẩm & tần suất giao
-                  </label>
-                  <textarea
-                    id="rfq-note"
-                    rows={3}
-                    value={rfqNote}
-                    onChange={(e) => setRfqNote(e.target.value)}
-                    className="w-full rounded-[10px] border border-[#D6DED2] bg-white p-3 text-sm"
-                  />
-                </div>
-                <Button type="submit" variant="primary" className="w-full">
-                  <Package className="h-4 w-4" aria-hidden="true" />
-                  <span>Gửi yêu cầu RFQ minh họa</span>
-                </Button>
-              </form>
-
-              <div className="rounded-[12px] bg-[#EAF0E5] p-3 text-xs text-[#245B3D]">
-                Tham khảo giá bán lẻ niêm yết hiện tại từ các vườn:{" "}
-                {products
-                  .slice(0, 3)
-                  .map((p) => `${p.name} (${formatVnd(p.priceVnd)})`)
-                  .join(" · ")}
-                .
-              </div>
-            </Card>
-          </div>
-        ) : null}
-
-        {/* MODE 3: SCHOOL CLASSROOM ROADMAP PREVIEW (S49) */}
-        {mode === "school" ? (
-          <div id="school" className="space-y-5">
-            <DemoBanner
-              title="Mô hình Farm as a Classroom — Học tập gắn với nhà vườn Đồng Nai (Roadmap S49)"
-              detail="Kết hợp trực tiếp bài học mở ở /learn với các chuyến tham quan an toàn tại Cù lao Tân Triều và Long Khánh."
-            />
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <Card className="p-5 space-y-3">
-                <div className="flex items-center gap-2 text-[#245B3D]">
-                  <ShieldCheck className="h-5 w-5" aria-hidden="true" />
-                  <h3 className="text-lg font-bold text-[#25352B]">
-                    Chuyên đề 1: Nhật ký Bưởi Tân Triều & Chuyển đổi số
-                  </h3>
-                </div>
-                <p className="text-sm text-[#52645A]">
-                  Học sinh quan sát quy trình chăm sóc bưởi, tự quét mã QR {batches[1]?.batchCode ?? "NF-TT-2026-01"} và
-                  nghe câu chuyện nghề nông từ Chú Ba Minh cùng đội Thanh niên tình nguyện.
-                </p>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <Link
-                    href="/learn"
-                    className="inline-flex min-h-[42px] items-center rounded-[10px] bg-[#245B3D] px-4 text-xs font-bold text-white"
-                  >
-                    Mở Học liệu &amp; Giải phẫu 2D
-                  </Link>
-                  <Link
-                    href="/explore"
-                    className="inline-flex min-h-[42px] items-center rounded-[10px] border border-[#245B3D] bg-white px-4 text-xs font-bold text-[#245B3D]"
-                  >
-                    Đặt lịch tham quan vườn
-                  </Link>
+                  ))}
                 </div>
               </Card>
+            ) : null}
 
-              <Card className="p-5 space-y-3">
-                <div className="flex items-center gap-2 text-[#245B3D]">
-                  <Truck className="h-5 w-5" aria-hidden="true" />
-                  <h3 className="text-lg font-bold text-[#25352B]">
-                    Cam kết an toàn trải nghiệm học đường (Demo)
-                  </h3>
+            {currentOrg === "mentor" ? (
+              <Card className="space-y-4 p-5">
+                <h3 className="text-base font-bold text-[#25352B]">
+                  Hồ sơ tư vấn kỹ thuật &amp; bao bì sau thu hoạch ({mentorCases.length})
+                </h3>
+                <div className="space-y-3 text-xs">
+                  {mentorCases.map((mc) => (
+                    <div key={mc.id} className="rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-bold text-[#245B3D]">{mc.id} · {mc.topic}</span>
+                        <Badge tone={mc.status === "reviewed" ? "success" : "warning"}>{mc.status}</Badge>
+                      </div>
+                      <p className="mt-1 text-sm font-bold text-[#25352B]">{mc.title}</p>
+                      <p className="text-[#52645A]">Vườn: {mc.farmName} · Cố vấn: {mc.mentorName} · {mc.scheduledAt}</p>
+                      {mc.feedback ? <p className="mt-1 text-[#24603B]">Kết luận: {mc.feedback}</p> : null}
+                    </div>
+                  ))}
                 </div>
-                <ul className="space-y-1.5 text-sm text-[#52645A] list-disc pl-5">
-                  <li>Nhóm tối đa 20–25 học sinh mỗi buổi kèm giáo viên và tình nguyện viên.</li>
-                  <li>Không sử dụng nông cụ sắc nhọn khi chưa có người hướng dẫn trực tiếp.</li>
-                  <li>Các em có thể thực hành ngay bài trắc nghiệm ở Góc học mở sau chuyến đi.</li>
-                </ul>
               </Card>
+            ) : null}
+
+            {currentOrg === "authority" ? (
+              <div className="space-y-5">
+                <QualityCenterPanel
+                  records={credentialRecords}
+                  roleMode="verifier"
+                  onChangeStatus={(id, next, note) => {
+                    updateCredentialLifecycle(id, next, note, "Cơ quan đối chiếu W05");
+                    notifySuccess(`Đã cập nhật trạng thái đối chiếu cho ${id}.`);
+                  }}
+                  onRenew={(id) => renewCredentialRecord(id, "Cơ quan đối chiếu W05")}
+                />
+              </div>
+            ) : null}
+          </>
+        ) : null}
+
+        {/* Tab 3: Members & Public Reference Verification */}
+        {tab === "members" ? (
+          <Card className="space-y-4 p-5">
+            <h3 className="text-base font-bold text-[#25352B]">
+              Đối tác liên kết &amp; Tham chiếu công bố trên địa bàn ({OCOP_PUBLIC_REFERENCE_CATALOG.length} hồ sơ tham khảo)
+            </h3>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 text-xs">
+              {OCOP_PUBLIC_REFERENCE_CATALOG.slice(0, 8).map((ref) => (
+                <div key={ref.id} className="rounded-[10px] border border-[#EAEFE6] bg-[#FAF8F1] p-3">
+                  <p className="font-bold text-[#25352B]">{ref.name}</p>
+                  <p className="text-[#245B3D]">{ref.subjectName}</p>
+                  <p className="text-[#52645A]">{ref.sourceAddressOriginal}</p>
+                </div>
+              ))}
             </div>
-          </div>
+          </Card>
+        ) : null}
+
+        {/* Tab 5: Scoped Reports */}
+        {tab === "reports" ? (
+          <Card className="space-y-4 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base font-bold text-[#25352B]">Báo cáo theo phạm vi tổ chức: {activeOrgMeta.label}</h3>
+                <p className="text-xs text-[#52645A]">Xuất tệp CSV chuẩn UTF-8 BOM an toàn công thức bảng tính.</p>
+              </div>
+              <Button size="sm" variant="primary" onClick={exportOrgCsv}>
+                <Download className="h-4 w-4" aria-hidden="true" />
+                <span>Xuất CSV tổ chức</span>
+              </Button>
+            </div>
+          </Card>
         ) : null}
       </div>
     </WorkspaceShell>
+  );
+}
+
+export default function OrganizationWorkspacePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-[1280px] px-4 py-12 text-sm text-[#52645A]">
+          Đang tải Không gian Tổ chức...
+        </div>
+      }
+    >
+      <OrganizationWorkspaceContent />
+    </Suspense>
   );
 }

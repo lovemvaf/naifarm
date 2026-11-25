@@ -18,14 +18,15 @@ import {
   Search,
   Settings,
   ShoppingBasket,
+  Sprout,
   Store,
   User,
   UserPlus,
   X,
 } from "lucide-react";
-import { toast } from "sonner";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { runGlobalSearch } from "@/lib/search/search-engine";
+import { notifyAccountSwitch, notifySignOut, notifySuccess } from "@/lib/toast";
 import { cn } from "@/lib/format";
 import type { WorkspaceId } from "@/types/naifarm";
 
@@ -99,8 +100,19 @@ export function AppHeader() {
         setAvatarOpen(false);
       }
     };
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSearchOpen(false);
+        setAvatarOpen(false);
+        setMobileOpen(false);
+      }
+    };
     document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscapeKey);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscapeKey);
+    };
   }, []);
 
   const searchPreview = useMemo(() => {
@@ -117,6 +129,7 @@ export function AppHeader() {
 
   const navItems = [
     { href: "/marketplace", label: "Chợ OCOP", icon: Store },
+    { href: "/farms", label: "Nhà vườn", icon: Sprout },
     { href: "/explore", label: "Bản đồ", icon: Compass },
     { href: "/live", label: "OCOP Live", icon: Radio },
     { href: "/learn", label: "Học tập", icon: GraduationCap },
@@ -133,7 +146,7 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#D6DED2] bg-[#F5F3E9]/95 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between gap-2.5 px-3 sm:px-4 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between gap-2 px-3 sm:px-4 lg:px-6">
         {/* Brand */}
         <Link
           href="/"
@@ -151,13 +164,13 @@ export function AppHeader() {
               NaiFarm
             </span>
             <span className="hidden text-[10px] font-medium text-[#52645A] xl:block">
-              Chợ OCOP Thanh niên · Đồng Nai
+              Chợ OCOP Thanh niên Đồng Nai
             </span>
           </div>
         </Link>
 
         {/* Primary Desktop Links */}
-        <nav aria-label="Điều hướng chính" className="hidden items-center gap-1 lg:flex">
+        <nav aria-label="Điều hướng chính" className="hidden items-center gap-0.5 lg:flex">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -166,13 +179,13 @@ export function AppHeader() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex min-h-[38px] shrink-0 items-center gap-1.5 rounded-[10px] px-2.5 text-[13px] font-semibold whitespace-nowrap transition-colors",
+                  "flex min-h-[38px] shrink-0 items-center gap-1 rounded-[10px] px-2 text-[12.5px] font-semibold whitespace-nowrap transition-colors xl:px-2.5 xl:text-[13px]",
                   active
                     ? "bg-[#EAF0E5] text-[#245B3D]"
                     : "text-[#25352B] hover:bg-[#EFECE0]",
                 )}
               >
-                <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <Icon className="h-3.5 w-3.5 shrink-0 xl:h-4 xl:w-4" aria-hidden="true" />
                 <span>{item.label}</span>
               </Link>
             );
@@ -180,10 +193,10 @@ export function AppHeader() {
         </nav>
 
         {/* Desktop Global Search */}
-        <div ref={searchBoxRef} className="relative hidden max-w-[290px] flex-1 md:block">
+        <div ref={searchBoxRef} className="relative hidden min-w-[145px] max-w-[230px] flex-1 md:block xl:max-w-[260px]">
           <form onSubmit={handleSearchSubmit}>
             <Search
-              className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#52645A]"
+              className="pointer-events-none absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-[#52645A]"
               aria-hidden="true"
             />
             <input
@@ -194,14 +207,14 @@ export function AppHeader() {
                 setSearchText(e.target.value);
                 setSearchOpen(true);
               }}
-              placeholder="Tìm nông sản, phường/xã, mã lô..."
+              placeholder="Tìm kiếm..."
               aria-label="Tìm kiếm nhanh trên NaiFarm"
-              className="min-h-[38px] w-full rounded-[10px] border border-[#C7D2C2] bg-white pr-3 pl-9 text-xs text-[#25352B] placeholder:text-[#687A70]"
+              className="min-h-[38px] w-full rounded-[10px] border border-[#C7D2C2] bg-white pr-2.5 pl-8 text-xs text-[#25352B] placeholder:text-[#687A70]"
             />
           </form>
 
           {searchOpen && searchText.trim().length >= 2 ? (
-            <div className="absolute top-[44px] right-0 left-0 z-50 rounded-[14px] border border-[#D6DED2] bg-white p-2 shadow-[0_14px_32px_rgba(37,53,43,0.16)]">
+            <div className="absolute top-[44px] right-0 left-0 z-50 min-w-[280px] rounded-[14px] border border-[#D6DED2] bg-white p-2 shadow-[0_14px_32px_rgba(37,53,43,0.16)]">
               {searchPreview.length > 0 ? (
                 <div className="space-y-1">
                   {searchPreview.map((hit) => (
@@ -237,7 +250,7 @@ export function AppHeader() {
         </div>
 
         {/* Right Actions: Cart + Guest Auth / Signed-in Avatar + Mobile Trigger */}
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1.5">
           <Link
             href="/cart"
             className="flex min-h-[38px] items-center gap-1.5 rounded-[10px] border border-[#D6DED2] bg-white px-2.5 text-xs font-semibold text-[#25352B] whitespace-nowrap hover:bg-[#EAF0E5]"
@@ -270,7 +283,8 @@ export function AppHeader() {
                 onClick={() => setAvatarOpen((v) => !v)}
                 aria-expanded={avatarOpen}
                 aria-haspopup="menu"
-                className="flex min-h-[38px] items-center gap-2 rounded-[10px] border border-[#245B3D]/30 bg-white px-2 py-1 text-left text-xs font-semibold text-[#25352B] whitespace-nowrap hover:bg-[#EAF0E5]"
+                aria-label="Mở menu tài khoản"
+                className="flex min-h-[38px] items-center gap-1.5 rounded-[10px] border border-[#245B3D]/30 bg-white px-2 py-1 text-left text-xs font-semibold text-[#25352B] whitespace-nowrap hover:bg-[#EAF0E5]"
               >
                 <span
                   className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
@@ -278,22 +292,25 @@ export function AppHeader() {
                 >
                   {authUser.avatarText}
                 </span>
-                <span className="hidden max-w-[96px] truncate sm:inline">{authUser.name}</span>
+                <span className="hidden max-w-[92px] truncate sm:inline">{authUser.name}</span>
                 <ChevronDown className="h-3.5 w-3.5 text-[#52645A]" aria-hidden="true" />
               </button>
 
               {avatarOpen ? (
                 <div
                   role="menu"
-                  aria-label="Menu tài khoản Demo"
-                  className="absolute top-[46px] right-0 z-50 w-[290px] rounded-[16px] border border-[#D6DED2] bg-white p-2.5 shadow-[0_16px_40px_rgba(37,53,43,0.18)]"
+                  aria-label="Menu tài khoản"
+                  className="absolute top-[46px] right-0 z-50 w-[300px] rounded-[16px] border border-[#D6DED2] bg-white p-2.5 shadow-[0_16px_40px_rgba(37,53,43,0.18)]"
                 >
                   <div className="rounded-[12px] bg-[#FAF8F1] px-3 py-2.5">
-                    <p className="text-xs font-bold text-[#25352B]">{authUser.name}</p>
-                    <p className="text-[11px] font-semibold text-[#245B3D]">{authUser.roleLabel}</p>
-                    <p className="text-[11px] text-[#52645A]">
-                      {authUser.unitName} · Demo Session
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-bold text-[#25352B]">{authUser.name}</p>
+                      <span className="rounded-full bg-[#EAF0E5] px-2 py-0.5 text-[10px] font-semibold text-[#245B3D]">
+                        Không gian trải nghiệm
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] font-semibold text-[#245B3D]">{authUser.roleLabel}</p>
+                    <p className="text-[11px] text-[#52645A]">{authUser.unitName}</p>
                   </div>
 
                   <div className="mt-2 space-y-1">
@@ -327,13 +344,13 @@ export function AppHeader() {
                       className="flex items-center gap-2 rounded-[10px] px-3 py-2 text-xs font-semibold text-[#245B3D] hover:bg-[#EAF0E5]"
                     >
                       <Compass className="h-4 w-4" aria-hidden="true" />
-                      <span>Trung tâm Trình diễn BGK</span>
+                      <span>Truy cập nhanh</span>
                     </Link>
                   </div>
 
                   <div className="mt-2 border-t border-[#D6DED2] pt-2">
-                    <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-[#52645A]">
-                      Chuyển nhanh vai trò Demo
+                    <p className="px-2 pb-1 text-[11px] font-bold text-[#52645A]">
+                      Đổi không gian làm việc
                     </p>
                     <div className="grid grid-cols-2 gap-1">
                       {demoAccounts.slice(0, 6).map((acc) => (
@@ -343,11 +360,11 @@ export function AppHeader() {
                           onClick={() => {
                             signInDemoAccount(acc.id);
                             setAvatarOpen(false);
-                            toast.info(`Đã chuyển sang ${acc.roleLabel}`);
+                            notifyAccountSwitch(acc.roleLabel);
                             router.push(WORKSPACE_HOME[acc.workspaceId]);
                           }}
                           className={cn(
-                            "rounded-[8px] px-2 py-1.5 text-left text-[11px] font-medium transition",
+                            "rounded-[8px] px-2 py-1.5 text-left text-[11px] font-medium transition cursor-pointer",
                             acc.id === authUser.id
                               ? "bg-[#245B3D] text-white"
                               : "bg-[#F5F3E9] text-[#25352B] hover:bg-[#EAF0E5]",
@@ -365,21 +382,21 @@ export function AppHeader() {
                       onClick={() => {
                         resetDemoState();
                         setAvatarOpen(false);
-                        toast.success("Đã đặt lại toàn bộ dữ liệu demo.");
+                        notifySuccess("Đã đặt lại dữ liệu trải nghiệm mặc định.");
                       }}
-                      className="inline-flex items-center gap-1 rounded-[8px] px-2.5 py-1.5 text-[11px] font-medium text-[#52645A] hover:bg-[#F5F3E9]"
+                      className="inline-flex items-center gap-1 rounded-[8px] px-2.5 py-1.5 text-[11px] font-medium text-[#52645A] hover:bg-[#F5F3E9] cursor-pointer"
                     >
                       <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>Reset Demo</span>
+                      <span>Đặt lại dữ liệu</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => {
-                        signOutDemo();
                         setAvatarOpen(false);
-                        toast.info("Đã đăng xuất về chế độ Khách.");
+                        signOutDemo();
+                        notifySignOut();
                       }}
-                      className="inline-flex items-center gap-1 rounded-[8px] bg-[#FDECEC] px-2.5 py-1.5 text-[11px] font-semibold text-[#A32D2D] hover:bg-[#FAD6D6]"
+                      className="inline-flex items-center gap-1 rounded-[8px] bg-[#FDECEC] px-2.5 py-1.5 text-[11px] font-semibold text-[#A32D2D] hover:bg-[#FAD6D6] cursor-pointer"
                     >
                       <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
                       <span>Đăng xuất</span>
@@ -392,14 +409,14 @@ export function AppHeader() {
             <div className="hidden items-center gap-1.5 sm:flex">
               <Link
                 href="/sign-in"
-                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-[10px] border border-[#245B3D] bg-white px-3 text-xs font-semibold text-[#245B3D] whitespace-nowrap hover:bg-[#EAF0E5]"
+                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-[10px] border border-[#245B3D] bg-white px-2.5 text-xs font-semibold text-[#245B3D] whitespace-nowrap hover:bg-[#EAF0E5]"
               >
                 <LogIn className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Đăng nhập</span>
               </Link>
               <Link
                 href="/sign-up"
-                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-[10px] bg-[#245B3D] px-3 text-xs font-semibold text-white whitespace-nowrap hover:bg-[#19472E]"
+                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-[10px] bg-[#245B3D] px-2.5 text-xs font-semibold text-white whitespace-nowrap hover:bg-[#19472E]"
               >
                 <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Đăng ký</span>
@@ -454,12 +471,20 @@ export function AppHeader() {
               );
             })}
             <Link
+              href="/quality"
+              onClick={() => setMobileOpen(false)}
+              className="flex min-h-[42px] items-center gap-2 rounded-[10px] border border-[#D6DED2] bg-[#FAF8F1] px-3 text-xs font-semibold text-[#25352B]"
+            >
+              <Layers className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
+              <span>Chất lượng 26 loại</span>
+            </Link>
+            <Link
               href="/demo"
               onClick={() => setMobileOpen(false)}
               className="flex min-h-[42px] items-center gap-2 rounded-[10px] border border-[#D6DED2] bg-[#EAF0E5] px-3 text-xs font-semibold text-[#245B3D]"
             >
-              <Layers className="h-4 w-4" aria-hidden="true" />
-              <span>Demo BGK</span>
+              <Compass className="h-4 w-4" aria-hidden="true" />
+              <span>Truy cập nhanh</span>
             </Link>
           </div>
 
@@ -470,7 +495,7 @@ export function AppHeader() {
                 onClick={() => setMobileOpen(false)}
                 className="flex min-h-[42px] items-center justify-center rounded-[10px] border border-[#245B3D] bg-white text-xs font-semibold text-[#245B3D]"
               >
-                Đăng nhập Demo
+                Đăng nhập
               </Link>
               <Link
                 href="/sign-up"

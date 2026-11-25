@@ -28,6 +28,8 @@ import {
   INITIAL_DOC_CASES,
   INITIAL_EXPERIENCE_BOOKINGS,
 } from "../src/data/demo/community";
+import { ASSET_MANIFEST } from "../src/data/reference/asset-manifest";
+import { OCOP_PUBLIC_REFERENCE_CATALOG } from "../src/data/reference/ocop-public-reference";
 
 function assertAssetExists(root: string, imagePath: string | undefined, owner: string) {
   if (!imagePath) return;
@@ -52,17 +54,53 @@ function main() {
   const certStatuses = new Set(INITIAL_CERTIFICATIONS.map((c) => c.status));
   const orderStatuses = new Set(INITIAL_ORDERS.map((o) => o.status));
 
-  // Count assertions matching V2.0 plan
-  assert(INITIAL_FARMS.length >= 24, `Expected >=24 farms, got ${INITIAL_FARMS.length}`);
+  // Count assertions matching V3.0 baseline & expansion targets
+  assert(INITIAL_FARMS.length >= 30, `Expected >=30 farms, got ${INITIAL_FARMS.length}`);
   assert(experienceCount >= 14, `Expected >=14 experiences, got ${experienceCount}`);
-  assert(INITIAL_PRODUCTS.length >= 84, `Expected >=84 products, got ${INITIAL_PRODUCTS.length}`);
+  assert(INITIAL_PRODUCTS.length >= 116, `Expected >=116 products, got ${INITIAL_PRODUCTS.length}`);
   assert(categories.size >= 10, `Expected 10 product categories, got ${categories.size}`);
-  assert(INITIAL_BATCHES.length >= 84, `Expected >=84 batches, got ${INITIAL_BATCHES.length}`);
+  assert(INITIAL_BATCHES.length >= 119, `Expected >=119 batches, got ${INITIAL_BATCHES.length}`);
   assert(INITIAL_SEASONS.length >= 30, `Expected >=30 seasons, got ${INITIAL_SEASONS.length}`);
   assert(INITIAL_DIARY_ENTRIES.length >= 300, `Expected >=300 diaries, got ${INITIAL_DIARY_ENTRIES.length}`);
   assert(INITIAL_CERTIFICATIONS.length >= 24, `Expected >=24 certifications, got ${INITIAL_CERTIFICATIONS.length}`);
   assert.equal(certStatuses.size, 7, `Expected all 7 certification statuses, got ${certStatuses.size}`);
-  assert(INITIAL_ORDERS.length >= 80, `Expected >=80 orders, got ${INITIAL_ORDERS.length}`);
+  assert(INITIAL_ORDERS.length >= 168, `Expected >=168 orders, got ${INITIAL_ORDERS.length}`);
+  assert(
+    INITIAL_ORDERS.some((o) => o.orderDateIso?.startsWith("2026-10")),
+    "Expected orders spanning Oct 2026 for prior-period comparisons",
+  );
+  assert(
+    INITIAL_ORDERS.some((o) => o.orderDateIso?.startsWith("2026-11")),
+    "Expected orders spanning Nov 2026 for current-period metrics",
+  );
+  assert.equal(ASSET_MANIFEST.length, 65, `Expected 65 asset manifest entries, got ${ASSET_MANIFEST.length}`);
+  for (const asset of ASSET_MANIFEST) {
+    assertAssetExists(root, asset.localPath, `asset manifest ${asset.assetId}`);
+  }
+  for (const ref of OCOP_PUBLIC_REFERENCE_CATALOG) {
+    if (ref.administrativeUnitCode) {
+      assert(
+        getAdministrativeUnitByCode(ref.administrativeUnitCode),
+        `Public reference ${ref.id} uses unknown unit code ${ref.administrativeUnitCode}`,
+      );
+    }
+    assertAssetExists(root, ref.image, `public reference ${ref.id}`);
+  }
+  // Security & architecture guardrails: zero 3D/WebGL, zero API routes, zero live secret keys
+  assert(!fs.existsSync(path.join(root, "src", "app", "api")), "Frontend-only constraint violated: src/app/api exists");
+  const scanSrcForBanned = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        scanSrcForBanned(full);
+      } else if (/\.(ts|tsx)$/.test(entry.name)) {
+        const text = fs.readFileSync(full, "utf8");
+        assert(!/from\s+["'](three|@react-three\/)/.test(text), `Forbidden 3D import found in ${full}`);
+        assert(!/(sk_live_|AIza[0-9A-Za-z_-]{20,}|ghp_[0-9A-Za-z]{20,})/.test(text), `Secret-like token found in ${full}`);
+      }
+    }
+  };
+  scanSrcForBanned(path.join(root, "src"));
   assert.equal(orderStatuses.size, 6, `Expected all 6 order statuses, got ${orderStatuses.size}`);
   assert(INITIAL_MISSIONS.length >= 40, `Expected >=40 missions, got ${INITIAL_MISSIONS.length}`);
   assert(INITIAL_VOLUNTEER_HOURS.length >= 120, `Expected >=120 volunteer hour records, got ${INITIAL_VOLUNTEER_HOURS.length}`);

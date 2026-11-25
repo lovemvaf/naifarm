@@ -2,10 +2,10 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Bell, CheckCheck, MapPin, Plus, Settings, Trash2, User } from "lucide-react";
-import { toast } from "sonner";
+import { Bell, CheckCheck, MapPin, Plus, RotateCcw, Settings, Trash2, User } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { ADMINISTRATIVE_UNITS } from "@/lib/geography/administrative-lookup";
+import { notifyError, notifyInfo, notifySuccess } from "@/lib/toast";
 import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
 import { Badge, Card } from "@/components/ui/Primitives";
 
@@ -18,11 +18,12 @@ export default function AccountSettingsPage() {
     notifications,
     markNotificationRead,
     markAllNotificationsRead,
+    resetDemoState,
   } = useDemoStore();
 
   const [label, setLabel] = useState("");
   const [recipientName, setRecipientName] = useState(authUser?.name ?? "Ngọc Linh");
-  const [phoneDemo, setPhoneDemo] = useState("090x xxx 888 (Demo)");
+  const [phoneDemo, setPhoneDemo] = useState("090x xxx 888");
   const [detailAddress, setDetailAddress] = useState("");
   const [unitCode, setUnitCode] = useState("26041");
 
@@ -36,10 +37,10 @@ export default function AccountSettingsPage() {
       administrativeUnitCode: unitCode,
     });
     if (!res.ok) {
-      toast.error(res.message);
+      notifyError(res.message);
       return;
     }
-    toast.success(res.message);
+    notifySuccess(res.message);
     setLabel("");
     setDetailAddress("");
   };
@@ -48,8 +49,8 @@ export default function AccountSettingsPage() {
     <WorkspaceShell
       workspaceId="W01"
       title="Cài đặt Tài khoản, Địa chỉ & Thông báo"
-      subtitle="Quản lý sổ địa chỉ chuẩn 95 Phường/Xã Thành phố Đồng Nai (25/11/2026) và hộp thông báo demo"
-      scopeBadge="Frontend-Only · Dữ liệu lưu cục bộ trên trình duyệt"
+      subtitle="Quản lý sổ địa chỉ nhận hàng, hộp thông báo và khôi phục trạng thái không gian trải nghiệm"
+      scopeBadge="Dữ liệu lưu cục bộ trên trình duyệt"
       navItems={[
         { label: "Tổng quan cá nhân", href: "/account", icon: <User className="h-4 w-4" /> },
         { label: "Cài đặt & Địa chỉ", href: "/account/settings", icon: <Settings className="h-4 w-4" />, active: true },
@@ -57,11 +58,10 @@ export default function AccountSettingsPage() {
     >
       <div className="space-y-6">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          {/* Address Book + Form */}
           <Card className="space-y-4 p-5 lg:col-span-6">
             <h2 className="flex items-center gap-2 text-base font-bold text-[#25352B]">
               <MapPin className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
-              <span>Thêm địa chỉ mới (95 Phường/Xã Đồng Nai)</span>
+              <span>Thêm địa chỉ mới (Thành phố Đồng Nai)</span>
             </h2>
             <form onSubmit={handleAddAddress} className="space-y-3">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -80,7 +80,7 @@ export default function AccountSettingsPage() {
                 </div>
                 <div>
                   <label htmlFor="addr-rec" className="block text-xs font-semibold text-[#25352B]">
-                    Người nhận (Demo)
+                    Người nhận
                   </label>
                   <input
                     id="addr-rec"
@@ -124,7 +124,7 @@ export default function AccountSettingsPage() {
                 </div>
                 <div>
                   <label htmlFor="addr-phone" className="block text-xs font-semibold text-[#25352B]">
-                    Số liên hệ minh họa
+                    Số liên hệ mẫu
                   </label>
                   <input
                     id="addr-phone"
@@ -137,10 +137,10 @@ export default function AccountSettingsPage() {
               </div>
               <button
                 type="submit"
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-[10px] bg-[#245B3D] px-4 text-xs font-semibold text-white hover:bg-[#19472E]"
+                className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-[10px] bg-[#245B3D] px-4 text-xs font-semibold text-white hover:bg-[#19472E] cursor-pointer"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
-                <span>Lưu địa chỉ chuẩn hóa Đồng Nai</span>
+                <span>Lưu địa chỉ nhận hàng</span>
               </button>
             </form>
           </Card>
@@ -170,9 +170,9 @@ export default function AccountSettingsPage() {
                       type="button"
                       onClick={() => {
                         removeAddressEntry(entry.id);
-                        toast.info("Đã xóa địa chỉ demo.");
+                        notifyInfo("Đã xóa địa chỉ khỏi sổ cá nhân.");
                       }}
-                      className="rounded-lg p-1.5 text-[#A32D2D] hover:bg-[#FDECEC]"
+                      className="rounded-lg p-1.5 text-[#A32D2D] hover:bg-[#FDECEC] cursor-pointer"
                       aria-label={`Xóa địa chỉ ${entry.label}`}
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -184,7 +184,6 @@ export default function AccountSettingsPage() {
           </Card>
         </div>
 
-        {/* Notifications inbox */}
         <Card id="notifications" className="space-y-4 p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="flex items-center gap-2 text-base font-bold text-[#25352B]">
@@ -195,9 +194,9 @@ export default function AccountSettingsPage() {
               type="button"
               onClick={() => {
                 markAllNotificationsRead();
-                toast.success("Đã đánh dấu tất cả thông báo là đã đọc.");
+                notifySuccess("Đã đánh dấu tất cả thông báo là đã đọc.");
               }}
-              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-[10px] border border-[#D6DED2] bg-white px-3 text-xs font-semibold text-[#245B3D] hover:bg-[#EAF0E5]"
+              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-[10px] border border-[#D6DED2] bg-white px-3 text-xs font-semibold text-[#245B3D] hover:bg-[#EAF0E5] cursor-pointer"
             >
               <CheckCheck className="h-3.5 w-3.5" aria-hidden="true" />
               <span>Đánh dấu tất cả đã đọc</span>
@@ -230,7 +229,7 @@ export default function AccountSettingsPage() {
                     <button
                       type="button"
                       onClick={() => markNotificationRead(n.id)}
-                      className="text-[11px] text-[#52645A] hover:underline"
+                      className="text-[11px] text-[#52645A] hover:underline cursor-pointer"
                     >
                       Đã đọc
                     </button>
@@ -239,6 +238,26 @@ export default function AccountSettingsPage() {
               </div>
             ))}
           </div>
+        </Card>
+
+        <Card className="flex flex-wrap items-center justify-between gap-4 border-[#D6DED2] bg-[#FAF8F1] p-5">
+          <div>
+            <p className="text-sm font-bold text-[#25352B]">Cài đặt không gian trải nghiệm</p>
+            <p className="mt-0.5 text-xs text-[#52645A]">
+              Khôi phục lại giỏ hàng, đơn hàng, nhật ký mùa vụ và quyền hạn về dữ liệu mẫu ban đầu.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              resetDemoState();
+              notifySuccess("Đã đặt lại dữ liệu trải nghiệm mặc định.");
+            }}
+            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-[10px] border border-[#D6DED2] bg-white px-4 text-xs font-semibold text-[#25352B] hover:bg-[#EAF0E5] cursor-pointer"
+          >
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Đặt lại dữ liệu trải nghiệm</span>
+          </button>
         </Card>
       </div>
     </WorkspaceShell>

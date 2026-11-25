@@ -11,6 +11,8 @@
     "data:import": "tsx scripts/import-administrative-data.ts",
     "data:validate": "tsx scripts/validate-administrative-data.ts",
     "test:data": "tsx scripts/validate-mock-data.ts",
+    "test:metrics": "tsx scripts/test-metrics.ts",
+    "test:quality": "tsx scripts/test-quality.ts",
     "test:qr": "tsx scripts/verify-qr-decode.ts"
   },
   "dependencies": {

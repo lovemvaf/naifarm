@@ -1,260 +1,429 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, MapPin, ShieldCheck, Truck } from "lucide-react";
-import { toast } from "sonner";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  MapPin,
+  ShoppingBag,
+  Sparkles,
+  Tag,
+  Truck,
+} from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { ADMINISTRATIVE_UNITS } from "@/lib/geography/administrative-lookup";
 import { formatVnd } from "@/lib/format";
+import { notifyError, notifySuccess } from "@/lib/toast";
 import { Badge, Button, Card, EmptyState } from "@/components/ui/Primitives";
-import type { DeliveryMethod } from "@/types/naifarm";
+
+const DELIVERY_SLOTS = [
+  "Sáng hôm nay (08:30 – 11:30)",
+  "Chiều hôm nay (14:00 – 17:30)",
+  "Sáng mai (08:30 – 11:30)",
+  "Cuối tuần (09:00 – 16:00)",
+];
 
 export default function CheckoutPage() {
-  const router = useRouter();
-  const { cart, products, addressBook, placeDemoOrder } = useDemoStore();
-  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("delivery");
-  const [customerName, setCustomerName] = useState("Ngọc Linh (Demo)");
+  const { cart, products, addressBook, authUser, placeDemoOrder } = useDemoStore();
+
+  const [customerName, setCustomerName] = useState(authUser?.name ?? "Ngọc Linh");
   const [customerPhone, setCustomerPhone] = useState("090x xxx 128");
-  const [deliveryAddress, setDeliveryAddress] = useState(
-    addressBook[0]?.fullAddress ??
-      "Số 45/2 Đường Nguyễn Ái Quốc, Phường Trấn Biên, Thành phố Đồng Nai, Việt Nam (Địa chỉ minh họa)",
-  );
-  const [submitting, setSubmitting] = useState(false);
+  const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
+  const [addressScope, setAddressScope] = useState<"dongnai" | "outside">("dongnai");
+  const [unitCode, setUnitCode] = useState(authUser?.unitCode ?? "26041");
+  const [streetDetail, setStreetDetail] = useState("Số 18 Đường Nguyễn Ái Quốc");
+  const [outsideAddress, setOutsideAddress] = useState("TP. Hồ Chí Minh — Quận Bình Thạnh, Số 45 Điện Biên Phủ");
+  const [deliverySlotLabel, setDeliverySlotLabel] = useState(DELIVERY_SLOTS[1]);
+  const [couponCode, setCouponCode] = useState("");
+  const [placedOrderIds, setPlacedOrderIds] = useState<string[]>([]);
 
-  const detailed = cart
-    .map((c) => {
+  const lineSummary = useMemo(() => {
+    const farms = new Set<string>();
+    let subtotal = 0;
+    for (const c of cart) {
       const p = products.find((x) => x.id === c.productId);
-      return p ? { ...c, product: p } : null;
-    })
-    .filter((x): x is NonNullable<typeof x> => x !== null);
+      if (!p) continue;
+      farms.add(p.farmId);
+      const opt = p.weightOptions?.find((o) => o.label === c.selectedOptionLabel);
+      subtotal += (opt?.priceVnd ?? p.priceVnd) * c.quantity;
+    }
+    return {
+      farmCount: Math.max(1, farms.size),
+      subtotalVnd: subtotal,
+    };
+  }, [cart, products]);
 
-  const subtotal = detailed.reduce((sum, i) => sum + i.product.priceVnd * i.quantity, 0);
-  const shippingFee = deliveryMethod === "delivery" ? 20000 : 0;
-  const total = subtotal + shippingFee;
+  const couponNorm = couponCode.trim().toUpperCase();
+  const discountVnd =
+    couponNorm === "NAIFARM10" && lineSummary.subtotalVnd >= 100000
+      ? 10000
+      : couponNorm === "MUAVU20" && lineSummary.subtotalVnd >= 200000
+      ? 20000
+      : 0;
+  const shippingFeeVnd = deliveryMethod === "delivery" ? lineSummary.farmCount * 20000 : 0;
+  const totalVnd = Math.max(0, lineSummary.subtotalVnd - discountVnd + shippingFeeVnd);
 
-  if (detailed.length === 0) {
+  const selectedUnit = ADMINISTRATIVE_UNITS.find((u) => u.maDvhc === unitCode);
+  const composedAddress =
+    deliveryMethod === "pickup"
+      ? "Nhận trực tiếp tại nhà vườn theo mã đơn"
+      : addressScope === "dongnai"
+      ? `${streetDetail.trim() || "Trung tâm"}, ${selectedUnit?.diaChiChuan ?? "Tỉnh Đồng Nai"}`
+      : outsideAddress.trim() || "Ngoài tỉnh Đồng Nai";
+
+  if (placedOrderIds.length > 0) {
     return (
-      <div className="mx-auto max-w-[780px] px-4 py-12">
-        <EmptyState
-          icon={<Truck className="h-6 w-6" />}
-          title="Chưa có sản phẩm để thanh toán"
-          description="Quay lại Chợ OCOP để chọn nông sản trước khi đặt đơn hàng demo."
-          action={
+      <div className="mx-auto max-w-[780px] space-y-6 px-4 py-10">
+        <Card className="space-y-5 border-[#245B3D] p-6 md:p-8">
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#E6F3E9] text-[#24603B]">
+              <CheckCircle2 className="h-6 w-6" aria-hidden="true" />
+            </div>
+            <div>
+              <Badge tone="success">Đã ghi nhận đơn hàng</Badge>
+              <h1 className="mt-2 font-editorial text-2xl font-bold text-[#25352B]">
+                Đặt hàng thành công ({placedOrderIds.length} đơn theo nhà vườn)
+              </h1>
+              <p className="mt-1 text-sm text-[#52645A]">
+                Đơn hàng trong không gian trải nghiệm, không phát sinh thanh toán hoặc giao hàng thực tế.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2 rounded-[14px] bg-[#FAF8F1] p-4">
+            <p className="text-xs font-bold text-[#52645A] uppercase">Mã đơn vừa tạo</p>
+            <div className="flex flex-wrap gap-2">
+              {placedOrderIds.map((oid) => (
+                <Link
+                  key={oid}
+                  href={`/account/orders/${oid}`}
+                  className="inline-flex min-h-[40px] items-center gap-1.5 rounded-[10px] border border-[#245B3D] bg-white px-3.5 text-sm font-bold text-[#245B3D] hover:bg-[#EAF0E5]"
+                >
+                  <span>{oid}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/account/orders"
+              className="inline-flex min-h-[46px] items-center justify-center rounded-[12px] bg-[#245B3D] px-5 text-sm font-semibold text-white hover:bg-[#19472E]"
+            >
+              Xem toàn bộ đơn hàng
+            </Link>
             <Link
               href="/marketplace"
-              className="inline-flex min-h-[44px] items-center rounded-[10px] bg-[#245B3D] px-5 text-sm font-semibold text-white"
+              className="inline-flex min-h-[46px] items-center justify-center rounded-[12px] border border-[#D6DED2] bg-white px-5 text-sm font-semibold text-[#25352B] hover:bg-[#EAF0E5]"
             >
-              Về Chợ OCOP
+              Tiếp tục khám phá chợ OCOP
             </Link>
-          }
-        />
+          </div>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-[1120px] space-y-6 px-4 py-8 lg:px-8">
-      <Link href="/cart" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#245B3D] hover:underline">
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        <span>Quay lại Giỏ hàng</span>
-      </Link>
-
+    <div className="mx-auto max-w-[1160px] space-y-6 px-4 py-8 lg:px-6">
       <div>
-        <Badge tone="gold">W01 · R4 · S06 Đặt hàng COD Demo (NaiAI tạm ẩn để tập trung)</Badge>
-        <h1 className="mt-2 font-editorial text-3xl font-semibold text-[#25352B]">
-          Xác nhận Phương thức Nhận hàng & Đặt đơn Demo
+        <Link
+          href="/cart"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#245B3D] hover:underline"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          <span>Quay lại giỏ hàng</span>
+        </Link>
+        <h1 className="mt-2 font-editorial text-2xl font-bold text-[#25352B] md:text-3xl">
+          Xác nhận thông tin đặt hàng
         </h1>
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (submitting) return;
-          if (deliveryMethod === "delivery" && deliveryAddress.trim().length < 5) {
-            toast.error("Vui lòng nhập địa chỉ giao hàng minh họa khi chọn Giao tận nơi.");
-            return;
+      {cart.length === 0 ? (
+        <EmptyState
+          icon={<ShoppingBag className="h-6 w-6" aria-hidden="true" />}
+          title="Chưa có sản phẩm để thanh toán"
+          description="Vui lòng chọn nông sản vào giỏ trước khi tạo đơn."
+          action={
+            <Link
+              href="/marketplace"
+              className="inline-flex min-h-[46px] items-center rounded-[12px] bg-[#245B3D] px-5 text-sm font-semibold text-white"
+            >
+              Mở Chợ nông sản
+            </Link>
           }
-          setSubmitting(true);
-          const res = placeDemoOrder({
-            customerName,
-            customerPhoneDemo: customerPhone,
-            deliveryMethod,
-            deliveryAddress,
-          });
-          if (res.ok && res.orderId) {
-            toast.success(res.message);
-            router.push(`/account/orders/${res.orderId}`);
-          } else {
-            toast.error(res.message);
-            setSubmitting(false);
-          }
-        }}
-        className="grid grid-cols-1 gap-6 lg:grid-cols-12"
-      >
-        <div className="space-y-5 lg:col-span-7">
-          <Card className="space-y-4 p-5">
-            <h2 className="text-lg font-bold text-[#25352B]">1. Chọn hình thức nhận nông sản</h2>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <label
-                className={`flex cursor-pointer flex-col justify-between rounded-[14px] border-2 p-4 ${
-                  deliveryMethod === "delivery"
-                    ? "border-[#245B3D] bg-[#EAF0E5]/70"
-                    : "border-[#D6DED2] bg-white"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-bold text-[#25352B]">Giao tận nơi (Xe mát HTX)</p>
-                    <p className="mt-1 text-xs text-[#52645A]">
-                      Giao trong ngày tuyến Đồng Nai – TP.HCM
-                    </p>
-                  </div>
+        />
+      ) : (
+        <form
+          className="grid grid-cols-1 gap-6 lg:grid-cols-12"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const res = placeDemoOrder({
+              customerName,
+              customerPhoneDemo: customerPhone,
+              deliveryMethod,
+              deliveryAddress: composedAddress,
+              deliverySlotLabel,
+              couponCode: couponCode.trim() || undefined,
+            });
+            if (!res.ok) {
+              notifyError(res.message);
+              return;
+            }
+            notifySuccess(res.message);
+            setPlacedOrderIds(res.orderIds ?? (res.orderId ? [res.orderId] : []));
+          }}
+        >
+          <div className="space-y-5 lg:col-span-8">
+            <Card className="space-y-4 p-5">
+              <h2 className="text-base font-bold text-[#25352B]">1. Người nhận nông sản</h2>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="chk-name" className="block text-xs font-semibold text-[#25352B]">
+                    Họ tên người nhận
+                  </label>
                   <input
-                    type="radio"
-                    name="deliveryMethod"
-                    checked={deliveryMethod === "delivery"}
-                    onChange={() => setDeliveryMethod("delivery")}
-                    className="mt-1 h-4 w-4 accent-[#245B3D]"
+                    id="chk-name"
+                    type="text"
+                    required
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="mt-1 min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
                   />
                 </div>
-                <p className="mt-3 tabular-nums text-sm font-bold text-[#245B3D]">+20.000 đ (Demo)</p>
-              </label>
-
-              <label
-                className={`flex cursor-pointer flex-col justify-between rounded-[14px] border-2 p-4 ${
-                  deliveryMethod === "pickup"
-                    ? "border-[#245B3D] bg-[#EAF0E5]/70"
-                    : "border-[#D6DED2] bg-white"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-bold text-[#25352B]">Nhận trực tiếp tại vườn</p>
-                    <p className="mt-1 text-xs text-[#52645A]">
-                      Ghé thăm vườn & đối chiếu tận tay cùng chủ vườn
-                    </p>
-                  </div>
+                <div>
+                  <label htmlFor="chk-phone" className="block text-xs font-semibold text-[#25352B]">
+                    Số liên hệ
+                  </label>
                   <input
-                    type="radio"
-                    name="deliveryMethod"
-                    checked={deliveryMethod === "pickup"}
-                    onChange={() => setDeliveryMethod("pickup")}
-                    className="mt-1 h-4 w-4 accent-[#245B3D]"
+                    id="chk-phone"
+                    type="text"
+                    required
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    className="mt-1 min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
                   />
                 </div>
-                <p className="mt-3 tabular-nums text-sm font-bold text-[#24603B]">0 đ (Miễn phí)</p>
-              </label>
-            </div>
-          </Card>
-
-          <Card className="space-y-4 p-5">
-            <h2 className="text-lg font-bold text-[#25352B]">2. Thông tin người nhận (Dữ liệu Demo)</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="co-name" className="block text-sm font-semibold text-[#25352B]">
-                  Họ tên khách hàng (Demo)
-                </label>
-                <input
-                  id="co-name"
-                  type="text"
-                  required
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="mt-1 min-h-[46px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
-                />
               </div>
-              <div>
-                <label htmlFor="co-phone" className="block text-sm font-semibold text-[#25352B]">
-                  Số liên hệ minh họa
-                </label>
-                <input
-                  id="co-phone"
-                  type="text"
-                  required
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="mt-1 min-h-[46px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
-                />
-              </div>
-            </div>
 
-            {deliveryMethod === "delivery" ? (
-              <div>
-                <label htmlFor="co-address" className="block text-sm font-semibold text-[#25352B]">
-                  Địa chỉ giao hàng minh họa
-                </label>
-                <input
-                  id="co-address"
-                  type="text"
-                  required
-                  value={deliveryAddress}
-                  onChange={(e) => setDeliveryAddress(e.target.value)}
-                  className="mt-1 min-h-[46px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
-                />
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 rounded-[10px] bg-[#EAF0E5] px-3.5 py-3 text-sm text-[#245B3D]">
-                <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span>Bạn sẽ nhận hàng trực tiếp tại {detailed[0].product.farmName} (0 đ phí giao).</span>
-              </div>
-            )}
-
-            <div className="rounded-[12px] border border-[#D6DED2] bg-[#FFF2D8]/60 p-3.5 text-sm text-[#25352B]">
-              <p className="font-bold">Thanh toán: COD Demo (Mô phỏng khi nhận hàng)</p>
-              <p className="mt-0.5 text-xs text-[#52645A]">
-                Không tích hợp cổng thanh toán ngân hàng hay ví điện tử thật ở giai đoạn prototype.
-              </p>
-            </div>
-          </Card>
-        </div>
-
-        <Card className="h-fit space-y-4 p-5 lg:col-span-5">
-          <h2 className="text-lg font-bold text-[#25352B]">Tóm tắt đơn hàng Demo</h2>
-          <ul className="space-y-3 border-b border-[#D6DED2] pb-4">
-            {detailed.map(({ product, quantity }) => (
-              <li key={product.id} className="flex items-center justify-between gap-3 text-sm">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-[#25352B]">{product.name}</p>
-                  <p className="tabular-nums text-xs text-[#52645A]">
-                    {quantity} {product.unitLabel} × {formatVnd(product.priceVnd)}
-                  </p>
+              {addressBook.length > 0 ? (
+                <div className="space-y-2 border-t border-[#EAEFE6] pt-3">
+                  <p className="text-xs font-semibold text-[#52645A]">Chọn nhanh từ sổ địa chỉ đã lưu:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {addressBook.map((addr) => (
+                      <button
+                        key={addr.id}
+                        type="button"
+                        onClick={() => {
+                          setCustomerName(addr.recipientName);
+                          setCustomerPhone(addr.phoneDemo);
+                          setAddressScope("dongnai");
+                          setUnitCode(addr.administrativeUnitCode);
+                          setStreetDetail(addr.detailAddress);
+                        }}
+                        className="cursor-pointer rounded-full border border-[#D6DED2] bg-[#FAF8F1] px-3 py-1.5 text-xs font-semibold text-[#25352B] hover:bg-[#EAF0E5]"
+                      >
+                        {addr.label}: {addr.recipientName}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <span className="tabular-nums font-bold text-[#25352B]">
-                  {formatVnd(product.priceVnd * quantity)}
-                </span>
-              </li>
-            ))}
-          </ul>
+              ) : null}
+            </Card>
 
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-[#52645A]">Tiền hàng</span>
-              <span className="tabular-nums font-semibold">{formatVnd(subtotal)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#52645A]">
-                {deliveryMethod === "delivery" ? "Phí giao tận nơi (Demo)" : "Nhận tại vườn"}
-              </span>
-              <span className="tabular-nums font-semibold">{formatVnd(shippingFee)}</span>
-            </div>
-            <div className="flex justify-between border-t border-[#D6DED2] pt-3 text-base">
-              <span className="font-bold text-[#25352B]">Tổng cộng (COD Demo)</span>
-              <span className="tabular-nums text-xl font-bold text-[#245B3D]">{formatVnd(total)}</span>
-            </div>
+            <Card className="space-y-4 p-5">
+              <h2 className="text-base font-bold text-[#25352B]">2. Phương thức &amp; địa chỉ nhận hàng</h2>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setDeliveryMethod("delivery")}
+                  className={`flex min-h-[58px] cursor-pointer items-center gap-3 rounded-[12px] border p-3.5 text-left ${
+                    deliveryMethod === "delivery"
+                      ? "border-[#245B3D] bg-[#EAF0E5]"
+                      : "border-[#D6DED2] bg-white"
+                  }`}
+                >
+                  <Truck className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-bold text-[#25352B]">Giao tận nơi</p>
+                    <p className="text-xs text-[#52645A]">20.000 đ / mỗi nhà vườn</p>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeliveryMethod("pickup")}
+                  className={`flex min-h-[58px] cursor-pointer items-center gap-3 rounded-[12px] border p-3.5 text-left ${
+                    deliveryMethod === "pickup"
+                      ? "border-[#245B3D] bg-[#EAF0E5]"
+                      : "border-[#D6DED2] bg-white"
+                  }`}
+                >
+                  <MapPin className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-bold text-[#25352B]">Nhận trực tiếp tại vườn</p>
+                    <p className="text-xs text-[#52645A]">Miễn phí vận chuyển</p>
+                  </div>
+                </button>
+              </div>
+
+              {deliveryMethod === "delivery" ? (
+                <div className="space-y-3 border-t border-[#EAEFE6] pt-3">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAddressScope("dongnai")}
+                      className={`min-h-[38px] cursor-pointer rounded-full px-4 text-xs font-semibold ${
+                        addressScope === "dongnai"
+                          ? "bg-[#245B3D] text-white"
+                          : "border border-[#D6DED2] bg-white text-[#25352B]"
+                      }`}
+                    >
+                      Trong tỉnh Đồng Nai (95 xã/phường)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAddressScope("outside")}
+                      className={`min-h-[38px] cursor-pointer rounded-full px-4 text-xs font-semibold ${
+                        addressScope === "outside"
+                          ? "bg-[#245B3D] text-white"
+                          : "border border-[#D6DED2] bg-white text-[#25352B]"
+                      }`}
+                    >
+                      Ngoài tỉnh (TP.HCM, Bình Dương, Hà Nội...)
+                    </button>
+                  </div>
+
+                  {addressScope === "dongnai" ? (
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div>
+                        <label htmlFor="chk-unit" className="block text-xs font-semibold text-[#25352B]">
+                          Xã / Phường thuộc tỉnh Đồng Nai
+                        </label>
+                        <select
+                          id="chk-unit"
+                          value={unitCode}
+                          onChange={(e) => setUnitCode(e.target.value)}
+                          className="mt-1 min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+                        >
+                          {ADMINISTRATIVE_UNITS.map((u) => (
+                            <option key={u.maDvhc} value={u.maDvhc}>
+                              {u.tenDayDu} ({u.maDvhc})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="chk-street" className="block text-xs font-semibold text-[#25352B]">
+                          Số nhà / Tên đường / Ấp
+                        </label>
+                        <input
+                          id="chk-street"
+                          type="text"
+                          value={streetDetail}
+                          onChange={(e) => setStreetDetail(e.target.value)}
+                          className="mt-1 min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <label htmlFor="chk-outside" className="block text-xs font-semibold text-[#25352B]">
+                        Địa chỉ nhận hàng ngoài tỉnh Đồng Nai
+                      </label>
+                      <input
+                        id="chk-outside"
+                        type="text"
+                        value={outsideAddress}
+                        onChange={(e) => setOutsideAddress(e.target.value)}
+                        placeholder="Ví dụ: TP. Thủ Đức, TP. Hồ Chí Minh - Số 12 Võ Văn Ngân"
+                        className="mt-1 min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label htmlFor="chk-slot" className="block text-xs font-semibold text-[#25352B]">
+                      Khung giờ mong muốn
+                    </label>
+                    <select
+                      id="chk-slot"
+                      value={deliverySlotLabel}
+                      onChange={(e) => setDeliverySlotLabel(e.target.value)}
+                      className="mt-1 min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
+                    >
+                      {DELIVERY_SLOTS.map((slot) => (
+                        <option key={slot} value={slot}>
+                          {slot}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              ) : null}
+            </Card>
           </div>
 
-          <Button type="submit" variant="primary" size="lg" className="w-full" disabled={submitting}>
-            <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
-            <span>{submitting ? "Đang tạo đơn demo..." : "Xác nhận đặt hàng (Demo)"}</span>
-          </Button>
+          <div className="lg:col-span-4">
+            <Card className="sticky top-24 space-y-4 p-5">
+              <h2 className="text-base font-bold text-[#25352B]">Tóm tắt đơn hàng</h2>
+              <div>
+                <label htmlFor="chk-coupon" className="flex items-center gap-1.5 text-xs font-semibold text-[#25352B]">
+                  <Tag className="h-3.5 w-3.5 text-[#245B3D]" aria-hidden="true" />
+                  <span>Mã ưu đãi (NAIFARM10 hoặc MUAVU20)</span>
+                </label>
+                <input
+                  id="chk-coupon"
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  placeholder="Nhập mã ưu đãi..."
+                  className="mt-1 min-h-[42px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm uppercase"
+                />
+              </div>
 
-          <p className="flex items-center gap-1.5 text-xs text-[#52645A]">
-            <ShieldCheck className="h-4 w-4 shrink-0 text-[#245B3D]" aria-hidden="true" />
-            <span>Đơn hàng mới sẽ xuất hiện ngay tại Không gian Nhà nông W02 để xử lý.</span>
-          </p>
-        </Card>
-      </form>
+              <div className="space-y-2 border-y border-[#EAEFE6] py-3 text-sm">
+                <div className="flex justify-between text-[#52645A]">
+                  <span>Tạm tính nông sản</span>
+                  <span className="tabular-nums font-semibold text-[#25352B]">
+                    {formatVnd(lineSummary.subtotalVnd)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-[#52645A]">
+                  <span>Ưu đãi theo mùa</span>
+                  <span className="tabular-nums font-semibold text-[#24603B]">
+                    -{formatVnd(discountVnd)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-[#52645A]">
+                  <span>Phí giao ({lineSummary.farmCount} nhà vườn)</span>
+                  <span className="tabular-nums font-semibold text-[#25352B]">
+                    {formatVnd(shippingFeeVnd)}
+                  </span>
+                </div>
+                <div className="flex justify-between pt-2 text-base font-bold text-[#245B3D]">
+                  <span>Tổng cộng</span>
+                  <span className="tabular-nums">{formatVnd(totalVnd)}</span>
+                </div>
+              </div>
+
+              <div className="rounded-[12px] bg-[#FAF8F1] p-3 text-xs text-[#52645A]">
+                <p className="inline-flex items-center gap-1 font-semibold text-[#25352B]">
+                  <Sparkles className="h-3.5 w-3.5 text-[#245B3D]" aria-hidden="true" />
+                  <span>Thanh toán tiền mặt khi nhận nông sản</span>
+                </p>
+                <p className="mt-1">
+                  Đơn hàng trong không gian trải nghiệm, không phát sinh thanh toán hoặc giao hàng thực tế.
+                </p>
+              </div>
+
+              <Button type="submit" variant="primary" size="lg" className="w-full">
+                Xác nhận đặt đơn
+              </Button>
+            </Card>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

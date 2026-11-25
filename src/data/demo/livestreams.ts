@@ -97,7 +97,7 @@ const EXTRA_LIVESTREAMS: LivestreamSession[] = Array.from({ length: 9 }, (_, idx
     farmName: farm.name,
     hostYouth: farm.youthSupporters[0] ?? "Đoàn viên Thanh niên Đồng Nai",
     farmerName: farm.ownerName,
-    scheduleLabel: `${String(1 + (idx % 6)).padStart(2, "0")}/12/2026 · ${idx % 2 === 0 ? "09:30" : "15:00"} (Demo)`,
+    scheduleLabel: `${String(1 + (idx % 6)).padStart(2, "0")}/12/2026 · ${idx % 2 === 0 ? "09:30" : "15:00"}`,
     status,
     pinnedProductIds: pinnedIds,
     angles: [

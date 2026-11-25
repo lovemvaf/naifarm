@@ -11,7 +11,6 @@ import { MapFilter } from "@/components/map/MapFilter";
 import { MapLegend } from "@/components/map/MapLegend";
 import { MapLocationCard } from "@/components/map/MapLocationCard";
 import { MapEmptyState } from "@/components/map/MapEmptyState";
-import { AdministrativeBoundaryLayer } from "@/components/map/AdministrativeBoundaryLayer";
 import { Badge, Card, DemoBanner } from "@/components/ui/Primitives";
 import {
   calculateStraightLineDistanceKm,
@@ -93,22 +92,20 @@ function ExploreMapInner() {
   return (
     <div className="mx-auto max-w-[1280px] space-y-6 px-4 py-8 lg:px-8">
       <div>
-        <Badge tone="success">OpenStreetMap thực · 95 Phường/Xã Thành phố Đồng Nai</Badge>
+        <Badge tone="success">95 Phường/Xã Thành phố Đồng Nai</Badge>
         <h1 className="mt-2 font-editorial text-3xl font-semibold text-[#25352B]">
           Bản đồ Nông sản &amp; Trải nghiệm Miệt vườn Đồng Nai
         </h1>
         <p className="mt-1 text-sm text-[#52645A]">
-          Khám phá 24 nhà vườn từ Tân Triều, Long Khánh, Xuân Lộc, Cẩm Mỹ đến Bình Phước, Đak Nhau,
-          Phước Sơn — kết nối GPS thực đo khoảng cách đường chim bay và đặt lịch tham quan.
+          Khám phá 30 nhà vườn từ Tân Triều, Long Khánh, Xuân Lộc, Cẩm Mỹ đến Bình Phước, Đak Nhau,
+          Phước Sơn — kết nối định vị đo khoảng cách đường chim bay và đặt lịch tham quan.
         </p>
       </div>
 
       <DemoBanner
-        title="Bản đồ OpenStreetMap thực & Tọa độ minh họa vùng sinh thái"
-        detail="Nền bản đồ hiển thị trực tiếp từ OpenStreetMap; các điểm ghim là tọa độ minh họa theo vùng sinh thái Đồng Nai vì dữ liệu hành chính 25/11/2026 chưa gắn polygon/tọa độ pháp lý."
+        title="Vị trí gần đúng theo vùng sinh thái"
+        detail="Các điểm ghim trên bản đồ thể hiện vị trí gần đúng theo cụm xã/phường Đồng Nai vì dữ liệu ranh giới hành chính hiện tại chưa gắn polygon hoặc tọa độ pháp lý chính thức."
       />
-
-      <AdministrativeBoundaryLayer />
 
       <MapFilter
         zone={zone}

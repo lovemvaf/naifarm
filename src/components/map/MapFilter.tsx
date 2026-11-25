@@ -61,7 +61,7 @@ export function MapFilter({
               : "border border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#EAF0E5]",
           )}
         >
-          {ocopOnly ? "Đang lọc: Đã đối chiếu HTX (Demo)" : "Chỉ hiện vườn đã đối chiếu HTX"}
+          {ocopOnly ? "Đang lọc: Đã đối chiếu HTX" : "Chỉ hiện vườn đã đối chiếu HTX"}
         </button>
       </div>
 

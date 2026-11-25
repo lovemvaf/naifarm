@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, HelpCircle, RotateCcw } from "lucide-react";
-import { toast } from "sonner";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { notifySuccess } from "@/lib/toast";
 import { Badge, Card } from "@/components/ui/Primitives";
 
 export default function ForgotPasswordPage() {
@@ -15,19 +15,19 @@ export default function ForgotPasswordPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
-    toast.success("Hướng dẫn khôi phục phiên Demo đã hiển thị.");
+    notifySuccess("Đã hiển thị hướng dẫn khôi phục truy cập.");
   };
 
   return (
     <div className="mx-auto max-w-[640px] space-y-6 px-4 py-8 lg:px-8">
       <div>
-        <Badge tone="info">Hỗ trợ truy cập phiên Demo</Badge>
+        <Badge tone="info">Hỗ trợ truy cập · Không gian trải nghiệm</Badge>
         <h1 className="mt-2 font-editorial text-3xl font-semibold text-[#25352B]">
-          Khôi phục quyền truy cập tài khoản Demo
+          Khôi phục quyền truy cập tài khoản
         </h1>
         <p className="mt-1 text-sm text-[#52645A]">
-          Vì NaiFarm bản Hackathon chạy hoàn toàn trên trình duyệt và không lưu mật khẩu thật, bạn
-          luôn có thể chọn lại 6 tài khoản Demo hoặc khôi phục dữ liệu mặc định.
+          Trong không gian trải nghiệm hiện tại, hệ thống không thu thập hoặc lưu trữ mật khẩu thật.
+          Bạn luôn có thể chọn lại 6 tài khoản có sẵn hoặc đặt lại dữ liệu mặc định.
         </p>
       </div>
 
@@ -35,20 +35,20 @@ export default function ForgotPasswordPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="recover-email" className="block text-xs font-semibold text-[#25352B]">
-              Email hoặc tên tài khoản Demo cần tra cứu
+              Email hoặc tên tài khoản cần tra cứu
             </label>
             <input
               id="recover-email"
               type="text"
               value={emailInput}
               onChange={(e) => setEmailInput(e.target.value)}
-              placeholder="Ví dụ: ngoclinh.buyer@naifarm-demo.local"
+              placeholder="Ví dụ: ngoclinh@example.com"
               className="mt-1 min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
             />
           </div>
           <button
             type="submit"
-            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] bg-[#245B3D] px-4 text-sm font-semibold text-white hover:bg-[#19472E]"
+            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] bg-[#245B3D] px-4 text-sm font-semibold text-white hover:bg-[#19472E] cursor-pointer"
           >
             <HelpCircle className="h-4 w-4" aria-hidden="true" />
             <span>Kiểm tra hướng dẫn khôi phục</span>
@@ -59,11 +59,11 @@ export default function ForgotPasswordPage() {
           <div className="rounded-[12px] border border-[#245B3D]/30 bg-[#EAF0E5] p-4 text-xs text-[#25352B]">
             <p className="flex items-center gap-1.5 font-bold text-[#245B3D]">
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-              <span>Không gửi email thật trong chế độ Frontend-Only</span>
+              <span>Không gửi email ra hệ thống bên ngoài</span>
             </p>
             <p className="mt-1 leading-relaxed text-[#52645A]">
-              Bạn có thể quay lại trang Đăng nhập để chọn 1 chạm vào bất kỳ tài khoản mẫu nào trong
-              6 vai trò, hoặc bấm nút đặt lại dữ liệu trình diễn bên dưới.
+              Bạn có thể quay lại trang Đăng nhập để chọn 1 chạm vào bất kỳ hồ sơ nào, hoặc nhấn
+              nút đặt lại dữ liệu trải nghiệm bên dưới.
             </p>
           </div>
         ) : null}
@@ -73,12 +73,12 @@ export default function ForgotPasswordPage() {
             type="button"
             onClick={() => {
               resetDemoState();
-              toast.success("Đã đặt lại toàn bộ dữ liệu trình diễn mặc định.");
+              notifySuccess("Đã đặt lại toàn bộ dữ liệu trải nghiệm mặc định.");
             }}
-            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-[10px] border border-[#D6DED2] bg-white px-3.5 text-xs font-semibold text-[#25352B] hover:bg-[#F5F3E9]"
+            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-[10px] border border-[#D6DED2] bg-white px-3.5 text-xs font-semibold text-[#25352B] hover:bg-[#F5F3E9] cursor-pointer"
           >
             <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>Đặt lại dữ liệu trình diễn</span>
+            <span>Đặt lại dữ liệu trải nghiệm</span>
           </button>
           <Link
             href="/sign-in"

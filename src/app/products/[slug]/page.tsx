@@ -1,51 +1,134 @@
 "use client";
 
-import React, { use, useState } from "react";
+import React, { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
+  AlertTriangle,
   ArrowLeft,
   Bell,
-  Check,
+  GitCompare,
+  Heart,
+  HelpCircle,
   MapPin,
   Minus,
   Plus,
   QrCode,
+  ShieldAlert,
+  ShieldCheck,
   ShoppingBasket,
-  Sprout,
-  Truck,
+  Star,
 } from "lucide-react";
-import { toast } from "sonner";
 import { useDemoStore } from "@/context/DemoStoreContext";
-import { formatVnd } from "@/lib/format";
-import { QrPassportCard } from "@/components/traceability/QrPassportCard";
-import { CertificationCard } from "@/components/traceability/CertificationCard";
-import { ProduceAnatomy2D } from "@/components/products/ProduceAnatomy2D";
 import { ProductGallery2D } from "@/components/products/ProductGallery2D";
+import { ProduceAnatomy2D } from "@/components/products/ProduceAnatomy2D";
+import { QrPassportCard } from "@/components/traceability/QrPassportCard";
+import { CredentialDetailDrawer } from "@/components/quality/CredentialDetailDrawer";
+import { ProductCard } from "@/components/marketplace/ProductCard";
+import { getRelatedProducts } from "@/lib/commerce/related-products";
+import {
+  CREDENTIAL_TYPE_MAP,
+  evaluateCredentialDisplay,
+} from "@/lib/quality/credential-registry";
+import { formatVnd } from "@/lib/format";
+import { notifyError, notifyInfo, notifySuccess } from "@/lib/toast";
 import { Badge, Button, Card, EmptyState } from "@/components/ui/Primitives";
+import type { CredentialRecord } from "@/types/naifarm";
 
-export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default function ProductDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = use(params);
-  const router = useRouter();
-  const { products, farms, batches, certifications, addToCart, toggleFollowSeason, followedProductIds } =
-    useDemoStore();
+  const {
+    hydrated,
+    products,
+    farms,
+    batches,
+    orders,
+    credentialRecords,
+    productReviews,
+    addToCart,
+    toggleFavorite,
+    favoriteProductIds,
+    toggleFollowSeason,
+    followedProductIds,
+    toggleCompareProduct,
+    compareProductIds,
+    markRecentlyViewed,
+    submitProductReview,
+  } = useDemoStore();
 
-  const product = products.find((p) => p.slug === slug);
-  const [qty, setQty] = useState(2);
+  const product = products.find((p) => p.slug === decodeURIComponent(slug));
+  const [quantity, setQuantity] = useState(1);
+  const [selectedOptionIdx, setSelectedOptionIdx] = useState(0);
+  const [selectedCred, setSelectedCred] = useState<CredentialRecord | null>(null);
+  const [reviewRating, setReviewRating] = useState<1 | 2 | 3 | 4 | 5>(5);
+  const [reviewComment, setReviewComment] = useState("");
+
+  useEffect(() => {
+    if (hydrated && product?.id) {
+      markRecentlyViewed(product.id);
+    }
+  }, [hydrated, product?.id, markRecentlyViewed]);
+
+  const farm = useMemo(
+    () => (product ? farms.find((f) => f.id === product.farmId) : undefined),
+    [farms, product],
+  );
+  const batch = useMemo(
+    () => (product ? batches.find((b) => b.batchCode === product.batchCode) : undefined),
+    [batches, product],
+  );
+
+  const evaluatedCreds = useMemo(() => {
+    if (!product) return [];
+    const matching = credentialRecords.filter(
+      (r) =>
+        r.productIds.includes(product.id) ||
+        (r.productIds.length === 0 && r.holderId === product.farmId) ||
+        (product.credentialIds?.includes(r.id) ?? false),
+    );
+    return matching.map((record) => ({
+      record,
+      typeDef: CREDENTIAL_TYPE_MAP.get(record.typeId),
+      evalRes: evaluateCredentialDisplay(record, product.category, product.id),
+    }));
+  }, [credentialRecords, product]);
+
+  const validCreds = evaluatedCreds.filter((c) => c.evalRes.canShowBadge);
+  const suppressedCount = evaluatedCreds.length - validCreds.length;
+
+  const relatedProducts = useMemo(
+    () => (product ? getRelatedProducts(product, products, 4) : []),
+    [product, products],
+  );
+
+  const reviews = useMemo(
+    () => (product ? productReviews.filter((rv) => rv.productId === product.id) : []),
+    [productReviews, product],
+  );
+
+  const completedQualifyingOrders = useMemo(() => {
+    if (!product) return [];
+    return orders.filter(
+      (o) => o.status === "completed" && o.items.some((it) => it.productId === product.id),
+    );
+  }, [orders, product]);
 
   if (!product) {
     return (
-      <div className="mx-auto max-w-[960px] px-4 py-12">
+      <div className="mx-auto max-w-[780px] px-4 py-12">
         <EmptyState
-          icon={<Sprout className="h-6 w-6" />}
-          title="Không tìm thấy sản phẩm"
-          description="Sản phẩm này không có trong danh mục demo hoặc đã đổi đường dẫn."
+          icon={<AlertTriangle className="h-6 w-6" aria-hidden="true" />}
+          title="Không tìm thấy nông sản yêu cầu"
+          description="Mặt hàng có thể đã thay đổi tên hoặc không còn trong danh mục hiện hành."
           action={
             <Link
               href="/marketplace"
-              className="inline-flex min-h-[44px] items-center rounded-[10px] bg-[#245B3D] px-5 text-sm font-semibold text-white"
+              className="inline-flex min-h-[44px] items-center rounded-[12px] bg-[#245B3D] px-5 text-sm font-semibold text-white"
             >
-              Quay lại Chợ OCOP
+              Về Chợ nông sản
             </Link>
           }
         />
@@ -53,213 +136,445 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
     );
   }
 
-  const farm = farms.find((f) => f.id === product.farmId);
-  const batch = batches.find((b) => b.batchCode === product.batchCode) ?? batches[0];
-  const farmCerts = certifications.filter((c) => c.farmId === product.farmId);
-  const isAvailable = product.seasonStatus === "in_season" && product.stockKg > 0;
+  const options = product.weightOptions ?? [];
+  const activeOption = options[selectedOptionIdx];
+  const activePriceVnd = activeOption?.priceVnd ?? product.priceVnd;
+  const activeUnitLabel = activeOption?.label ?? product.unitLabel;
+
+  const isLotBlocked =
+    batch?.lotStatus === "quarantine" ||
+    batch?.lotStatus === "recalled" ||
+    batch?.lotStatus === "expired";
+  const isAvailable =
+    !isLotBlocked &&
+    (product.seasonStatus === "in_season" || product.seasonStatus === "pre_order") &&
+    product.stockKg > 0;
+  const isFav = favoriteProductIds.includes(product.id);
   const isFollowed = followedProductIds.includes(product.id);
-  const gallery = product.gallery.length > 0 ? product.gallery : [product.image];
+  const isCompared = compareProductIds.includes(product.id);
 
   return (
-    <div className="mx-auto max-w-[1280px] space-y-10 px-4 py-6 lg:px-8">
+    <div className="mx-auto max-w-[1280px] space-y-8 px-4 py-8 lg:px-6">
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-        <Link href="/marketplace" className="inline-flex items-center gap-1.5 font-semibold text-[#245B3D] hover:underline">
+        <Link
+          href="/marketplace"
+          className="inline-flex items-center gap-1.5 font-semibold text-[#245B3D] hover:underline"
+        >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          <span>Quay lại Chợ OCOP</span>
+          <span>Quay lại Chợ nông sản</span>
         </Link>
-        <span className="text-xs text-[#52645A]">Mã sản phẩm: {product.id} · Mã lô: {product.batchCode}</span>
+        <div className="flex flex-wrap items-center gap-2 text-xs text-[#52645A]">
+          <span>{product.category}</span>
+          <span>/</span>
+          <span className="font-semibold text-[#25352B]">{product.name}</span>
+        </div>
       </div>
 
-      {/* Main Product Section */}
-      <section className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+      {/* Quarantine / Recall Lock Alert */}
+      {isLotBlocked && batch ? (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-[16px] border-2 border-[#A32D2D] bg-[#FDECEC] p-4 text-sm text-[#7A1E1E]"
+        >
+          <ShieldAlert className="mt-0.5 h-6 w-6 shrink-0 text-[#A32D2D]" aria-hidden="true" />
+          <div>
+            <p className="font-bold">
+              Tạm khóa đặt mua — Lô {batch.batchCode} đang{" "}
+              {batch.lotStatus === "recalled"
+                ? "trong diện thu hồi khẩn cấp"
+                : batch.lotStatus === "quarantine"
+                ? "tạm giữ kiểm tra"
+                : "hết hạn lưu hành"}
+            </p>
+            <p className="mt-1 text-xs">
+              Hệ thống tự động vô hiệu hóa giỏ hàng đối với sản phẩm thuộc lô đang phong tỏa.{" "}
+              <Link href={`/trace/${batch.batchCode}`} className="font-bold underline">
+                Xem thông báo lô &amp; truy xuất phả hệ →
+              </Link>
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Top Grid: 2D Gallery + Commercial Panel */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         <div className="lg:col-span-6">
-          <ProductGallery2D images={gallery} productName={product.name} />
+          <ProductGallery2D
+            images={product.gallery?.length ? product.gallery : [product.image]}
+            productName={product.name}
+          />
         </div>
 
         <div className="space-y-5 lg:col-span-6">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={isAvailable ? "success" : "warning"}>
-              {isAvailable ? "Đang vào mùa (Có hàng demo)" : "Tạm hết — Hẹn mùa vụ tới"}
-            </Badge>
-            <Badge tone="neutral">{product.category}</Badge>
-            {product.brixNote ? <Badge tone="gold">{product.brixNote}</Badge> : null}
+            {product.seasonStatus === "in_season" && product.stockKg > 0 ? (
+              <Badge tone="success">Đang vào mùa</Badge>
+            ) : product.seasonStatus === "pre_order" ? (
+              <Badge tone="info">Đặt trước mùa vụ</Badge>
+            ) : (
+              <Badge tone="warning">Hẹn mùa vụ tới</Badge>
+            )}
+            {product.isNaiBox ? <Badge tone="gold">NaiBox 95</Badge> : null}
+            {product.isRescue ? <Badge tone="warning">NaiRescue</Badge> : null}
+            <Badge tone="neutral">Hồ sơ trải nghiệm</Badge>
           </div>
 
           <div>
-            <h1 className="font-editorial text-3xl font-semibold text-[#25352B]">{product.name}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-[#52645A]">
+            <h1 className="font-editorial text-2xl font-bold text-[#25352B] md:text-3xl">
+              {product.name}
+            </h1>
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-[#52645A]">
               {farm ? (
                 <Link
                   href={`/farms/${farm.slug}`}
-                  className="inline-flex items-center gap-1.5 font-semibold text-[#245B3D] hover:underline"
+                  className="inline-flex items-center gap-1 font-semibold text-[#245B3D] hover:underline"
                 >
                   <MapPin className="h-4 w-4" aria-hidden="true" />
-                  <span>{farm.name} ({farm.region})</span>
+                  <span>
+                    {product.farmName} · {product.administrativeUnitName}
+                  </span>
                 </Link>
-              ) : null}
-              <span className="tabular-nums">
-                Tồn kho demo: <strong>{product.stockKg} {product.unitLabel}</strong>
-              </span>
+              ) : (
+                <span>
+                  {product.farmName} · {product.administrativeUnitName}
+                </span>
+              )}
+              <Link
+                href={`/trace/${product.batchCode}`}
+                className="inline-flex items-center gap-1 rounded-full bg-[#EAF0E5] px-2.5 py-0.5 text-xs font-bold text-[#245B3D] hover:underline"
+              >
+                <QrCode className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Lô {product.batchCode}</span>
+              </Link>
             </div>
           </div>
 
-          <div className="rounded-[16px] border border-[#D6DED2] bg-white p-4">
-            <p className="tabular-nums text-3xl font-bold text-[#245B3D]">
-              {formatVnd(product.priceVnd)}
-              <span className="text-base font-medium text-[#52645A]"> / {product.unitLabel}</span>
+          <div className="rounded-[16px] border border-[#D6DED2] bg-[#FAF8F1] p-4">
+            <p className="tabular-nums text-2xl font-bold text-[#245B3D] md:text-3xl">
+              {formatVnd(activePriceVnd)}
+              <span className="ml-1 text-sm font-medium text-[#52645A]">/ {activeUnitLabel}</span>
             </p>
-            <p className="mt-2 text-sm text-[#25352B]">{product.shortDescription}</p>
-            <p className="mt-2 text-xs text-[#52645A]">{product.storyNote}</p>
+            <p className="mt-1 text-xs text-[#52645A]">
+              {isLotBlocked
+                ? "Tạm dừng xuất bán theo cảnh báo lô."
+                : product.stockKg > 0
+                ? `Tồn khả dụng tại vườn: ${product.stockKg} ${product.unitLabel}`
+                : "Đã hết đợt thu hái hiện tại — bật theo dõi để nhận thông báo vụ mới."}
+              {product.preOrderEtaLabel ? ` · Dự kiến thu hái: ${product.preOrderEtaLabel}` : ""}
+            </p>
           </div>
 
+          <p className="text-sm leading-relaxed text-[#25352B]">{product.shortDescription}</p>
+
+          {/* Weight / Pack Variants */}
+          {options.length > 0 ? (
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-[#25352B] uppercase">Quy cách đóng gói</p>
+              <div className="flex flex-wrap gap-2">
+                {options.map((opt, idx) => (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    onClick={() => setSelectedOptionIdx(idx)}
+                    className={`min-h-[40px] cursor-pointer rounded-[10px] border px-3.5 text-xs font-semibold transition ${
+                      idx === selectedOptionIdx
+                        ? "border-[#245B3D] bg-[#245B3D] text-white"
+                        : "border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#EAF0E5]"
+                    }`}
+                  >
+                    {opt.label} · {formatVnd(opt.priceVnd)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           {/* Quantity & Actions */}
-          {isAvailable ? (
-            <div className="space-y-3 rounded-[16px] border border-[#D6DED2] bg-white p-4">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <span className="text-sm font-semibold text-[#25352B]">Số lượng ({product.unitLabel})</span>
-                  <p className="tabular-nums text-xs text-[#52645A]">
-                    Tạm tính: <strong className="text-[#245B3D]">{formatVnd(product.priceVnd * qty)}</strong>
-                  </p>
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-[12px] border border-[#788A7B] bg-[#F5F3E9] p-1">
+          <div className="flex flex-wrap items-center gap-3">
+            {isAvailable ? (
+              <>
+                <div className="inline-flex items-center rounded-[12px] border border-[#788A7B] bg-white">
                   <button
                     type="button"
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     aria-label="Giảm số lượng"
-                    onClick={() => setQty((q) => Math.max(1, q - 1))}
-                    className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-white text-[#25352B] hover:bg-[#EAF0E5] cursor-pointer"
+                    className="flex h-12 w-11 cursor-pointer items-center justify-center hover:bg-[#EAF0E5]"
                   >
                     <Minus className="h-4 w-4" aria-hidden="true" />
                   </button>
-                  <span className="tabular-nums min-w-[44px] text-center text-base font-bold text-[#25352B]">
-                    {qty}
-                  </span>
+                  <span className="min-w-[40px] text-center text-sm font-bold tabular-nums">{quantity}</span>
                   <button
                     type="button"
+                    onClick={() => setQuantity((q) => Math.min(product.stockKg, q + 1))}
                     aria-label="Tăng số lượng"
-                    onClick={() => setQty((q) => Math.min(product.stockKg, q + 1))}
-                    className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-white text-[#25352B] hover:bg-[#EAF0E5] cursor-pointer"
+                    className="flex h-12 w-11 cursor-pointer items-center justify-center hover:bg-[#EAF0E5]"
                   >
                     <Plus className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Button
                   variant="primary"
                   size="lg"
+                  className="flex-1"
                   onClick={() => {
-                    const res = addToCart(product.id, qty);
-                    if (res.ok) toast.success(res.message);
-                    else toast.error(res.message);
+                    const res = addToCart(product.id, quantity, activeOption?.label);
+                    if (res.ok) notifySuccess(res.message);
+                    else notifyError(res.message);
                   }}
                 >
-                  <ShoppingBasket className="h-5 w-5" aria-hidden="true" />
+                  <ShoppingBasket className="h-4 w-4" aria-hidden="true" />
                   <span>Thêm vào giỏ hàng</span>
                 </Button>
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  onClick={() => {
-                    const res = addToCart(product.id, qty);
-                    if (res.ok) router.push("/checkout");
-                    else toast.error(res.message);
-                  }}
-                >
-                  <span>Đặt nhanh (COD Demo)</span>
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <Card className="p-4 bg-[#FFF2D8]/50">
-              <p className="text-sm font-medium text-[#80520C]">
-                Sản phẩm hiện tạm hết tồn sẵn trong kỳ này. Nút mua đã tắt để tránh đặt nhầm.
-              </p>
+              </>
+            ) : (
               <Button
                 variant="secondary"
-                className="mt-3"
+                size="lg"
+                disabled={isLotBlocked}
                 onClick={() => {
                   toggleFollowSeason(product.id);
-                  toast.info(isFollowed ? "Đã bỏ theo dõi vụ mùa." : "Đã bật thông báo khi có mùa mới (Demo).");
+                  notifyInfo(
+                    isFollowed
+                      ? `Đã tắt nhắc vụ mùa ${product.name}`
+                      : `Đã theo dõi vụ mùa ${product.name}`,
+                  );
                 }}
               >
                 <Bell className="h-4 w-4" aria-hidden="true" />
-                <span>{isFollowed ? "Đang theo dõi vụ mùa" : "Theo dõi vụ mùa"}</span>
+                <span>{isFollowed ? "Đang theo dõi vụ mùa" : "Nhắc tôi khi vào mùa"}</span>
               </Button>
-            </Card>
-          )}
+            )}
 
-          {/* Provenance & Delivery Quick Summary */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Link
-              href={`/trace/${product.batchCode}`}
-              className="flex items-center gap-3 rounded-[14px] border border-[#D6DED2] bg-[#EAF0E5] p-3.5 hover:bg-[#DDE7D6]"
+            <button
+              type="button"
+              onClick={() => toggleFavorite(product.id)}
+              aria-label={isFav ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
+              className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-[12px] border border-[#D6DED2] bg-white hover:bg-[#EAF0E5]"
             >
-              <QrCode className="h-8 w-8 shrink-0 text-[#245B3D]" aria-hidden="true" />
-              <div>
-                <p className="text-sm font-bold text-[#245B3D]">Xem Hộ chiếu QR & Nhật ký</p>
-                <p className="text-xs text-[#52645A]">Mã lô {product.batchCode} · 3 mốc minh bạch</p>
-              </div>
-            </Link>
+              <Heart
+                className={`h-5 w-5 ${isFav ? "fill-[#A32D2D] text-[#A32D2D]" : "text-[#52645A]"}`}
+                aria-hidden="true"
+              />
+            </button>
 
-            <div className="flex items-center gap-3 rounded-[14px] border border-[#D6DED2] bg-white p-3.5">
-              <Truck className="h-7 w-7 shrink-0 text-[#245B3D]" aria-hidden="true" />
-              <div>
-                <p className="text-sm font-bold text-[#25352B]">Giao tận nơi hoặc Tại vườn</p>
-                <p className="text-xs text-[#52645A]">Phí giao dự kiến 20.000 đ · Nhận tại vườn 0 đ</p>
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const res = toggleCompareProduct(product.id);
+                if (!res.ok && res.message) notifyError(res.message);
+                else notifyInfo(isCompared ? "Đã bỏ khỏi danh sách so sánh." : "Đã thêm vào danh sách so sánh.");
+              }}
+              aria-label="So sánh sản phẩm"
+              className={`flex h-12 cursor-pointer items-center gap-1.5 rounded-[12px] border px-3.5 text-xs font-semibold ${
+                isCompared
+                  ? "border-[#245B3D] bg-[#EAF0E5] text-[#245B3D]"
+                  : "border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#EAF0E5]"
+              }`}
+            >
+              <GitCompare className="h-4 w-4" aria-hidden="true" />
+              <span>{isCompared ? "Đang đối chiếu" : "So sánh"}</span>
+            </button>
           </div>
 
-          {farm ? (
-            <div className="flex items-center justify-between rounded-[14px] border border-[#D6DED2] bg-white px-4 py-3 text-sm">
-              <div className="flex items-center gap-3">
-                <img src={farm.ownerPortrait} alt={farm.ownerName} className="h-11 w-11 rounded-full object-cover" />
-                <div>
-                  <p className="font-semibold text-[#25352B]">{farm.name}</p>
-                  <p className="text-xs text-[#52645A]">{farm.ocopLabel}</p>
-                </div>
-              </div>
-              <Link href={`/farms/${farm.slug}`} className="font-semibold text-[#245B3D] hover:underline">
-                Hồ sơ vườn →
-              </Link>
+          {/* Storage / Origin / Valid-Only Credentials */}
+          <Card className="space-y-3 p-4">
+            <h2 className="flex items-center gap-2 text-sm font-bold text-[#25352B]">
+              <ShieldCheck className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
+              <span>Thông số bảo quản &amp; hồ sơ chất lượng hợp lệ</span>
+            </h2>
+            <div className="grid grid-cols-1 gap-2 text-xs text-[#52645A] sm:grid-cols-2">
+              <p>
+                <strong className="text-[#25352B]">Chỉ tiêu đặc trưng:</strong>{" "}
+                {product.brixNote || "Thu hái đúng độ chín tự nhiên"}
+              </p>
+              <p>
+                <strong className="text-[#25352B]">Hạn dùng khuyến nghị:</strong>{" "}
+                {product.expiryDays ? `${product.expiryDays} ngày` : "Theo nhãn bao bì lô"}
+              </p>
+              <p className="sm:col-span-2">
+                <strong className="text-[#25352B]">Bảo quản:</strong>{" "}
+                {product.storageNote || "Nơi khô ráo thoáng mát, tránh ánh nắng trực tiếp."}
+              </p>
+              <p className="sm:col-span-2">
+                <strong className="text-[#25352B]">Nguồn gốc vùng:</strong>{" "}
+                {product.originNote || `${product.farmName}, ${product.administrativeUnitName}`}
+              </p>
             </div>
-          ) : null}
+
+            {validCreds.length > 0 ? (
+              <div className="flex flex-wrap gap-2 border-t border-[#EAEFE6] pt-3">
+                {validCreds.map(({ record, typeDef }) => (
+                  <button
+                    key={record.id}
+                    type="button"
+                    onClick={() => setSelectedCred(record)}
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#245B3D]/30 bg-[#E6F3E9] px-3 py-1 text-xs font-semibold text-[#24603B] hover:bg-[#D5ECDA]"
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>
+                      {record.typeId} · {typeDef?.displayName}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="border-t border-[#EAEFE6] pt-3 text-xs text-[#52645A]">
+                Chưa có chứng nhận hợp lệ gắn trực tiếp cho SKU này. Tham khảo chi tiết tại{" "}
+                <Link href="/quality" className="font-semibold text-[#245B3D] underline">
+                  Trung tâm Chất lượng
+                </Link>
+                .
+              </p>
+            )}
+
+            {suppressedCount > 0 ? (
+              <p className="text-[11px] text-[#80520C]">
+                Lưu ý minh bạch: có {suppressedCount} hồ sơ đã tự động ẩn huy hiệu do hết hạn, thiếu bằng chứng
+                hoặc không thuộc phạm vi SKU này.
+              </p>
+            ) : null}
+          </Card>
         </div>
-      </section>
+      </div>
 
-      {/* 2D Interactive Produce Anatomy & Farm Certification Showcase */}
-      {product.anatomyType ? (
-        <ProduceAnatomy2D initialProduce={product.anatomyType} allowSwitch={false} />
-      ) : null}
+      {/* Story + QR Passport + 2D Anatomy */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="space-y-6 lg:col-span-7">
+          <Card className="p-5">
+            <h2 className="font-editorial text-xl font-bold text-[#25352B]">Câu chuyện mùa vụ tại vườn</h2>
+            <p className="mt-2 text-sm leading-relaxed text-[#52645A]">{product.storyNote}</p>
+          </Card>
 
-      {farmCerts.length > 0 ? (
-        <section aria-labelledby="prod-certs-heading" className="space-y-3">
-          <h2 id="prod-certs-heading" className="text-xl font-bold text-[#25352B]">
-            Hồ sơ chứng nhận &amp; Vùng trồng tham khảo (Demo)
+          {product.anatomyType ? <ProduceAnatomy2D initialProduce={product.anatomyType} /> : null}
+        </div>
+
+        <div className="space-y-5 lg:col-span-5">
+          {batch ? <QrPassportCard batch={batch} compact /> : null}
+
+          {/* Q&A */}
+          <Card className="space-y-3 p-5">
+            <h2 className="flex items-center gap-2 text-base font-bold text-[#25352B]">
+              <HelpCircle className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
+              <span>Hỏi đáp nhanh cho người mua</span>
+            </h2>
+            <div className="space-y-2.5 text-xs text-[#52645A]">
+              <div className="rounded-[10px] bg-[#FAF8F1] p-3">
+                <p className="font-bold text-[#25352B]">Làm sao kiểm tra đúng lô hàng khi nhận?</p>
+                <p className="mt-1">
+                  Quét tem QR trên thùng/túi hoặc nhập mã <strong className="text-[#245B3D]">{product.batchCode}</strong> tại mục Truy xuất để đối chiếu ngày thu hái và nhật ký công khai.
+                </p>
+              </div>
+              <div className="rounded-[10px] bg-[#FAF8F1] p-3">
+                <p className="font-bold text-[#25352B]">Khi giao hàng bị dập hoặc sai quy cách xử lý thế nào?</p>
+                <p className="mt-1">
+                  Người mua vào Chi tiết đơn hàng gửi đề xuất hoàn tiền một phần/toàn phần; yêu cầu sẽ qua quy trình kiểm tra độc lập của nhà vườn và kế toán.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* Verified Order Reviews */}
+      <Card className="space-y-4 p-5 md:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 font-editorial text-xl font-bold text-[#25352B]">
+            <Star className="h-5 w-5 text-[#D7A34D]" aria-hidden="true" />
+            <span>Đánh giá từ đơn hàng đã hoàn thành ({reviews.length})</span>
           </h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {farmCerts.map((cert) => (
-              <CertificationCard key={cert.id} cert={cert} />
+        </div>
+
+        {completedQualifyingOrders.length > 0 ? (
+          <form
+            className="space-y-3 rounded-[14px] border border-[#D6DED2] bg-[#FAF8F1] p-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const res = submitProductReview(
+                product.id,
+                completedQualifyingOrders[0].id,
+                reviewRating,
+                reviewComment || "Nông sản tươi đúng mùa vụ, thông tin truy xuất rõ ràng.",
+              );
+              if (res.ok) {
+                notifySuccess(res.message);
+                setReviewComment("");
+              } else {
+                notifyError(res.message);
+              }
+            }}
+          >
+            <p className="text-xs font-semibold text-[#245B3D]">
+              Bạn có đơn {completedQualifyingOrders[0].id} đã hoàn thành chứa sản phẩm này — hãy để lại nhận xét:
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <select
+                value={reviewRating}
+                onChange={(e) => setReviewRating(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
+                aria-label="Chọn số sao đánh giá"
+                className="min-h-[40px] rounded-[10px] border border-[#788A7B] bg-white px-3 text-xs"
+              >
+                <option value={5}>5 sao — Rất hài lòng</option>
+                <option value={4}>4 sao — Tốt</option>
+                <option value={3}>3 sao — Bình thường</option>
+                <option value={2}>2 sao — Cần cải thiện</option>
+                <option value={1}>1 sao — Chưa đạt</option>
+              </select>
+              <input
+                type="text"
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                placeholder="Chia sẻ trải nghiệm hương vị, đóng gói..."
+                className="min-h-[40px] flex-1 rounded-[10px] border border-[#788A7B] bg-white px-3 text-xs"
+              />
+              <Button type="submit" variant="primary" size="sm">
+                Gửi đánh giá
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <p className="rounded-[12px] bg-[#FAF8F1] px-4 py-3 text-xs text-[#52645A]">
+            Đánh giá chỉ mở sau khi đơn hàng chứa sản phẩm này chuyển sang trạng thái hoàn thành.
+          </p>
+        )}
+
+        {reviews.length > 0 ? (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {reviews.map((rv) => (
+              <div key={rv.id} className="rounded-[12px] border border-[#EAEFE6] bg-white p-3.5 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-[#25352B]">{rv.authorName}</span>
+                  <Badge tone="success">{rv.rating} ★ · Đơn {rv.orderId}</Badge>
+                </div>
+                <p className="mt-1.5 text-[#52645A]">{rv.comment}</p>
+                <p className="mt-1 text-[11px] text-[#788A7B]">{rv.createdDateLabel}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-[#52645A]">Chưa có đánh giá nào được ghi nhận cho mặt hàng này.</p>
+        )}
+      </Card>
+
+      {/* Related Products */}
+      {relatedProducts.length > 0 ? (
+        <section aria-label="Nông sản gợi ý cùng mùa" className="space-y-4">
+          <h2 className="font-editorial text-xl font-bold text-[#25352B]">
+            Nông sản cùng nhóm &amp; lân cận
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {relatedProducts.map((item) => (
+              <ProductCard key={item.id} product={item} showCompareToggle />
             ))}
           </div>
         </section>
       ) : null}
 
-      {/* Full QR Traceability Section embedded directly on product page (Stitch ST-03) */}
-      <section aria-labelledby="trace-embed-heading" className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 id="trace-embed-heading" className="text-2xl font-bold text-[#25352B]">
-            Tem Truy xuất Điện tử & Nhật ký Lô {batch.batchCode}
-          </h2>
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#24603B]">
-            <Check className="h-4 w-4" aria-hidden="true" />
-            Đồng bộ cùng nguồn dữ liệu với trang QR công khai
-          </span>
-        </div>
-        <QrPassportCard batch={batch} />
-      </section>
+      <CredentialDetailDrawer
+        record={selectedCred}
+        allRecords={credentialRecords}
+        onClose={() => setSelectedCred(null)}
+      />
     </div>
   );
 }

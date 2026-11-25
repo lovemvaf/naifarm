@@ -22,7 +22,7 @@ export default function FarmDetailPage({ params }: { params: Promise<{ slug: str
         <EmptyState
           icon={<Sprout className="h-6 w-6" />}
           title="Không tìm thấy hồ sơ nhà vườn"
-          description="Đường dẫn nhà vườn không tồn tại trong danh sách dữ liệu demo hiện tại."
+          description="Đường dẫn nhà vườn không tồn tại trong danh sách vườn hiện tại."
           action={
             <Link
               href="/farms"

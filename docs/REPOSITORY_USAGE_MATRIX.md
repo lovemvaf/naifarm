@@ -1,19 +1,16 @@
-# NaiFarm V2.0 — Repository & Local Skill Usage Matrix
+# NAIFARM V3.0 — REPOSITORY & RUNTIME DEPENDENCY MATRIX
 
-Tài liệu đối chiếu các kho/kỹ năng cục bộ thực sự đã kiểm chứng trong hệ sinh thái workspace và kế hoạch tái sử dụng cho NaiFarm V2.0 (Frontend-Only Next.js 16 + React 19 + Tailwind CSS v4).
+Tài liệu xác minh toàn bộ thư viện runtime, công cụ kiểm thử và kỹ năng cục bộ đang dùng trong NaiFarm V3.0 (cập nhật 25/11/2026).
 
-| Hạng mục / Repo / Skill | Đường dẫn cục bộ đã kiểm chứng | Mục đích & Pattern tái sử dụng cho V2.0 | Trạng thái |
-| :--- | :--- | :--- | :--- |
-| `Dong Nai Memory` | `E:\04_Projects\Dong Nai Memory\apps\web\src\pages\MapPage.tsx` | Mẫu OpenStreetMap Leaflet tile layer, `tileError` fallback, `AdminEraMode` & phân biệt dữ liệu hành chính lịch sử vs hiện hành; xác nhận **không** có GeoJSON 95 phường/xã sẵn | Áp dụng trực tiếp (không sao chép file nguyên xi) |
-| `EduMap` | `C:\Users\asus\Documents\EduMap\frontend` | Tham chiếu cấu trúc lọc GIS, phân tách component map/controls/legend | Tham khảo pattern |
-| `ui-ux-pro-max` | `.agents/skills/ui-ux-pro-max` | Design system Warm Rice (`#F5F3E9`) + Forest Green (`#245B3D`) + Earth Ink (`#25352B`), tokens, scale khoảng cách và nhịp đọc | Áp dụng |
-| `impeccable` | `.agents/skills/impeccable` | Craft floor: bỏ nested cards dư thừa, `::selection` + scrollbar đồng bộ theme, tách elevation bằng border hoặc shadow rõ ràng, không kicker/eyebrow lạm dụng | Áp dụng |
-| `hallmark` & `unslop` & `design-taste-frontend` | `.agents/skills/hallmark`, `.agents/skills/unslop`, `.agents/skills/design-taste-frontend` | Audit anti-slop HTML/CSS, kiểm tra responsive 375/768/1440px, sloplint render QA | Áp dụng QA Phase 8 |
-| `ws-vi-ux-writing` & `ws-vi-vietnamizer` & `ws-gen-clarity` | `C:\Users\asus\.gemini\config\skills\ws-*` | Chuẩn hóa UX copy tiếng Việt: xưng hô thống nhất, bỏ khẩu ngữ ("bằng tay", "nhé"), sentence-case tiêu đề, thông báo lỗi khôi phục được, nhãn demo trung thực | Áp dụng toàn bộ UI |
-| `Leaflet` + `react-leaflet` + `@turf/distance` | `naifarm/node_modules/leaflet`, `react-leaflet@5.0.0`, `@turf/distance@7.4.0` | Bản đồ OpenStreetMap thực, marker phân loại theo mã ĐVHC 95 đơn vị, GPS trình duyệt thực & tính "Khoảng cách đường chim bay" | Cài đặt mới V2.0 |
-| `Fuse.js` | `naifarm/node_modules/fuse.js@7.5.0` | Global Search hỗ trợ tìm tiếng Việt có dấu & không dấu qua sản phẩm, nhà vườn, ĐVHC Đồng Nai, lô QR, bài học, nhiệm vụ | Cài đặt mới V2.0 |
-| `qrcode` + `qr-scanner` + `jsqr` | `naifarm/node_modules/qrcode@1.5.4`, `qr-scanner@1.4.2` | Tạo mã QR chuẩn (SVG/PNG tải được), quét QR camera/ảnh/mã lô tại `/trace/scan` và kiểm chứng giải mã tự động bằng `jsQR` | Cài đặt mới V2.0 |
-| `papaparse` + `zod` + `tsx` | `naifarm/node_modules/papaparse@5.7.1`, `zod@4.6.7`, `tsx` | Parse & validate nghiêm ngặt CSV địa giới hành chính Đồng Nai 25/11/2026 (`95` ĐVHC) và kiểm chứng quan hệ mock data | Cài đặt mới V2.0 |
-| `3D Stack` (`three`, `@react-three/fiber`, `@react-three/drei`) | Đã gỡ khỏi `naifarm/package.json` | Gỡ bỏ hoàn toàn theo yêu cầu V2.0; thay bằng 2D Produce Anatomy & Gallery tương tác nhẹ, nhanh, rõ nét trên mọi thiết bị | Đã gỡ bỏ |
-
-> **Ranh giới bảo mật & tuân thủ:** Không sao chép mã nguồn độc quyền từ repo tham khảo, không nhúng khóa API trả phí, không dùng script `.toolbox/qa-runtime` hoặc `.hallmark/` trong bundle triển khai.
+| Nhóm | Package / Nguồn / Skill | Phiên bản / Đường dẫn | Giấy phép | Loại | Bằng chứng sử dụng & Mục đích |
+|---|---|---|---|---|---|
+| Core Web Stack | `next`, `react`, `react-dom`, `tailwindcss` | `16.4.6`, `19.3.0`, `4.3.3` | MIT | `existing` | App Router Frontend-Only `src/app/`, Tailwind v4 Turbopack build |
+| UI & Charts | `lucide-react`, `recharts`, `motion`, `sonner`, `clsx`, `tailwind-merge`, `class-variance-authority` | Xem `package.json` | ISC / MIT | `existing` | Hệ thống icon thống nhất Lucide, biểu đồ có fallback bảng, thông báo toast tập trung ở `src/lib/toast.ts` |
+| Bản đồ & GIS | `leaflet`, `react-leaflet`, `@turf/distance`, `@turf/helpers` | `1.9.4`, `5.0.0`, `7.4.0` | BSD-2 / MIT | `existing` | Bản đồ `OpenStreetMap` (`src/components/map/*`), GPS trình duyệt có xin phép, khoảng cách đường chim bay |
+| Tìm kiếm & Schema | `fuse.js`, `papaparse`, `zod` | `7.5.0`, `5.7.1`, `4.6.7` | Apache-2 / MIT | `existing` | Tìm kiếm mờ hỗ trợ `đ→d` tại `/search`, parse CSV `25/11/2026` 95 ĐVHC Đồng Nai |
+| QR Code & Scanner | `qrcode`, `qrcode.react`, `qr-scanner`, `jsqr`, `pngjs` | `1.5.4`, `4.2.0`, `1.4.2`, `1.4.0` | MIT / Apache-2 | `existing` | Sinh QR tuyệt đối (`https://naifarm.vercel.app/trace/<batch>`), giải mã cam/ảnh & kiểm chứng roundtrip `test:qr` |
+| E2E & Test Runner | `tsx`, `python` Playwright (`chromium`) | `tsx 4.23.15` | MIT / Apache-2 | `existing` | Chạy `data:validate`, `test:data`, `test:metrics`, `test:quality`, `test:qr` và `tests/e2e-v3-verify.py` |
+| Nghiệp vụ Local Reference | `Dong Nai Memory`, `EduMap`, `FLOODTWIN-AI` | `E:\04_Projects\...`, `C:\Users\asus\Documents\EduMap` | Local Workspace | `reference` | Tham chiếu cấu trúc bản đồ Leaflet + tile fallback + phân tầng địa giới hành chính |
+| UX & Copy Skills | `ws-vi-ux-writing`, `ui-ux-pro-max`, `ecc-frontend-patterns`, `design-taste-frontend`, `hallmark`, `unslop`, `ecc-verification-loop` | `.agents/skills/*`, `~/.gemini/config/skills/ws-vi-ux-writing` | Local Skills | `skill` | Quét copy tiếng Việt chuẩn, tổ chức React App Router, visual QA và verification gate trước commit |
+| Thư viện 3D cũ | `three`, `@react-three/fiber`, `@react-three/drei`, `@types/three` | Gỡ bỏ từ V2 | — | `skipped` | Đã xóa vĩnh viễn theo yêu cầu; thay bằng 2D tương tác (`ProduceAnatomy2D`, `ProductGallery2D`) |
+| Backend / DB / Auth | Supabase, Prisma, PostgreSQL, Payment SDK | Không cài đặt | — | `skipped` | Tuân thủ phạm vi Frontend-Only, mọi dữ liệu và state chạy hoàn toàn cục bộ trên trình duyệt |
