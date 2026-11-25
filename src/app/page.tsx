@@ -15,12 +15,13 @@ import {
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { useLocale } from "@/context/LocaleContext";
-import { localizeCategory } from "@/lib/i18n/domain-en";
+import { useCms } from "@/context/CmsContext";
+import { localizeCategory, localizeAdminUnitName } from "@/lib/i18n/domain-en";
 import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
 import { CulturalCampaignBanner } from "@/components/events/CulturalCampaignBanner";
 import { EditorialCursorStage } from "@/components/motion/MotionSystem";
 import { ProductCard } from "@/components/marketplace/ProductCard";
-import { Badge, Button, Card, DemoBanner, EmptyState } from "@/components/ui/Primitives";
+import { Badge, Button, Card, EmptyState } from "@/components/ui/Primitives";
 import { normalizeSearchText } from "@/lib/geography/normalize-address";
 import { cn } from "@/lib/format";
 import type { ProductCategory } from "@/types/naifarm";
@@ -40,11 +41,20 @@ export default function HomePage() {
   const router = useRouter();
   const { locale, t } = useLocale();
   const isEn = locale === "en";
+  const { getBlock } = useCms();
+  const heroCms = getBlock("hero.main");
   const { products, farms, livestreams, lessons } = useDemoStore();
+
+  const resolvedHeroTitle =
+    (isEn ? heroCms?.publishedEnTitle : heroCms?.publishedViTitle) || t.home.heroTitle;
+  const resolvedHeroSubtitle =
+    (isEn ? heroCms?.publishedEnBody : heroCms?.publishedViBody) || t.home.heroSubtitle;
+  const resolvedHeroImg = heroCms?.imageUrl || "/images/stitch/stitch-02.jpg";
+  const resolvedHeroPos = heroCms?.focalPoint || "50% 45%";
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<"Tất cả" | ProductCategory>("Tất cả");
   const [onlyInSeason, setOnlyInSeason] = useState(false);
-  const [qrInput, setQrInput] = useState("NF-DEMO-001");
+  const [qrInput, setQrInput] = useState("");
 
   const filteredProducts = useMemo(() => {
     const q = normalizeSearchText(search);
@@ -72,11 +82,11 @@ export default function HomePage() {
             id="hero-heading"
             className="font-editorial text-[30px] font-semibold leading-[1.15] text-[#25352B] sm:text-4xl lg:text-[50px]"
           >
-            {t.home.heroTitle}
+            {resolvedHeroTitle}
           </h1>
 
           <p className="max-w-xl text-base text-[#25352B]/85 sm:text-lg">
-            {t.home.heroSubtitle}
+            {resolvedHeroSubtitle}
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -99,7 +109,11 @@ export default function HomePage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              const code = qrInput.trim() || "NF-DEMO-001";
+              const code = qrInput.trim();
+              if (!code) {
+                router.push(buildLocalizedHref("/trace/scan", locale));
+                return;
+              }
               router.push(buildLocalizedHref(`/trace/${encodeURIComponent(code)}`, locale));
             }}
             className="flex flex-wrap items-center gap-2 rounded-[14px] border border-[#D6DED2] bg-white p-2.5 shadow-[0_2px_8px_rgba(37,53,43,0.05)] max-w-2xl"
@@ -135,8 +149,9 @@ export default function HomePage() {
           >
             <Link href={buildLocalizedHref("/explore", locale)} className="block">
               <img
-                src="/images/stitch/stitch-02.jpg"
+                src={resolvedHeroImg}
                 alt={t.home.heroCaptionTitle}
+                style={{ objectPosition: resolvedHeroPos }}
                 className="aspect-[4/3] w-full object-cover lg:aspect-[5/4]"
               />
               <div className="border-t border-[#D6DED2] bg-white/95 px-4 py-3">
@@ -152,15 +167,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Clock-Aware Cultural Campaign Banner (Nov 25-30 active, Nov 24 honest recap, Dec 5 upcoming) */}
+      {/* Clock-Aware Cultural Campaign Carousel (Nov 25-30 active, Nov 24 honest recap, Dec 5 upcoming) */}
       <CulturalCampaignBanner />
 
-      <DemoBanner
-        title={t.brand.experienceSpaceBadge}
-        detail={t.brand.experienceSpaceNotice}
-      />
-
-      {/* Search, Category Filter & 4-col Product Grid */}
+      {/* Search, Category Filter & Responsive 4-col Product Grid */}
       <section id="cho-nong-san" aria-labelledby="catalog-heading" className="space-y-5">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -236,7 +246,7 @@ export default function HomePage() {
         </div>
 
         {filteredProducts.length > 0 ? (
-          <div className="grid-safe grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+          <div className="grid-safe grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 lg:gap-6">
             {filteredProducts.slice(0, 8).map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -267,14 +277,23 @@ export default function HomePage() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 id="farms-story-heading" className="text-2xl font-bold text-[#25352B]">
-              Câu chuyện Nhà vườn & Thanh niên Đồng hành
+              {isEn
+                ? "Farm stories and young people making a difference"
+                : "Câu chuyện nhà vườn và thanh niên đồng hành"}
             </h2>
             <p className="mt-1 text-sm text-[#52645A]">
-              Hồ sơ sản xuất tách biệt minh bạch trạng thái tự khai với văn bản đã đối chiếu.
+              {isEn
+                ? "Information provided by the farm is clearly distinguished from records checked against supporting documents."
+                : "Thông tin do nhà vườn cung cấp được phân biệt với hồ sơ đã đối chiếu."}
             </p>
           </div>
-          <Link href="/farms" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#245B3D] hover:underline">
-            <span>Xem tất cả {farms.length} nhà vườn</span>
+          <Link
+            href={buildLocalizedHref("/farms", locale)}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#245B3D] hover:underline"
+          >
+            <span>
+              {isEn ? `Browse all ${farms.length} orchards` : `Xem tất cả ${farms.length} nhà vườn`}
+            </span>
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
@@ -285,42 +304,50 @@ export default function HomePage() {
               <div className="grid grid-cols-1 sm:grid-cols-[220px_minmax(0,1fr)]">
                 <img
                   src={farm.ownerPortrait}
-                  alt={`${farm.ownerName} - ${farm.name}`}
+                  alt={`${farm.ownerName} - ${isEn && farm.enName ? farm.enName : farm.name}`}
                   className="h-56 w-full object-cover sm:h-full"
                 />
                 <div className="flex flex-col justify-between p-5">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge tone={farm.ocopStatus === "coop_checked_demo" ? "success" : "warning"}>
-                        {farm.ocopLabel}
+                        {isEn
+                          ? farm.ocopStatus === "coop_checked_demo"
+                            ? "Co-op Checked (Sample)"
+                            : "Self-declared by Farm"
+                          : farm.ocopLabel}
                       </Badge>
                       <span className="tabular-nums text-xs font-semibold text-[#52645A]">
-                        {farm.areaHa} ha · {farm.region}
+                        {farm.areaHa} ha · {localizeAdminUnitName(farm.administrativeUnitName, undefined, locale)}
                       </span>
                     </div>
                     <h3 className="mt-2 font-editorial text-xl font-semibold text-[#25352B]">
-                      {farm.name}
+                      {isEn && farm.enName ? farm.enName : farm.name}
                     </h3>
-                    <p className="mt-1 text-sm text-[#52645A]">{farm.storySummary}</p>
+                    <p className="mt-1 text-sm text-[#52645A]">
+                      {isEn && farm.enStorySummary ? farm.enStorySummary : farm.storySummary}
+                    </p>
                     <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-[#245B3D]">
                       <Users className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>Hỗ trợ số: {farm.youthSupporters.join(", ")}</span>
+                      <span>
+                        {isEn ? "Youth partners:" : "Hỗ trợ số:"} {farm.youthSupporters.join(", ")}
+                      </span>
                     </p>
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Link
-                      href={`/farms/${farm.slug}`}
+                      href={buildLocalizedHref(`/farms/${farm.slug}`, locale)}
                       className="inline-flex min-h-[42px] items-center gap-1.5 rounded-[10px] bg-[#245B3D] px-4 text-xs font-semibold text-white hover:bg-[#19472E]"
                     >
-                      <span>Xem hồ sơ nhà vườn</span>
+                      <span>{isEn ? "View farm profile" : "Xem hồ sơ nhà vườn"}</span>
                       <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                     </Link>
                     <Link
-                      href="/explore"
+                      href={buildLocalizedHref("/explore", locale)}
                       className="inline-flex min-h-[42px] items-center gap-1.5 rounded-[10px] border border-[#D6DED2] bg-[#F5F3E9] px-3.5 text-xs font-semibold text-[#25352B] hover:bg-[#EAF0E5]"
                     >
                       <MapPin className="h-3.5 w-3.5 text-[#245B3D]" aria-hidden="true" />
-                      <span>Vị trí vườn</span>
+                      <span>{isEn ? "Orchard map" : "Vị trí vườn"}</span>
                     </Link>
                   </div>
                 </div>
@@ -336,17 +363,20 @@ export default function HomePage() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 id="live-strip-heading" className="flex items-center gap-2 text-xl font-bold text-[#25352B]">
               <Radio className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
-              <span>Lịch OCOP Live từ Nhà vườn</span>
+              <span>{isEn ? "OCOP Live Schedule from Orchards" : "Lịch OCOP Live từ Nhà vườn"}</span>
             </h2>
-            <Link href="/live" className="text-sm font-semibold text-[#245B3D] hover:underline">
-              Mở phòng OCOP Live →
+            <Link
+              href={buildLocalizedHref("/live", locale)}
+              className="text-sm font-semibold text-[#245B3D] hover:underline"
+            >
+              {isEn ? "Open OCOP Live hub →" : "Mở phòng OCOP Live →"}
             </Link>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {livestreams.slice(0, 2).map((session) => (
               <Link
                 key={session.id}
-                href="/live"
+                href={buildLocalizedHref(`/live/${session.id}?returnTo=%2F`, locale)}
                 className="flex gap-3 rounded-[12px] border border-[#D6DED2] bg-[#F5F3E9]/60 p-3 hover:bg-[#EAF0E5]"
               >
                 <img
@@ -356,9 +386,17 @@ export default function HomePage() {
                 />
                 <div className="min-w-0">
                   <Badge tone={session.status === "replay_demo" ? "info" : "gold"}>
-                    {session.status === "replay_demo" ? "Xem phát lại" : "Lịch dự kiến"}
+                    {session.status === "replay_demo"
+                      ? isEn
+                        ? "Watch replay"
+                        : "Xem phát lại"
+                      : isEn
+                      ? "Scheduled"
+                      : "Lịch dự kiến"}
                   </Badge>
-                  <p className="mt-1 line-clamp-2 text-sm font-semibold text-[#25352B]">{session.title}</p>
+                  <p className="mt-1 line-clamp-2 text-sm font-semibold text-[#25352B]">
+                    {session.title}
+                  </p>
                   <p className="mt-1 text-xs text-[#52645A]">{session.scheduleLabel}</p>
                 </div>
               </Link>
@@ -368,31 +406,35 @@ export default function HomePage() {
 
         <Card className="flex flex-col justify-between bg-[#EAF0E5] p-5">
           <div>
-            <Badge tone="success">Khám phá &amp; Học tập 2D</Badge>
+            <Badge tone="success">
+              {isEn ? "Explore & 2D Learning" : "Khám phá & Học tập 2D"}
+            </Badge>
             <h2 className="mt-2 font-editorial text-xl font-semibold text-[#25352B]">
-              Bản đồ nhà vườn Đồng Nai &amp; Giải phẫu nông sản 2D
+              {isEn
+                ? "Dong Nai Orchard Map & 2D Produce Anatomy"
+                : "Bản đồ nhà vườn Đồng Nai & Giải phẫu nông sản 2D"}
             </h2>
-              <p className="mt-2 text-sm text-[#52645A]">
-                {isEn
-                  ? `Locate ${farms.length} Dong Nai orchards, reserve bilingual orchard tours, and learn across ${lessons.length} interactive VI/EN & 2D anatomy lessons.`
-                  : `Định vị hệ sinh thái ${farms.length} nhà vườn tại Đồng Nai, đặt tour trải nghiệm miệt vườn và học tập qua ${lessons.length} chuyên đề song ngữ & giải phẫu 2D.`}
-              </p>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Link
-                href={buildLocalizedHref("/explore?view=tours", locale)}
-                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[10px] bg-[#245B3D] px-4 text-xs font-semibold text-white hover:bg-[#19472E]"
-              >
-                <Compass className="h-4 w-4" aria-hidden="true" />
-                <span>{t.explore.viewToursTab}</span>
-              </Link>
-              <Link
-                href={buildLocalizedHref("/learn", locale)}
-                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[10px] border border-[#245B3D] bg-white px-4 text-xs font-semibold text-[#245B3D] hover:bg-[#F5F3E9]"
-              >
-                <span>{t.nav.learn}</span>
-              </Link>
-            </div>
+            <p className="mt-2 text-sm text-[#52645A]">
+              {isEn
+                ? `Locate ${farms.length} Dong Nai orchards, reserve bilingual orchard tours, and learn across ${lessons.length} interactive VI/EN & 2D anatomy lessons.`
+                : `Định vị hệ sinh thái ${farms.length} nhà vườn tại Đồng Nai, đặt tour trải nghiệm miệt vườn và học tập qua ${lessons.length} chuyên đề song ngữ & giải phẫu 2D.`}
+            </p>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link
+              href={buildLocalizedHref("/explore?view=tours", locale)}
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[10px] bg-[#245B3D] px-4 text-xs font-semibold text-white hover:bg-[#19472E]"
+            >
+              <Compass className="h-4 w-4" aria-hidden="true" />
+              <span>{t.explore.viewToursTab}</span>
+            </Link>
+            <Link
+              href={buildLocalizedHref("/learn", locale)}
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[10px] border border-[#245B3D] bg-white px-4 text-xs font-semibold text-[#245B3D] hover:bg-[#F5F3E9]"
+            >
+              <span>{t.nav.learn}</span>
+            </Link>
+          </div>
         </Card>
       </section>
     </div>

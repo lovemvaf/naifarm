@@ -46,6 +46,7 @@ function ExploreMapInner() {
   const [unitQuery, setUnitQuery] = useState(unitParam);
   const [selectedFarmId, setSelectedFarmId] = useState<string>(farms[0]?.id ?? "");
   const [sortByDistance, setSortByDistance] = useState(true);
+  const [mobileMapPane, setMobileMapPane] = useState<"map" | "list">("map");
 
   const [tourLangFilter, setTourLangFilter] = useState<"all" | "vi" | "en">("all");
   const [tourKindFilter, setTourKindFilter] = useState<"all" | TourPackage["experienceKind"]>("all");
@@ -351,74 +352,121 @@ function ExploreMapInner() {
               }}
             />
           ) : (
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-              <div className="max-h-[540px] space-y-2.5 overflow-y-auto pr-1 lg:col-span-5">
-                {filteredFarms.map((farm) => {
-                  const active = farm.id === selectedFarm?.id;
-                  const distKm = userCoords
-                    ? calculateStraightLineDistanceKm(userCoords, {
-                        lat: farm.coordinates.lat,
-                        lng: farm.coordinates.lng,
-                      })
-                    : null;
-                  return (
-                    <button
-                      key={farm.id}
-                      type="button"
-                      onClick={() => setSelectedFarmId(farm.id)}
-                      className={cn(
-                        "flex w-full gap-3 rounded-[16px] border p-3 text-left transition cursor-pointer",
-                        active
-                          ? "border-[#245B3D] bg-[#EAF0E5]/85 shadow-[0_4px_12px_rgba(37,53,43,0.08)]"
-                          : "border-[#D6DED2] bg-white hover:bg-[#FAF8F1]",
-                      )}
-                    >
-                      <img
-                        src={farm.bannerImage}
-                        alt={isEn && farm.enName ? farm.enName : farm.name}
-                        className="h-20 w-20 shrink-0 rounded-[12px] object-cover"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center justify-between gap-1">
-                          <span className="text-[11px] font-bold text-[#245B3D]">
-                            {farm.administrativeUnitName} ({farm.administrativeUnitCode})
-                          </span>
-                          <span className="tabular-nums text-[11px] text-[#52645A]">
-                            {distKm !== null ? formatStraightLineDistanceVi(distKm) : `${farm.areaHa} ha`}
-                          </span>
-                        </div>
-                        <h2 className="mt-0.5 truncate text-sm font-bold text-[#25352B]">
-                          {isEn && farm.enName ? farm.enName : farm.name}
-                        </h2>
-                        <p className="mt-0.5 line-clamp-1 text-xs text-[#52645A]">
-                          {farm.mainCrops.join(" · ")}
-                        </p>
-                        <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[#80520C]">
-                          <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
-                          <span className="truncate">{farm.ocopLabel}</span>
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
+            <div className="space-y-3">
+              {/* Mobile Segmented Map / List Toggle so mobile scrolling stays smooth */}
+              <div
+                className="flex items-center justify-between rounded-[12px] border border-[#D6DED2] bg-white p-1 lg:hidden"
+                role="group"
+                aria-label={isEn ? "Mobile map or orchard list" : "Chế độ bản đồ hoặc danh sách trên di động"}
+              >
+                <button
+                  type="button"
+                  onClick={() => setMobileMapPane("map")}
+                  className={cn(
+                    "min-h-[38px] flex-1 rounded-[9px] text-xs font-bold transition cursor-pointer",
+                    mobileMapPane === "map"
+                      ? "bg-[#245B3D] text-white"
+                      : "text-[#52645A]",
+                  )}
+                >
+                  {isEn ? "Dong Nai 2D Map" : "Bản đồ 2D Đồng Nai"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMobileMapPane("list")}
+                  className={cn(
+                    "min-h-[38px] flex-1 rounded-[9px] text-xs font-bold transition cursor-pointer",
+                    mobileMapPane === "list"
+                      ? "bg-[#245B3D] text-white"
+                      : "text-[#52645A]",
+                  )}
+                >
+                  {isEn ? `Orchard list (${filteredFarms.length})` : `Danh sách vườn (${filteredFarms.length})`}
+                </button>
               </div>
 
-              <div className="space-y-4 lg:col-span-7">
-                <NaiFarmMapHost
-                  farms={filteredFarms}
-                  selectedFarmId={selectedFarm?.id}
-                  onSelectFarm={setSelectedFarmId}
-                  userCoords={userCoords}
-                  accuracyMeters={accuracyMeters}
-                  heightClassName="h-[440px]"
-                  zoom={filteredFarms.length === 1 ? 12 : 10}
-                />
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                <div
+                  className={cn(
+                    "max-h-[540px] space-y-2.5 overflow-y-auto pr-1 lg:col-span-5 lg:block",
+                    mobileMapPane === "list" ? "block" : "hidden",
+                  )}
+                >
+                  {filteredFarms.map((farm) => {
+                    const active = farm.id === selectedFarm?.id;
+                    const distKm = userCoords
+                      ? calculateStraightLineDistanceKm(userCoords, {
+                          lat: farm.coordinates.lat,
+                          lng: farm.coordinates.lng,
+                        })
+                      : null;
+                    return (
+                      <button
+                        key={farm.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedFarmId(farm.id);
+                          setMobileMapPane("map");
+                        }}
+                        className={cn(
+                          "flex w-full gap-3 rounded-[16px] border p-3 text-left transition cursor-pointer",
+                          active
+                            ? "border-[#245B3D] bg-[#EAF0E5]/85 shadow-[0_4px_12px_rgba(37,53,43,0.08)]"
+                            : "border-[#D6DED2] bg-white hover:bg-[#FAF8F1]",
+                        )}
+                      >
+                        <img
+                          src={farm.bannerImage}
+                          alt={isEn && farm.enName ? farm.enName : farm.name}
+                          className="h-20 w-20 shrink-0 rounded-[12px] object-cover"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center justify-between gap-1">
+                            <span className="text-[11px] font-bold text-[#245B3D]">
+                              {farm.administrativeUnitName} ({farm.administrativeUnitCode})
+                            </span>
+                            <span className="tabular-nums text-[11px] text-[#52645A]">
+                              {distKm !== null ? formatStraightLineDistanceVi(distKm) : `${farm.areaHa} ha`}
+                            </span>
+                          </div>
+                          <h2 className="mt-0.5 truncate text-sm font-bold text-[#25352B]">
+                            {isEn && farm.enName ? farm.enName : farm.name}
+                          </h2>
+                          <p className="mt-0.5 line-clamp-1 text-xs text-[#52645A]">
+                            {farm.mainCrops.join(" · ")}
+                          </p>
+                          <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[#80520C]">
+                            <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+                            <span className="truncate">{farm.ocopLabel}</span>
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
 
-                <MapLegend />
+                <div
+                  className={cn(
+                    "space-y-4 lg:col-span-7 lg:block",
+                    mobileMapPane === "map" ? "block" : "hidden",
+                  )}
+                >
+                  <NaiFarmMapHost
+                    farms={filteredFarms}
+                    selectedFarmId={selectedFarm?.id}
+                    onSelectFarm={setSelectedFarmId}
+                    userCoords={userCoords}
+                    accuracyMeters={accuracyMeters}
+                    heightClassName="h-[440px]"
+                    zoom={filteredFarms.length === 1 ? 12 : 10}
+                  />
 
-                {selectedFarm ? (
-                  <MapLocationCard farm={selectedFarm} distanceKm={selectedDistanceKm} />
-                ) : null}
+                  <MapLegend />
+
+                  {selectedFarm ? (
+                    <MapLocationCard farm={selectedFarm} distanceKm={selectedDistanceKm} />
+                  ) : null}
+                </div>
               </div>
             </div>
           )}

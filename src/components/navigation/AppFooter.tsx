@@ -4,11 +4,16 @@ import React from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
+import { useCms } from "@/context/CmsContext";
 import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
 
 export function AppFooter() {
   const { locale, t } = useLocale();
   const isEn = locale === "en";
+  const { getBlock } = useCms();
+  const footerCms = getBlock("footer.brand");
+  const resolvedTagline =
+    (isEn ? footerCms?.publishedEnTitle : footerCms?.publishedViTitle) || t.brand.tagline;
   const lhref = (href: string) => buildLocalizedHref(href, locale);
 
   const footerGroups = [
@@ -18,37 +23,34 @@ export function AppFooter() {
         { href: "/marketplace", label: isEn ? "Dong Nai OCOP Market" : "Chợ nông sản Đồng Nai" },
         { href: "/farms", label: isEn ? "Orchard & Cooperative Directory" : "Danh bạ nhà vườn & HTX" },
         { href: "/explore", label: isEn ? "Orchard Map & Agritourism" : "Bản đồ & Du lịch miệt vườn" },
-        { href: "/quality", label: isEn ? "26 Quality & OCOP Standards" : "Trung tâm chất lượng & OCOP" },
+        { href: "/quality", label: isEn ? "Quality & OCOP Standards" : "Trung tâm chất lượng & OCOP" },
         { href: "/trace/scan", label: isEn ? "Scan QR Traceability Tag" : "Quét tem truy xuất nguồn gốc" },
-        { href: "/account/favorites", label: t.nav.favorites },
       ],
     },
     {
       title: t.nav.footerGroupCommunity,
       links: [
-        { href: "/farmer", label: isEn ? "Farmer & Cooperative Portal (W02)" : "Không gian Nhà nông & HTX (W02)" },
-        { href: "/volunteer", label: isEn ? "Digital Youth Volunteering (W03)" : "Thanh niên tình nguyện số (W03)" },
-        { href: "/learn", label: isEn ? "Bilingual Academy & 2D Anatomy" : "NaiAcademy song ngữ & Giải phẫu 2D" },
+        { href: "/farmer", label: isEn ? "Orchard Owner Space" : "Góc Nhà vườn & HTX" },
+        { href: "/volunteer", label: isEn ? "Youth Volunteers" : "Thanh niên Tình nguyện" },
+        { href: "/learn", label: isEn ? "Bilingual Produce Learning" : "Học tập & Khám phá nông sản" },
         { href: "/live", label: isEn ? "OCOP Live Story Hub" : "Phòng OCOP Live" },
         { href: "/events", label: t.nav.calendar },
-        { href: "/coordinator", label: isEn ? "Community Coordination (W04)" : "Điều phối cộng đồng (W04)" },
       ],
     },
     {
       title: t.nav.footerGroupSupport,
       links: [
-        { href: "/sign-in", label: isEn ? "Sign In / Quick Access" : "Đăng nhập / Truy cập nhanh" },
+        { href: "/sign-in", label: isEn ? "Sign in / Role switcher" : "Đăng nhập / Chọn vai trò" },
         { href: "/search", label: isEn ? "Sitewide Search" : "Tìm kiếm toàn trang" },
-        { href: "/organization", label: isEn ? "Cooperative & Org Space (W05)" : "Hợp tác xã & Tổ chức (W05)" },
-        { href: "/admin", label: isEn ? "Governance & Scopes (W06)" : "Quản trị hệ thống (W06)" },
+        { href: "/account/favorites", label: t.nav.favorites },
         { href: "/policies", label: isEn ? "Data Integrity & Safeguarding" : "Chính sách & Minh bạch dữ liệu" },
       ],
     },
   ];
 
   return (
-    <footer className="mt-14 border-t border-[#D6DED2] bg-[#EFECE0] pb-24 lg:pb-10">
-      <div className="mx-auto max-w-[1360px] px-4 py-10 lg:px-8">
+    <footer className="mt-8 border-t border-[#D6DED2] bg-[#EFECE0] pb-20 lg:pb-8">
+      <div className="mx-auto max-w-[1360px] px-4 py-8 lg:px-8">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-12">
           <div className="sm:col-span-2 lg:col-span-4">
             <div className="flex items-center gap-2.5">
@@ -67,12 +69,13 @@ export function AppFooter() {
               </div>
             </div>
             <p className="mt-3 font-editorial text-sm font-semibold text-[#25352B]">
-              {t.brand.tagline}
+              {resolvedTagline}
             </p>
             <p className="mt-2 text-xs leading-relaxed text-[#52645A]">
-              {isEn
-                ? "Connecting Dong Nai family orchards, honest seasonal logs, QR lot traceability, bilingual youth ambassadors, and orchard tour experiences."
-                : "Nền tảng kết nối nông sản Đồng Nai, nhật ký mùa vụ minh bạch, truy xuất nguồn gốc QR, học tập song ngữ và thanh niên tình nguyện đồng hành cùng nhà vườn địa phương."}
+              {(isEn ? footerCms?.publishedEnBody : footerCms?.publishedViBody) ||
+                (isEn
+                  ? "Connecting Dong Nai family orchards, honest seasonal logs, QR lot traceability, bilingual youth ambassadors, and orchard tour experiences."
+                  : "Nền tảng kết nối nông sản Đồng Nai, nhật ký mùa vụ minh bạch, truy xuất nguồn gốc QR, học tập song ngữ và thanh niên tình nguyện đồng hành cùng nhà vườn địa phương.")}
             </p>
           </div>
 
@@ -115,7 +118,7 @@ export function AppFooter() {
           ))}
         </div>
 
-        <div className="mt-8 flex flex-col gap-2 border-t border-[#D6DED2] pt-5 text-xs text-[#52645A] md:flex-row md:items-center md:justify-between">
+        <div className="mt-8 flex flex-col gap-2 border-t border-[#D6DED2] pt-5 pb-12 text-xs text-[#52645A] sm:pb-2 md:flex-row md:items-center md:justify-between md:pr-16">
           <span>{t.brand.footerCopyright}</span>
           <span>{t.brand.footerExperienceDisclaimer}</span>
         </div>

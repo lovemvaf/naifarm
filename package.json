@@ -16,6 +16,7 @@
     "test:qr": "tsx scripts/verify-qr-decode.ts",
     "test:i18n": "tsx scripts/test-i18n.ts",
     "test:calendar": "tsx scripts/test-calendar-promo.ts",
+    "test:video-studio": "tsx scripts/test-video-studio.ts",
     "test:deepseek": "node --env-file=.env test/test-deepseek.mjs",
     "test:deepseek:py": "python test/test_deepseek.py",
     "balance": "node --env-file=.env test/check-balance.mjs",

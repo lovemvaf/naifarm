@@ -144,7 +144,7 @@ export const STITCH_SCREEN_COVERAGE: StitchMappingEntry[] = [
     stitchId: "BP-06",
     slug: "blueprint_farmer_home_u50",
     blueprintIds: "S08, S11, S12, S25, S30, R5",
-    title: "Trang chủ Nhà nông U50+, Đơn hàng & Nhật ký",
+    title: "Trang chủ Nhà nông dễ đọc, Đơn hàng & Nhật ký",
     workspace: "W02",
     route: "/farmer",
     kind: "blueprint-reconstructed",

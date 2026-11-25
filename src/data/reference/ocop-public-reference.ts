@@ -22,7 +22,7 @@ export const OCOP_PUBLIC_REFERENCE_CATALOG: PublicReferenceItem[] = [
     checkedAt: "2026-11-25",
     lifecycleStatus: "source_verified",
     scopeWarning: "Danh mục tham khảo từ văn bản công bố chính thức; không mở bán trực tiếp qua ứng dụng.",
-    image: "/images/stitch/stitch-18.jpg",
+    image: "/images/products/dried-mango.jpg",
     sourceKind: "public_reference",
   },
   {
@@ -41,7 +41,7 @@ export const OCOP_PUBLIC_REFERENCE_CATALOG: PublicReferenceItem[] = [
     checkedAt: "2026-11-25",
     lifecycleStatus: "source_verified",
     scopeWarning: "SKU riêng trong phụ lục QĐ 125; kiểm tra gia hạn/thu hồi tại cổng UBND tỉnh.",
-    image: "/images/stitch/stitch-10.jpg",
+    image: "/images/products/dried-mango.jpg",
     sourceKind: "public_reference",
   },
   {
@@ -59,7 +59,7 @@ export const OCOP_PUBLIC_REFERENCE_CATALOG: PublicReferenceItem[] = [
     publishedAt: "2026-01-14",
     checkedAt: "2026-11-25",
     lifecycleStatus: "source_verified",
-    image: "/images/stitch/stitch-18.jpg",
+    image: "/images/products/dried-mango.jpg",
     sourceKind: "public_reference",
   },
   {
@@ -113,7 +113,7 @@ export const OCOP_PUBLIC_REFERENCE_CATALOG: PublicReferenceItem[] = [
     publishedAt: "2026-01-14",
     checkedAt: "2026-11-25",
     lifecycleStatus: "source_verified",
-    image: "/images/stitch/stitch-49.jpg",
+    image: "/images/products/jackfruit-chips.jpg",
     sourceKind: "public_reference",
   },
   {
@@ -131,7 +131,7 @@ export const OCOP_PUBLIC_REFERENCE_CATALOG: PublicReferenceItem[] = [
     publishedAt: "2026-01-14",
     checkedAt: "2026-11-25",
     lifecycleStatus: "source_verified",
-    image: "/images/stitch/stitch-18.jpg",
+    image: "/images/products/ocop-gift-basket.jpg",
     sourceKind: "public_reference",
   },
   {
@@ -150,7 +150,7 @@ export const OCOP_PUBLIC_REFERENCE_CATALOG: PublicReferenceItem[] = [
     checkedAt: "2026-11-25",
     lifecycleStatus: "source_verified",
     scopeWarning: "Lưu ý minh bạch: chữ 'hữu cơ' nằm trong tên pháp nhân HTX, không tự suy diễn chứng nhận Organic nếu chưa có hồ sơ chứng nhận hữu cơ riêng.",
-    image: "/images/stitch/stitch-35.jpg",
+    image: "/images/products/hydroponic-greens.jpg",
     sourceKind: "public_reference",
   },
   {
@@ -187,7 +187,7 @@ export const OCOP_PUBLIC_REFERENCE_CATALOG: PublicReferenceItem[] = [
     checkedAt: "2026-11-25",
     lifecycleStatus: "source_verified",
     scopeWarning: "Danh mục công bố đến 31/12/2025; cần kiểm tra quyết định gốc khi đối chiếu gia hạn mới.",
-    image: "/images/stitch/stitch-08.jpg",
+    image: "/images/products/chocolate-cacao.jpg",
     sourceKind: "public_reference",
   },
   {
@@ -297,7 +297,7 @@ export const OCOP_PUBLIC_REFERENCE_CATALOG: PublicReferenceItem[] = [
     checkedAt: "2026-11-25",
     lifecycleStatus: "revoked",
     scopeWarning: "Case kiểm thử thu hồi thực tế: ẩn badge hoàn toàn và chặn dùng giấy cũ.",
-    image: "/images/stitch/stitch-09.jpg",
+    image: "/images/stitch/stitch-04.jpg",
     sourceKind: "public_reference",
   },
   {

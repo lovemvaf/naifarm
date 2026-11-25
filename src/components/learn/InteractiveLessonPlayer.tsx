@@ -5,10 +5,14 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
+  Award,
   BookOpen,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Layers,
+  Lock,
   MapPin,
   MessageSquare,
   Puzzle,
@@ -16,6 +20,7 @@ import {
   RotateCw,
   ShieldAlert,
   Sparkles,
+  Unlock,
   Volume2,
   XCircle,
 } from "lucide-react";
@@ -35,6 +40,13 @@ import {
 import { cn } from "@/lib/format";
 import { notifyInfo, notifySuccess } from "@/lib/toast";
 import { ProduceAnatomy2D } from "@/components/products/ProduceAnatomy2D";
+import { MediaPlayer } from "@/components/media/MediaPlayer";
+import { resolveCategoryMedia } from "@/data/reference/media-library";
+import { CertificatePreviewModal } from "@/components/credentials/CertificatePreviewModal";
+import {
+  resolveAchievementCredential,
+  type AchievementCredential,
+} from "@/lib/credentials/achievement-registry";
 import { Badge, Button, Card, DemoBanner } from "@/components/ui/Primitives";
 
 type LessonTab = "content" | "flashcards" | "matching" | "quiz" | "roleplay" | "anatomy";
@@ -79,6 +91,11 @@ export function InteractiveLessonPlayer({ lessonSlug }: { lessonSlug: string }) 
   const [selectedViId, setSelectedViId] = useState<string | null>(null);
   const [matchMismatch, setMatchMismatch] = useState(false);
   const [bankAnswers, setBankAnswers] = useState<Record<string, number>>({});
+  const [freeBrowse, setFreeBrowse] = useState(false);
+  const [unlockedStepIdx, setUnlockedStepIdx] = useState<number>(() =>
+    urlTab && VALID_LESSON_TABS.includes(urlTab) ? Math.max(0, VALID_LESSON_TABS.indexOf(urlTab)) : 0,
+  );
+  const [previewCert, setPreviewCert] = useState<AchievementCredential | null>(null);
 
   const cachedTab =
     typeof window !== "undefined"
@@ -92,7 +109,18 @@ export function InteractiveLessonPlayer({ lessonSlug }: { lessonSlug: string }) 
           ? (cachedTab as LessonTab)
           : "content");
 
+  const currentStepIdx = Math.max(0, VALID_LESSON_TABS.indexOf(activeTab));
+
   const handleTabChange = (nextTab: LessonTab) => {
+    const nextIdx = VALID_LESSON_TABS.indexOf(nextTab);
+    if (!freeBrowse && nextIdx > unlockedStepIdx) {
+      notifyInfo(
+        isEn
+          ? `Complete Step ${unlockedStepIdx + 1} first, or enable Free Browse above.`
+          : `Hãy hoàn thành Bước ${unlockedStepIdx + 1} hoặc bật Chế độ tự do bên trên.`,
+      );
+      return;
+    }
     setLocalTab(nextTab);
     saveRoomSessionState(`learn:${lesson?.slug ?? lessonSlug}`, { tab: nextTab });
     const params = new URLSearchParams(searchParams.toString());
@@ -100,6 +128,29 @@ export function InteractiveLessonPlayer({ lessonSlug }: { lessonSlug: string }) 
     if (locale === "en") params.set("lang", "en");
     else params.delete("lang");
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const handleAdvanceStep = () => {
+    const nextIdx = Math.min(VALID_LESSON_TABS.length - 1, currentStepIdx + 1);
+    const nextTab = VALID_LESSON_TABS[nextIdx];
+    setUnlockedStepIdx((prev) => Math.max(prev, nextIdx));
+    setLocalTab(nextTab);
+    saveRoomSessionState(`learn:${lesson?.slug ?? lessonSlug}`, { tab: nextTab });
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", nextTab);
+    if (locale === "en") params.set("lang", "en");
+    else params.delete("lang");
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const openLessonCertificate = () => {
+    const cert = resolveAchievementCredential("NF-CERT-2026-002", {
+      recipientName: authUser?.name ?? (isEn ? "NaiAcademy Learner" : "Học viên NaiAcademy"),
+      programVi: `Hoàn thành 6 bước: ${lesson?.title ?? ""}`,
+      programEn: `Completed 6-Step Course: ${lesson?.titleEn ?? lesson?.title ?? ""}`,
+      scoreText: `${learningProgress.practicePoints} pts · 6/6 steps`,
+    });
+    if (cert) setPreviewCert(cert);
   };
 
   const lessonPhrases = useMemo(() => {
@@ -251,49 +302,89 @@ export function InteractiveLessonPlayer({ lessonSlug }: { lessonSlug: string }) 
           <p className="mt-2 max-w-3xl text-sm text-[#52645A]">{lessonSummary}</p>
         </div>
 
-        {/* Navigation Tabs */}
-        <div
-          role="tablist"
-          aria-label={isEn ? "Learning modes" : "Chế độ học tập"}
-          className="flex flex-wrap gap-2 border-b border-[#D6DED2] bg-[#FAF8F1] px-6 py-3"
-        >
-          {(
-            [
-              { id: "content", label: t.learn.tabContent, icon: BookOpen },
-              { id: "flashcards", label: t.learn.tabFlashcards, icon: RotateCw },
-              { id: "matching", label: t.learn.tabMatching, icon: Puzzle },
-              { id: "quiz", label: t.learn.tabQuiz, icon: Sparkles },
-              { id: "roleplay", label: t.learn.tabRoleplay, icon: MessageSquare },
-              { id: "anatomy", label: t.learn.tabAnatomy, icon: Layers },
-            ] as const
-          ).map((item) => {
-            const Icon = item.icon;
-            const active = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => handleTabChange(item.id)}
-                className={cn(
-                  "inline-flex min-h-[40px] items-center gap-1.5 rounded-[10px] px-3.5 text-xs font-semibold transition-colors cursor-pointer",
-                  active
-                    ? "bg-[#245B3D] text-white"
-                    : "border border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#EAF0E5]",
-                )}
-              >
-                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+        {/* Sequential 6-Step Progress Bar & Free-Browse Teacher Toggle */}
+        <div className="border-b border-[#D6DED2] bg-[#FAF8F1] px-6 py-3 space-y-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2 font-bold text-[#245B3D]">
+              <span>
+                {isEn
+                  ? `Sequential Lesson · Step ${currentStepIdx + 1} / 6`
+                  : `Lộ trình tuần tự · Bước ${currentStepIdx + 1} / 6`}
+              </span>
+              <span className="rounded-full bg-[#EAF0E5] px-2 py-0.5 text-[11px] font-semibold">
+                {Math.round(((currentStepIdx + 1) / 6) * 100)}%
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFreeBrowse((v) => !v)}
+              aria-pressed={freeBrowse}
+              className={cn(
+                "inline-flex min-h-[32px] items-center gap-1.5 rounded-full border px-3 text-[11px] font-semibold transition cursor-pointer",
+                freeBrowse
+                  ? "border-[#245B3D] bg-[#EAF0E5] text-[#245B3D]"
+                  : "border-[#D6DED2] bg-white text-[#52645A]",
+              )}
+            >
+              {freeBrowse ? (
+                <Unlock className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : (
+                <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              <span>{freeBrowse ? (isEn ? "Free browse: ON" : "Chế độ tự do: BẬT") : isEn ? "Free browse" : "Mở xem tự do"}</span>
+            </button>
+          </div>
+
+          <div
+            role="tablist"
+            aria-label={isEn ? "6-step learning sequence" : "Lộ trình học 6 bước"}
+            className="flex flex-wrap gap-2"
+          >
+            {(
+              [
+                { id: "content", label: `1. ${t.learn.tabContent}`, icon: BookOpen },
+                { id: "flashcards", label: `2. ${t.learn.tabFlashcards}`, icon: RotateCw },
+                { id: "matching", label: `3. ${t.learn.tabMatching}`, icon: Puzzle },
+                { id: "quiz", label: `4. ${t.learn.tabQuiz}`, icon: Sparkles },
+                { id: "roleplay", label: `5. ${t.learn.tabRoleplay}`, icon: MessageSquare },
+                { id: "anatomy", label: `6. ${t.learn.tabAnatomy}`, icon: Layers },
+              ] as const
+            ).map((item, idx) => {
+              const Icon = item.icon;
+              const active = activeTab === item.id;
+              const locked = !freeBrowse && idx > unlockedStepIdx;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => handleTabChange(item.id)}
+                  className={cn(
+                    "inline-flex min-h-[40px] items-center gap-1.5 rounded-[10px] px-3.5 text-xs font-semibold transition-colors cursor-pointer",
+                    active
+                      ? "bg-[#245B3D] text-white"
+                      : locked
+                      ? "border border-[#D6DED2] bg-[#F5F3E9] text-[#687A70] opacity-75"
+                      : "border border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#EAF0E5]",
+                  )}
+                >
+                  {locked ? (
+                    <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                  ) : (
+                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="p-6">
-          {/* TAB 1: CONTENT */}
+          {/* TAB 1: CONTENT + REGIONAL MEDIA */}
           {activeTab === "content" ? (
-            <div className="space-y-4">
+            <div className="space-y-5">
               {lesson.sections.map((sec) => (
                 <article
                   key={sec.heading}
@@ -314,6 +405,10 @@ export function InteractiveLessonPlayer({ lessonSlug }: { lessonSlug: string }) 
                   </div>
                 </article>
               ))}
+              <MediaPlayer
+                asset={resolveCategoryMedia(lesson.topicTag, lesson.anatomyTarget)}
+                compact
+              />
             </div>
           ) : null}
 
@@ -699,18 +794,69 @@ export function InteractiveLessonPlayer({ lessonSlug }: { lessonSlug: string }) 
             </div>
           ) : null}
 
-          {/* TAB 6: 2D PRODUCE ANATOMY */}
+          {/* TAB 6: 2D PRODUCE ANATOMY & COMPLETION CERTIFICATE */}
           {activeTab === "anatomy" ? (
-            <ProduceAnatomy2D
-              key={lesson.anatomyTarget}
-              initialProduce={lesson.anatomyTarget}
-              allowSwitch
-            />
+            <div className="space-y-5">
+              <ProduceAnatomy2D
+                key={lesson.anatomyTarget}
+                initialProduce={lesson.anatomyTarget}
+                allowSwitch
+              />
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] border border-[#245B3D]/30 bg-[#EAF0E5] p-4">
+                <div>
+                  <p className="text-sm font-bold text-[#245B3D]">
+                    {isEn ? "Step 6 Complete · Completion Certificate Ready" : "Hoàn thành Bước 6 · Sẵn sàng xuất Chứng nhận PDF"}
+                  </p>
+                  <p className="text-xs text-[#52645A]">
+                    {isEn
+                      ? "Preview your completion record with scannable QR and export A4 landscape PDF."
+                      : "Xem trước chứng nhận có mã QR đối chiếu và tải xuống bản PDF chuẩn tiếng Việt."}
+                  </p>
+                </div>
+                <Button variant="gold" size="sm" onClick={openLessonCertificate}>
+                  <Award className="h-4 w-4" aria-hidden="true" />
+                  <span>{isEn ? "Preview & Download PDF" : "Xem & Tải Chứng nhận PDF"}</span>
+                </Button>
+              </div>
+            </div>
           ) : null}
+
+          {/* Unified Sequential Step Navigation Bar */}
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#D6DED2] pt-4">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={currentStepIdx === 0}
+              onClick={() => handleTabChange(VALID_LESSON_TABS[Math.max(0, currentStepIdx - 1)])}
+            >
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              <span>{isEn ? "Previous step" : "Quay lại bước trước"}</span>
+            </Button>
+
+            <span className="text-xs font-semibold text-[#52645A]">
+              {isEn ? `Step ${currentStepIdx + 1} of 6` : `Bước ${currentStepIdx + 1} / 6`}
+            </span>
+
+            {currentStepIdx < VALID_LESSON_TABS.length - 1 ? (
+              <Button variant="primary" size="sm" onClick={handleAdvanceStep}>
+                <span>
+                  {isEn ? `Continue to Step ${currentStepIdx + 2}` : `Tiếp tục Bước ${currentStepIdx + 2}`}
+                </span>
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            ) : (
+              <Button variant="gold" size="sm" onClick={openLessonCertificate}>
+                <Award className="h-4 w-4" aria-hidden="true" />
+                <span>{isEn ? "Completion Certificate" : "Nhận Chứng nhận"}</span>
+              </Button>
+            )}
+          </div>
         </div>
       </Card>
 
       <DemoBanner title={t.learn.practicePointsLabel} detail={t.learn.volunteerHoursSeparateNote} />
+
+      <CertificatePreviewModal credential={previewCert} onClose={() => setPreviewCert(null)} />
     </div>
   );
 }

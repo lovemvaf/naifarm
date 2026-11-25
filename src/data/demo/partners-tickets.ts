@@ -367,7 +367,7 @@ export const INITIAL_PARTNER_ORGS: PartnerOrganization[] = [
     administrativeUnitName: "Phường Long Khánh",
     linkedFarmsCount: 19,
     contactRoleDemo: "Đội trưởng TNV",
-    focusArea: "Đồng hành 1-1 với nhà vườn U50+ đăng bán 3 bước",
+    focusArea: "Đồng hành 1-1 với nhà vườn lớn tuổi đăng bán 3 bước",
     statusLabel: "Đang phối hợp tích cực",
   },
   {

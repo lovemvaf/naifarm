@@ -5,20 +5,25 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, MailCheck, ShieldAlert, UserPlus } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { useLocale } from "@/context/LocaleContext";
 import { ADMINISTRATIVE_UNITS } from "@/lib/geography/administrative-lookup";
+import { localizeAdminUnitName } from "@/lib/i18n/domain-en";
+import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
 import { notifyError, notifySuccess } from "@/lib/toast";
 import { Badge, Card, DemoBanner } from "@/components/ui/Primitives";
 import type { AppRole } from "@/types/naifarm";
 
-const ROLE_OPTIONS: { value: AppRole; label: string; home: string }[] = [
-  { value: "customer", label: "Cá nhân & Khách mua", home: "/account" },
-  { value: "farmer", label: "Nhà nông / Chủ vườn", home: "/farmer" },
-  { value: "volunteer", label: "Thanh niên Tình nguyện", home: "/volunteer" },
-  { value: "organization", label: "Tổ chức / HTX / Doanh nghiệp", home: "/organization" },
+const ROLE_OPTIONS: { value: AppRole; label: string; enLabel: string; home: string }[] = [
+  { value: "customer", label: "Cá nhân & Khách mua", enLabel: "Personal & Buyer", home: "/account" },
+  { value: "farmer", label: "Nhà nông / Chủ vườn", enLabel: "Orchard Owner / Farmer", home: "/farmer" },
+  { value: "volunteer", label: "Thanh niên Tình nguyện", enLabel: "Youth Volunteer", home: "/volunteer" },
+  { value: "organization", label: "Tổ chức / HTX / Doanh nghiệp", enLabel: "Organization / Cooperative / Business", home: "/organization" },
 ];
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { locale } = useLocale();
+  const isEn = locale === "en";
   const { supabaseRealSignUp, signUpDemoGuest } = useDemoStore();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -33,11 +38,11 @@ export default function SignUpPage() {
     e.preventDefault();
     setErrorMsg(null);
     if (name.trim().length < 2) {
-      setErrorMsg("Vui lòng nhập họ tên tối thiểu 2 ký tự.");
+      setErrorMsg(isEn ? "Please enter at least 2 characters for your display name." : "Vui lòng nhập họ tên tối thiểu 2 ký tự.");
       return;
     }
     if (!email.trim() || password.length < 6) {
-      setErrorMsg("Vui lòng nhập email và mật khẩu tối thiểu 6 ký tự.");
+      setErrorMsg(isEn ? "Please provide an email and password with at least 6 characters." : "Vui lòng nhập email và mật khẩu tối thiểu 6 ký tự.");
       return;
     }
     setPending(true);
@@ -52,9 +57,16 @@ export default function SignUpPage() {
         });
         if (fallback.ok) {
           notifySuccess(
-            "Supabase chưa kết nối — đã tạo tài khoản trải nghiệm cục bộ trên trình duyệt.",
+            isEn
+              ? "Created a local browser experience account."
+              : "Đã tạo tài khoản trải nghiệm cục bộ trên trình duyệt.",
           );
-          router.push(role === "farmer" ? "/farmer" : role === "volunteer" ? "/volunteer" : "/account");
+          router.push(
+            buildLocalizedHref(
+              role === "farmer" ? "/farmer" : role === "volunteer" ? "/volunteer" : "/account",
+              locale,
+            ),
+          );
           return;
         }
         setErrorMsg(fallback.message);
@@ -106,19 +118,24 @@ export default function SignUpPage() {
   return (
     <div className="mx-auto max-w-[760px] space-y-6 px-4 py-8 lg:px-8">
       <div>
-        <Badge tone="success">Đăng ký tài khoản</Badge>
+        <Badge tone="success">{isEn ? "Sign Up" : "Đăng ký tài khoản"}</Badge>
         <h1 className="mt-2 font-editorial text-3xl font-semibold text-[#25352B]">
-          Tạo tài khoản NaiFarm
+          {isEn ? "Create a NaiFarm Account" : "Tạo tài khoản NaiFarm"}
         </h1>
         <p className="mt-1 text-sm text-[#52645A]">
-          Đăng ký miễn phí cho Khách mua, Nhà nông, Thanh niên Tình nguyện hoặc Tổ chức/HTX.
-          Tài khoản được xác minh qua email.
+          {isEn
+            ? "Free registration for Buyers, Orchard Owners, Youth Volunteers, or Organizations & Cooperatives."
+            : "Đăng ký miễn phí cho Khách mua, Nhà nông, Thanh niên Tình nguyện hoặc Tổ chức/HTX."}
         </p>
       </div>
 
       <DemoBanner
-        title="Quy tắc phân quyền an toàn"
-        detail="Đăng ký công khai chỉ mở cho Khách mua, Nhà nông, Thanh niên Tình nguyện và Tổ chức/HTX. Quyền Điều phối (W04) và Quản trị (W06) được cấp qua phê duyệt nội bộ."
+        title={isEn ? "Role Access Safeguard" : "Quy tắc phân quyền an toàn"}
+        detail={
+          isEn
+            ? "Public registration covers Buyer, Farmer, Volunteer, and Organization roles. Coordinator and Governance scopes require internal approval."
+            : "Đăng ký công khai chỉ mở cho Khách mua, Nhà nông, Thanh niên Tình nguyện và Tổ chức/HTX. Quyền Điều phối và Quản trị được cấp qua phê duyệt nội bộ."
+        }
       />
 
       <Card className="p-6">
@@ -126,7 +143,7 @@ export default function SignUpPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="signup-name" className="block text-xs font-semibold text-[#25352B]">
-                Họ và tên hiển thị <span className="text-[#A32D2D]">*</span>
+                {isEn ? "Display Name" : "Họ và tên hiển thị"} <span className="text-[#A32D2D]">*</span>
               </label>
               <input
                 id="signup-name"
@@ -134,7 +151,7 @@ export default function SignUpPage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ví dụ: Nguyễn Minh Quân"
+                placeholder={isEn ? "e.g. Minh Quan Nguyen" : "Ví dụ: Nguyễn Minh Quân"}
                 className="mt-1 min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
               />
             </div>
@@ -159,7 +176,7 @@ export default function SignUpPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="signup-password" className="block text-xs font-semibold text-[#25352B]">
-                Mật khẩu <span className="text-[#A32D2D]">*</span>
+                {isEn ? "Password" : "Mật khẩu"} <span className="text-[#A32D2D]">*</span>
               </label>
               <input
                 id="signup-password"
@@ -169,14 +186,14 @@ export default function SignUpPage() {
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Tối thiểu 6 ký tự"
+                placeholder={isEn ? "Minimum 6 characters" : "Tối thiểu 6 ký tự"}
                 className="mt-1 min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
               />
             </div>
 
             <div>
               <label htmlFor="signup-role" className="block text-xs font-semibold text-[#25352B]">
-                Vai trò tham gia
+                {isEn ? "Account Role" : "Vai trò tham gia"}
               </label>
               <select
                 id="signup-role"
@@ -186,7 +203,7 @@ export default function SignUpPage() {
               >
                 {ROLE_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {isEn ? option.enLabel : option.label}
                   </option>
                 ))}
               </select>
@@ -195,7 +212,7 @@ export default function SignUpPage() {
 
           <div>
             <label htmlFor="signup-unit" className="block text-xs font-semibold text-[#25352B]">
-              Phường / Xã tại Thành phố Đồng Nai
+              {isEn ? "Ward / Commune in Dong Nai City" : "Phường / Xã tại Thành phố Đồng Nai"}
             </label>
             <select
               id="signup-unit"
@@ -205,7 +222,7 @@ export default function SignUpPage() {
             >
               {ADMINISTRATIVE_UNITS.map((unit) => (
                 <option key={unit.maDvhc} value={unit.maDvhc}>
-                  {unit.tenDayDu} ({unit.maDvhc})
+                  {localizeAdminUnitName(unit.tenDayDu, undefined, locale)}
                 </option>
               ))}
             </select>
@@ -231,16 +248,18 @@ export default function SignUpPage() {
             ) : (
               <UserPlus className="h-4 w-4" aria-hidden="true" />
             )}
-            <span>{pending ? "Đang tạo tài khoản..." : "Tạo tài khoản"}</span>
+            <span>{pending ? (isEn ? "Creating account..." : "Đang tạo tài khoản...") : isEn ? "Create Account" : "Tạo tài khoản"}</span>
           </button>
 
           <p className="text-center text-xs text-[#52645A]">
-            Đã có tài khoản sẵn?{" "}
-            <Link href="/sign-in" className="font-semibold text-[#245B3D] hover:underline">
-              Đăng nhập ngay →
+            {isEn ? "Already have an account?" : "Đã có tài khoản sẵn?"}{" "}
+            <Link href={buildLocalizedHref("/sign-in", locale)} className="font-semibold text-[#245B3D] hover:underline">
+              {isEn ? "Sign in now →" : "Đăng nhập ngay →"}
             </Link>
             {" · "}
-            Sau khi đăng ký, bạn sẽ vào {selectedRole.home} bằng tài khoản mới.
+            {isEn
+              ? `Next destination: ${selectedRole.home}`
+              : `Sau khi đăng ký, bạn sẽ vào ${selectedRole.home}.`}
           </p>
         </form>
       </Card>

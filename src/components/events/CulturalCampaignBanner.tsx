@@ -1,13 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, Sparkles } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Pause, Play, Sparkles } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { useLocale } from "@/context/LocaleContext";
 import { formatCountdownRemaining, formatVnDate } from "@/lib/clock/vn-clock";
 import { resolveCampaignRuntimeState } from "@/lib/commerce/promotion-engine";
 import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
+import { cn } from "@/lib/format";
 import { Badge, Card } from "@/components/ui/Primitives";
 
 /**
@@ -22,7 +23,7 @@ function VietnamFlagBadgeSvg() {
       height={18}
       role="img"
       aria-label="Cờ Tổ quốc Việt Nam"
-      className="shrink-0 rounded-[3px] border border-[#D6DED2] shadow-xs"
+      className="vn-flag-wave shrink-0 rounded-[3px] border border-[#D6DED2] shadow-xs"
     >
       <rect width="30" height="20" fill="#DA251D" />
       <polygon
@@ -37,6 +38,8 @@ export function CulturalCampaignBanner() {
   const { locale, t } = useLocale();
   const isEn = locale === "en";
   const { campaigns, activeClockIso } = useDemoStore();
+  const [slideIdx, setSlideIdx] = useState(0);
+  const [paused, setPaused] = useState(false);
 
   const evaluated = campaigns
     .map((c) => ({
@@ -45,107 +48,155 @@ export function CulturalCampaignBanner() {
     }))
     .filter((item) => item.runtime !== "paused_or_draft");
 
-  const activeCampaign = evaluated.find((e) => e.runtime === "active")?.campaign ?? campaigns[1];
-  const recapCampaign = evaluated.find((e) => e.runtime === "recap")?.campaign ?? campaigns[0];
-  const upcomingCampaign = evaluated.find((e) => e.runtime === "upcoming")?.campaign ?? campaigns[2];
+  const activeItem = evaluated.find((e) => e.runtime === "active") ?? evaluated[1] ?? evaluated[0];
+  const upcomingItem = evaluated.find((e) => e.runtime === "upcoming");
+  const recapItem = evaluated.find((e) => e.runtime === "recap");
 
-  if (!activeCampaign) return null;
+  const slides = [activeItem, upcomingItem, recapItem].filter(
+    (s): s is NonNullable<typeof activeItem> => Boolean(s),
+  );
+
+  useEffect(() => {
+    if (slides.length <= 1 || paused) return;
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    const timer = window.setInterval(() => {
+      setSlideIdx((prev) => (prev + 1) % slides.length);
+    }, 6500);
+    return () => window.clearInterval(timer);
+  }, [slides.length, paused]);
+
+  if (slides.length === 0) return null;
+
+  const safeIdx = slideIdx % slides.length;
+  const current = slides[safeIdx];
+  const { campaign, runtime } = current;
+
+  const statusTone = runtime === "active" ? "gold" : runtime === "upcoming" ? "info" : "neutral";
+  const statusLabel =
+    runtime === "active"
+      ? t.events.activeBadge
+      : runtime === "upcoming"
+      ? t.events.upcomingBadge
+      : t.events.recapBadge;
+
+  const isRecap = runtime === "recap";
 
   return (
-    <section aria-label={t.events.tabCampaigns} className="space-y-3">
-      <Card className="overflow-hidden border-[#D6DED2] bg-gradient-to-r from-[#245B3D] via-[#2A6846] to-[#347852] text-white">
-        <div className="grid grid-cols-1 items-center gap-4 p-5 lg:grid-cols-12">
+    <section
+      aria-label={t.events.tabCampaigns}
+      aria-roledescription="carousel"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+      className="space-y-3"
+    >
+      <Card
+        className={cn(
+          "min-h-[168px] overflow-hidden border-[#D6DED2] transition-colors",
+          isRecap
+            ? "bg-gradient-to-r from-[#2D4739] via-[#355444] to-[#416552] text-white"
+            : "bg-gradient-to-r from-[#245B3D] via-[#2A6846] to-[#347852] text-white",
+        )}
+      >
+        <div className="grid min-h-[168px] grid-cols-1 items-center gap-4 p-5 lg:grid-cols-12">
           <div className="space-y-2 lg:col-span-8">
             <div className="flex flex-wrap items-center gap-2">
-              {activeCampaign.showNationalFlagAccent ? <VietnamFlagBadgeSvg /> : null}
-              <Badge tone="gold">
+              {campaign.showNationalFlagAccent ? <VietnamFlagBadgeSvg /> : null}
+              <Badge tone={statusTone}>
                 <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>{t.events.activeBadge}</span>
+                <span>{statusLabel}</span>
               </Badge>
-              <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-semibold text-white">
-                {formatVnDate(activeCampaign.startIso, locale)} –{" "}
-                {formatVnDate(activeCampaign.endIso, locale)} ·{" "}
-                {formatCountdownRemaining(activeClockIso, activeCampaign.endIso, locale)}
+              <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-semibold text-white tabular-nums">
+                {formatVnDate(campaign.startIso, locale)} – {formatVnDate(campaign.endIso, locale)}
+                {runtime === "active"
+                  ? ` · ${formatCountdownRemaining(activeClockIso, campaign.endIso, locale)}`
+                  : ""}
               </span>
             </div>
 
             <h2 className="font-editorial text-xl font-bold leading-snug sm:text-2xl">
-              {isEn ? activeCampaign.titleEn : activeCampaign.titleVi}
+              {isEn ? campaign.titleEn : campaign.titleVi}
             </h2>
             <p className="max-w-2xl text-xs text-white/90 sm:text-sm">
-              {isEn ? activeCampaign.subtitleEn : activeCampaign.subtitleVi}
+              {isRecap ? `${t.events.endedNoCountdownNote} ` : ""}
+              {isEn ? campaign.subtitleEn : campaign.subtitleVi}
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center justify-start gap-2.5 lg:col-span-4 lg:justify-end">
-            <Link
-              href={buildLocalizedHref(`/events/${activeCampaign.slug}`, locale)}
-              className="inline-flex min-h-[42px] items-center rounded-[12px] bg-[#D7A34D] px-4 text-xs font-bold text-[#25352B] hover:bg-[#C6923D]"
-            >
-              {isEn ? activeCampaign.primaryCtaLabelEn : activeCampaign.primaryCtaLabelVi}
-            </Link>
-            <Link
-              href={buildLocalizedHref("/events?tab=calendar", locale)}
-              className="inline-flex min-h-[42px] items-center gap-1.5 rounded-[12px] border border-white/40 bg-white/10 px-3.5 text-xs font-semibold text-white hover:bg-white/20"
-            >
-              <CalendarDays className="h-4 w-4" aria-hidden="true" />
-              <span>{t.events.tabCalendar}</span>
-            </Link>
+          <div className="flex flex-col items-start justify-between gap-3 lg:col-span-4 lg:items-end">
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={buildLocalizedHref(`/events/${campaign.slug}`, locale)}
+                className="inline-flex min-h-[42px] items-center rounded-[12px] bg-[#D7A34D] px-4 text-xs font-bold text-[#25352B] hover:bg-[#C6923D]"
+              >
+                {isEn ? campaign.primaryCtaLabelEn : campaign.primaryCtaLabelVi}
+              </Link>
+              <Link
+                href={buildLocalizedHref("/events?tab=calendar", locale)}
+                className="inline-flex min-h-[42px] items-center gap-1.5 rounded-[12px] border border-white/40 bg-white/10 px-3.5 text-xs font-semibold text-white hover:bg-white/20"
+              >
+                <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                <span>{t.events.tabCalendar}</span>
+              </Link>
+            </div>
+
+            {slides.length > 1 ? (
+              <div className="flex items-center gap-1.5" role="group" aria-label={isEn ? "Campaign slide controls" : "Điều khiển chuyển chiến dịch"}>
+                <button
+                  type="button"
+                  onClick={() => setSlideIdx((prev) => (prev - 1 + slides.length) % slides.length)}
+                  aria-label={isEn ? "Previous campaign" : "Chiến dịch trước"}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white hover:bg-white/25 cursor-pointer"
+                >
+                  <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <div className="flex items-center gap-1 px-1">
+                  {slides.map((s, i) => (
+                    <button
+                      key={s.campaign.id}
+                      type="button"
+                      onClick={() => setSlideIdx(i)}
+                      aria-label={
+                        isEn
+                          ? `Slide ${i + 1}: ${s.campaign.titleEn}`
+                          : `Trang ${i + 1}: ${s.campaign.titleVi}`
+                      }
+                      aria-current={i === safeIdx ? "true" : undefined}
+                      className={cn(
+                        "h-2.5 rounded-full transition-all cursor-pointer",
+                        i === safeIdx ? "w-6 bg-[#D7A34D]" : "w-2.5 bg-white/45 hover:bg-white/75",
+                      )}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSlideIdx((prev) => (prev + 1) % slides.length)}
+                  aria-label={isEn ? "Next campaign" : "Chiến dịch tiếp theo"}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white hover:bg-white/25 cursor-pointer"
+                >
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaused((p) => !p)}
+                  aria-label={paused ? (isEn ? "Resume autoplay" : "Tiếp tục chuyển") : isEn ? "Pause carousel" : "Tạm dừng chuyển"}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white hover:bg-white/25 cursor-pointer"
+                >
+                  {paused ? (
+                    <Play className="h-3.5 w-3.5" aria-hidden="true" />
+                  ) : (
+                    <Pause className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </Card>
-
-      {/* Compact Secondary Recap (No Fake Countdown!) + Upcoming Youth Event Strip */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        {recapCampaign ? (
-          <Link
-            href={buildLocalizedHref(`/events/${recapCampaign.slug}`, locale)}
-            className="flex items-center justify-between gap-3 rounded-[14px] border border-[#D6DED2] bg-white px-4 py-3 text-xs hover:bg-[#FAF8F1]"
-          >
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                {recapCampaign.showNationalFlagAccent ? <VietnamFlagBadgeSvg /> : null}
-                <Badge tone="neutral">{t.events.recapBadge}</Badge>
-              </div>
-              <p className="mt-1 truncate font-bold text-[#25352B]">
-                {isEn ? recapCampaign.titleEn : recapCampaign.titleVi}
-              </p>
-              <p className="truncate text-[11px] text-[#52645A]">
-                {t.events.endedNoCountdownNote}
-              </p>
-            </div>
-            <span className="shrink-0 font-semibold text-[#245B3D]">
-              {isEn ? "Recap →" : "Xem tư liệu →"}
-            </span>
-          </Link>
-        ) : null}
-
-        {upcomingCampaign ? (
-          <Link
-            href={buildLocalizedHref(`/events/${upcomingCampaign.slug}`, locale)}
-            className="flex items-center justify-between gap-3 rounded-[14px] border border-[#D6DED2] bg-white px-4 py-3 text-xs hover:bg-[#FAF8F1]"
-          >
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <Badge tone="info">{t.events.upcomingBadge}</Badge>
-                <span className="text-[11px] font-semibold text-[#52645A]">
-                  {formatVnDate(upcomingCampaign.startIso, locale)} –{" "}
-                  {formatVnDate(upcomingCampaign.endIso, locale)}
-                </span>
-              </div>
-              <p className="mt-1 truncate font-bold text-[#25352B]">
-                {isEn ? upcomingCampaign.titleEn : upcomingCampaign.titleVi}
-              </p>
-              <p className="truncate text-[11px] text-[#52645A]">
-                {upcomingCampaign.organizer}
-              </p>
-            </div>
-            <span className="shrink-0 font-semibold text-[#245B3D]">
-              {isEn ? "Details →" : "Chi tiết →"}
-            </span>
-          </Link>
-        ) : null}
-      </div>
     </section>
   );
 }

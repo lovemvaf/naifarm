@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -10,6 +11,7 @@ import {
   Camera,
   CheckCircle2,
   FilePlus2,
+  Film,
   HandHelping,
   LayoutGrid,
   Megaphone,
@@ -37,6 +39,16 @@ import { formatVnd } from "@/lib/format";
 import { notifyError, notifySuccess } from "@/lib/toast";
 import type { CertificationStatus, DiaryEntry, FarmCertification, OrderStatus } from "@/types/naifarm";
 
+const LazyCmsManagerPanel = dynamic(
+  () => import("@/components/cms/CmsManagerPanel").then((m) => m.CmsManagerPanel),
+  { ssr: false, loading: () => <div className="p-4 text-xs text-[#52645A]">Loading CMS...</div> },
+);
+
+const LazyCreativeStudioPanel = dynamic(
+  () => import("@/components/studio/CreativeStudioPanel").then((m) => m.CreativeStudioPanel),
+  { ssr: false, loading: () => <div className="p-4 text-xs text-[#52645A]">Loading Video Studio...</div> },
+);
+
 type SimpleTab = "orders" | "diary" | "quality" | "support";
 type ErpTab =
   | "overview"
@@ -44,6 +56,7 @@ type ErpTab =
   | "inventory"
   | "coop"
   | "marketing"
+  | "studio"
   | "calendar"
   | "quality"
   | "seasons"
@@ -91,7 +104,7 @@ function FarmerWorkspaceContent() {
   const [mode, setMode] = useState<"simple" | "erp">(urlMode);
   const [simpleTab, setSimpleTab] = useState<SimpleTab>("orders");
   const [erpTab, setErpTab] = useState<ErpTab>(
-    (["overview", "commerce", "inventory", "coop", "marketing", "calendar", "quality", "seasons", "support"] as ErpTab[]).includes(
+    (["overview", "commerce", "inventory", "coop", "marketing", "studio", "calendar", "quality", "seasons", "support"] as ErpTab[]).includes(
       urlTab as ErpTab,
     )
       ? (urlTab as ErpTab)
@@ -263,6 +276,16 @@ function FarmerWorkspaceContent() {
             icon: <Megaphone className="h-4 w-4" aria-hidden="true" />,
           },
           {
+            label: "Video Studio OCOP",
+            href: "#studio",
+            active: erpTab === "studio",
+            onClick: () => {
+              setErpTab("studio");
+              syncModeUrl("erp", "studio");
+            },
+            icon: <Film className="h-4 w-4" aria-hidden="true" />,
+          },
+          {
             label: "Lịch HTX (NaiCalendar)",
             href: "#calendar",
             active: erpTab === "calendar",
@@ -372,7 +395,7 @@ function FarmerWorkspaceContent() {
 
         {mode === "simple" ? (
           <>
-            {/* U50+ Large Primary Action Tiles (4 main blocks) */}
+            {/* Accessible High-Contrast Large Primary Action Tiles (4 main blocks) */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <button
                 type="button"
@@ -848,9 +871,22 @@ function FarmerWorkspaceContent() {
             ) : null}
 
             {erpTab === "marketing" ? (
-              <FarmerMarketingToursPanel
-                farmId={activeFarm.id}
-                farmName={activeFarm.name}
+              <div className="space-y-6">
+                <FarmerMarketingToursPanel
+                  farmId={activeFarm.id}
+                  farmName={activeFarm.name}
+                  actorName={authUser?.name ?? activeFarm.ownerName}
+                />
+                <LazyCmsManagerPanel
+                  scopeMode="farmer"
+                  actorName={authUser?.name ?? activeFarm.ownerName}
+                />
+              </div>
+            ) : null}
+
+            {erpTab === "studio" ? (
+              <LazyCreativeStudioPanel
+                mode="creator"
                 actorName={authUser?.name ?? activeFarm.ownerName}
               />
             ) : null}

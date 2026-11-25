@@ -1,0 +1,21 @@
+# NAIFARM V5 TODO & MILESTONE CHECKPOINT LOG
+
+Cập nhật tự động trong quá trình thực thi V5 trên source `E:\04_Projects\Group 8 - Hackathon Dong Nai\naifarm` (base commit `40f6e9d`, branch `main`).
+
+| ID | Milestone | Mục tiêu | Trạng thái | Kiểm chứng / Ghi chú |
+|---|---|---|---|---|
+| V5-M00 | M00 Discover & Baseline | Đọc toàn bộ V5 + Phụ lục A/B + Stitch contact sheets + baseline scripts | `DONE` | Tất cả 8 baseline script PASS; 65 ảnh Stitch đã kiểm bằng contact sheet |
+| V5-M01 | M01 Media Audit & ProductCard | Tạo & tối ưu 23 ảnh nông sản còn thiếu, ánh xạ đủ 168 SKUs + 17 OCOP refs, sửa `ProductCard` grid + mùa vụ + tồn kho | `DONE` | 88 ảnh trong `V5_MEDIA_PROVENANCE.csv` + `asset-manifest.ts`; `test:data` & `typecheck` PASS |
+| V5-M02 | M02 Header, Auth, Footer, VI/EN | Header fixed grid slots (≤2px shift), sửa clipping `/sign-in`, làm sạch footer, `Toàn Thành phố Đồng Nai`, VI/EN sweep toàn trang | `DONE` | Fixed CSS Grid header, mobile `VI\|EN`, `/sign-in` overflow fixed, `typecheck` & `test:i18n` (234 keys) PASS |
+| V5-M03 | M03 Landing, Carousel & 2D Flag | Editorial hero (bỏ preset QR DEMO), carousel 3 chiến dịch giảm CLS, cờ 2D `.vn-flag-wave` đúng ngữ cảnh | `DONE` | Empty QR preset, VI/EN homepage hero & farm stories, 3-slide `CulturalCampaignBanner`, `test:calendar` PASS |
+| V5-M04 | M04 Dong Nai Local GIS & Map | Local `dong-nai-outline.json` + wards GeoJSON + manifest, inverse mask, `MapStatusStore` chống trùng alert, strict bounds + GPS | `DONE` | 95/95 xã/phường GeoJSON + `dong-nai-outline.json` + `manifest.json`; inverse mask, `maxBounds`, `MapStatusStore`, mobile Map/List; `typecheck` & `data:validate` PASS |
+| V5-M05 | M05 MediaPlayer & Live/Farm | Sửa kéo giãn trắng trang Farm detail (`items-start`, 0/1/2+ adaptive), `MediaPlayer`, nguồn V5.08 §8.3, `returnTo` context back | `DONE` | `media-library.ts` + `MediaPlayer.tsx` + `farms/[slug]` `items-start` & adaptive 0/1/2+ + `LiveRoomView` bounded shelf + `products/[slug]` `returnTo`; `typecheck` PASS |
+| V5-M06 | M06 Academy, Volunteer & PDF/QR | Lesson 6 bước tuần tự, giải phẫu 2D mở rộng 9 nông sản SVG, thẻ Volunteer state-aware, `/credentials/[id]` + PDF tiếng Việt có QR | `DONE` | 9-crop SVG `ProduceAnatomy2D`, 6-step sequential `InteractiveLessonPlayer`, state-aware `volunteer/page.tsx` tabs, `certificate-pdf.ts` + `/credentials/[id]`; `typecheck`, `test:qr`, `test:quality` PASS |
+| V5-M07 | M07 Bilingual NaiAI | Chat VI/EN tra cứu Fuse.js dữ liệu thật, bỏ nhãn `W01–W06`, nút xóa hội thoại, kiểm soát tuổi | `DONE` | Song ngữ VI/EN đầy đủ, Fuse.js tra cứu trực tiếp dữ liệu, nút xóa hội thoại, lọc an toàn `<18`; `typecheck` PASS |
+| V5-M08 | M08 IndexedDB Local CMS | `CmsContext` + IDB blobs/versions/rollback + JSON export/import, editor side-by-side VI/EN tại W06 & scoped W02/W05 | `DONE` | `idb-storage.ts`, `CmsContext`, `CmsManagerPanel` trong W06/W05/W02 + override Hero & Footer; `typecheck` PASS |
+| V5-M09 | M09 Creative Studio & FFmpeg | `services/video-worker` (`node:sqlite` + FFmpeg + FFprobe QC + Muse disabled/audited), 3 MP4 mẫu dựng thật từ FFmpeg, 8 scripts `.ps1`, T01–T16 | `DONE` | 3 sample MP4 (`468/502/518 KB`, `h264`/`yuv420p`/`aac`), 5 `/api/video/*` routes, `CreativeStudioPanel` trong W02/W05/W06, 8 `.ps1`, `test:video-studio` PASS (16/16) |
+| V5-M10 | M10 Full QA & Docs | Static tests, `next build`, Playwright multi-breakpoint VI/EN + offline map + Video Studio + visual inspect, bộ tài liệu V5 | `DONE` | Tất cả 11 CLI gate (`typecheck`, `lint`, `build`, `test:*`) + `v5-playwright-qa.mjs` (8 breakpoints, 0.00px header shift, 97 GeoJSON paths offline) PASS |
+| V5-M11 | M11 GitHub Main Push | Kiểm tra sạch secret/3D/temp, commit + push `main` lên `lovemvaf/naifarm.git` | `IN_PROGRESS` | Chuẩn bị commit & push `main` |
+| V5-M12 | M12 Vercel Deploy & Live QA | Deploy `visionary19/naifarm`, kiểm tra Playwright UI thật trên `https://naifarm.vercel.app/` | `PENDING` | Chờ push `main` |
+
+> **Manual External Deferrals:** `Muse2API` live generative AI video clips remain `DEFERRED_MANUAL_LOGIN` (`VIDEO_AI_ENABLED=false`) pending owner manual login on local Windows machine. Remote Supabase migration `supabase/migrations/0003_cms_and_video_studio.sql` is ready for manual `supabase db push` / SQL Editor application if remote cloud persistence is enabled.

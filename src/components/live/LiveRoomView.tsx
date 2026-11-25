@@ -34,7 +34,9 @@ import {
   saveRoomSessionState,
 } from "@/lib/navigation/safe-nav";
 import { evaluateMinorSafeguarding } from "@/lib/permissions/access-control";
-import { cn, formatVnd } from "@/lib/format";
+import { resolveCategoryMedia } from "@/data/reference/media-library";
+import { MediaPlayer } from "@/components/media/MediaPlayer";
+import { cn, formatVnd, stripWorkspaceCodePrefix } from "@/lib/format";
 import { notifyError, notifySuccess } from "@/lib/toast";
 import { Badge, Button, Card, DemoBanner } from "@/components/ui/Primitives";
 import type { CalendarEvent, LiveStatus } from "@/types/naifarm";
@@ -281,8 +283,9 @@ export function LiveRoomView({ routeRoomId }: { routeRoomId?: string }) {
             <Badge tone="info">{t.brand.experienceSpaceBadge}</Badge>
             {isSignedInWorkspace && authUser ? (
               <Badge tone="neutral">
-                {authUser.workspaceId} ·{" "}
-                {isEn && authUser.roleLabelEn ? authUser.roleLabelEn : authUser.roleLabel}
+                {stripWorkspaceCodePrefix(
+                  isEn && authUser.roleLabelEn ? authUser.roleLabelEn : authUser.roleLabel,
+                )}
               </Badge>
             ) : null}
           </div>
@@ -564,7 +567,7 @@ export function LiveRoomView({ routeRoomId }: { routeRoomId?: string }) {
               </div>
 
               {activeTab === "overview" ? (
-                <div className="space-y-3 text-sm text-[#25352B]">
+                <div className="space-y-4 text-sm text-[#25352B]">
                   <p>
                     {isEn
                       ? activeAngle?.captionEn ?? activeSession.summaryEn ?? activeSession.summary
@@ -573,6 +576,12 @@ export function LiveRoomView({ routeRoomId }: { routeRoomId?: string }) {
                   <p className="rounded-[10px] border border-[#D6DED2] bg-[#FAF8F1] px-3 py-2 text-xs text-[#52645A]">
                     {t.live.noCommentsNotice}
                   </p>
+                  <MediaPlayer
+                    asset={resolveCategoryMedia(
+                      `${activeSession.title} ${activeFarm?.mainCrops.join(" ") ?? ""}`,
+                    )}
+                    compact
+                  />
                 </div>
               ) : null}
 
@@ -707,7 +716,7 @@ export function LiveRoomView({ routeRoomId }: { routeRoomId?: string }) {
                 </div>
               ) : null}
 
-              <div className="mt-3 space-y-3">
+              <div className="mt-3 max-h-[460px] space-y-3 overflow-y-auto pr-1">
                 {pinnedProducts.map((p) => (
                   <div
                     key={p.id}
@@ -720,7 +729,10 @@ export function LiveRoomView({ routeRoomId }: { routeRoomId?: string }) {
                     />
                     <div className="min-w-0 flex-1">
                       <Link
-                        href={buildLocalizedHref(`/products/${p.slug}`, locale)}
+                        href={buildLocalizedHref(
+                          `/products/${p.slug}?returnTo=${encodeURIComponent(currentRoomCanonicalPath)}`,
+                          locale,
+                        )}
                         className="line-clamp-2 text-sm font-bold text-[#25352B] hover:text-[#245B3D]"
                       >
                         {localizeProductName(p, locale)}
@@ -745,7 +757,10 @@ export function LiveRoomView({ routeRoomId }: { routeRoomId?: string }) {
                           </Button>
                         ) : null}
                         <Link
-                          href={buildLocalizedHref(`/trace/${p.batchCode}`, locale)}
+                          href={buildLocalizedHref(
+                            `/trace/${p.batchCode}?returnTo=${encodeURIComponent(currentRoomCanonicalPath)}`,
+                            locale,
+                          )}
                           className="inline-flex min-h-[36px] items-center gap-1 rounded-[10px] border border-[#D6DED2] bg-white px-2.5 text-xs font-semibold text-[#245B3D] hover:bg-[#EAF0E5]"
                         >
                           <QrCode className="h-3.5 w-3.5" aria-hidden="true" />

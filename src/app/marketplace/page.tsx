@@ -31,13 +31,13 @@ import type { DongNaiZone, ProductCategory } from "@/types/naifarm";
 type CollectionTab = "all" | "in_season" | "pre_order" | "naibox" | "rescue" | "public_ref";
 type SortOption = "featured" | "price_asc" | "price_desc" | "name_asc";
 
-const COLLECTIONS: { id: CollectionTab; label: string; badge?: string }[] = [
-  { id: "all", label: "Tất cả nông sản" },
-  { id: "in_season", label: "Mua theo mùa" },
-  { id: "pre_order", label: "Đặt trước mùa vụ" },
-  { id: "naibox", label: "NaiBox 95", badge: "Hộp quà" },
-  { id: "rescue", label: "NaiRescue", badge: "Giải cứu" },
-  { id: "public_ref", label: "Danh mục OCOP tham khảo", badge: "Nguồn công bố" },
+const COLLECTIONS: { id: CollectionTab; label: string; enLabel: string; badge?: string; enBadge?: string }[] = [
+  { id: "all", label: "Tất cả nông sản", enLabel: "All produce" },
+  { id: "in_season", label: "Mua theo mùa", enLabel: "In season" },
+  { id: "pre_order", label: "Đặt trước mùa vụ", enLabel: "Seasonal pre-order" },
+  { id: "naibox", label: "NaiBox 95", enLabel: "NaiBox 95", badge: "Hộp quà", enBadge: "Gift box" },
+  { id: "rescue", label: "NaiRescue", enLabel: "NaiRescue", badge: "Giải cứu", enBadge: "Harvest support" },
+  { id: "public_ref", label: "Danh mục OCOP tham khảo", enLabel: "Public OCOP Reference", badge: "Nguồn công bố", enBadge: "Official source" },
 ];
 
 const CATEGORIES: ProductCategory[] = [
@@ -212,7 +212,7 @@ function MarketplaceContent() {
       </div>
 
       {/* Collection Tabs */}
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Bộ sưu tập chợ nông sản">
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label={isEn ? "Market collections" : "Bộ sưu tập chợ nông sản"}>
         {COLLECTIONS.map((col) => {
           const active = collection === col.id;
           return (
@@ -229,7 +229,7 @@ function MarketplaceContent() {
                   : "border-[#D6DED2] bg-white text-[#25352B] hover:bg-[#EAF0E5]",
               )}
             >
-              <span>{col.label}</span>
+              <span>{isEn ? col.enLabel : col.label}</span>
               {col.badge ? (
                 <span
                   className={cn(
@@ -237,7 +237,7 @@ function MarketplaceContent() {
                     active ? "bg-white/20 text-white" : "bg-[#FFF2D8] text-[#80520C]",
                   )}
                 >
-                  {col.badge}
+                  {isEn && col.enBadge ? col.enBadge : col.badge}
                 </span>
               ) : null}
             </button>
@@ -259,10 +259,14 @@ function MarketplaceContent() {
               onChange={(e) => setSearchText(e.target.value)}
               placeholder={
                 collection === "public_ref"
-                  ? "Tìm sản phẩm, doanh nghiệp, QĐ 125 trong danh mục công bố..."
+                  ? isEn
+                    ? "Search published product, producer, or decision number..."
+                    : "Tìm sản phẩm, doanh nghiệp, QĐ 125 trong danh mục công bố..."
+                  : isEn
+                  ? "Search pomelo, durian, QR lot NF-..., orchard, or ward..."
                   : "Tìm bưởi, sầu riêng, mã lô NF-..., tên nhà vườn, xã/phường..."
               }
-              aria-label="Tìm kiếm nông sản"
+              aria-label={isEn ? "Search produce" : "Tìm kiếm nông sản"}
               className="min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white pr-3 pl-9 text-sm"
             />
           </div>
@@ -278,10 +282,10 @@ function MarketplaceContent() {
                   <select
                     value={selectedZone}
                     onChange={(e) => setSelectedZone(e.target.value)}
-                    aria-label="Lọc theo vùng Đồng Nai"
+                    aria-label={isEn ? "Filter by Dong Nai zone" : "Lọc theo vùng Đồng Nai"}
                     className="min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white pr-3 pl-9 text-sm"
                   >
-                    <option value="all">Tất cả vùng Đồng Nai</option>
+                    <option value="all">{isEn ? "All Dong Nai areas" : "Tất cả vùng Đồng Nai"}</option>
                     {ZONES.map((z) => (
                       <option key={z} value={z}>
                         {z}
@@ -300,13 +304,13 @@ function MarketplaceContent() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    aria-label="Sắp xếp sản phẩm"
+                    aria-label={isEn ? "Sort products" : "Sắp xếp sản phẩm"}
                     className="min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white pr-3 pl-9 text-sm"
                   >
-                    <option value="featured">Sắp xếp: Nổi bật theo mùa</option>
-                    <option value="price_asc">Giá: Thấp đến cao</option>
-                    <option value="price_desc">Giá: Cao đến thấp</option>
-                    <option value="name_asc">Tên nông sản: A–Z</option>
+                    <option value="featured">{isEn ? "Sort: Seasonal highlights" : "Sắp xếp: Nổi bật theo mùa"}</option>
+                    <option value="price_asc">{isEn ? "Price: Low to high" : "Giá: Thấp đến cao"}</option>
+                    <option value="price_desc">{isEn ? "Price: High to low" : "Giá: Cao đến thấp"}</option>
+                    <option value="name_asc">{isEn ? "Product name: A–Z" : "Tên nông sản: A–Z"}</option>
                   </select>
                 </div>
               </div>
@@ -318,7 +322,7 @@ function MarketplaceContent() {
           <div className="flex flex-wrap items-center gap-2 border-t border-[#EAEFE6] pt-3">
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#52645A]">
               <Filter className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Ngành hàng:</span>
+              <span>{isEn ? "Categories:" : "Ngành hàng:"}</span>
             </span>
             <button
               type="button"
@@ -330,7 +334,7 @@ function MarketplaceContent() {
                   : "bg-[#F5F3E9] text-[#25352B] hover:bg-[#EAF0E5]",
               )}
             >
-              Tất cả ({products.length})
+              {isEn ? `All (${products.length})` : `Tất cả (${products.length})`}
             </button>
             {CATEGORIES.map((cat) => {
               const count = categoryCounts.get(cat) ?? 0;
@@ -358,17 +362,19 @@ function MarketplaceContent() {
 
       {/* Public Reference Catalog Tab */}
       {collection === "public_ref" ? (
-        <section aria-label="Danh mục OCOP VietGAP GI công bố chính thức" className="space-y-4">
+        <section aria-label={isEn ? "Official Public OCOP & VietGAP Reference Catalog" : "Danh mục OCOP VietGAP GI công bố chính thức"} className="space-y-4">
           <div className="flex items-start gap-3 rounded-[14px] border border-[#D7A34D]/60 bg-[#FFF8E7] p-4 text-sm text-[#5C3D0A]">
             <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-[#80520C]" aria-hidden="true" />
             <div>
               <p className="font-bold">
-                Danh mục tham khảo công khai — Chỉ hiển thị dữ liệu từ nguồn công bố chính thức
+                {isEn
+                  ? "Public Reference Catalog — Strictly read-only records from published decisions"
+                  : "Danh mục tham khảo công khai — Chỉ hiển thị dữ liệu từ nguồn công bố chính thức"}
               </p>
               <p className="mt-1 text-xs leading-relaxed">
-                Các bản ghi bên dưới trích xuất nguyên văn tên sản phẩm, chủ thể và địa bàn từ QĐ 125/QĐ-UBND,
-                cổng VietGAP và hồ sơ Chỉ dẫn địa lý Đồng Nai. Không gắn giá bán, giỏ hàng hoặc đánh giá khách hàng
-                lên chủ thể pháp lý thật khi chưa ký kết mở gian hàng.
+                {isEn
+                  ? "Records below quote official names and locations from Dong Nai Decision 125/QD-UBND, VietGAP portals, and Geographical Indication registries. Prices, carts, and reviews are never attached to real legal producers without an active storefront."
+                  : "Các bản ghi bên dưới trích xuất nguyên văn tên sản phẩm, chủ thể và địa bàn từ QĐ 125/QĐ-UBND, cổng VietGAP và hồ sơ Chỉ dẫn địa lý Đồng Nai. Không gắn giá bán, giỏ hàng hoặc đánh giá khách hàng lên chủ thể pháp lý thật khi chưa ký kết mở gian hàng."}
               </p>
             </div>
           </div>
@@ -376,8 +382,8 @@ function MarketplaceContent() {
           {filteredReferenceItems.length === 0 ? (
             <EmptyState
               icon={<Search className="h-6 w-6" aria-hidden="true" />}
-              title="Không tìm thấy hồ sơ công bố phù hợp"
-              description="Thử xóa từ khóa lọc để xem toàn bộ 17 mục OCOP, VietGAP và Chỉ dẫn địa lý công bố."
+              title={isEn ? "No matching official records found" : "Không tìm thấy hồ sơ công bố phù hợp"}
+              description={isEn ? "Clear the search filter to browse all 17 published OCOP, VietGAP, and GI entries." : "Thử xóa từ khóa lọc để xem toàn bộ 17 mục OCOP, VietGAP và Chỉ dẫn địa lý công bố."}
             />
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -391,7 +397,7 @@ function MarketplaceContent() {
                         className="h-20 w-20 shrink-0 rounded-[12px] border border-[#D6DED2] object-cover"
                       />
                       <div className="min-w-0 flex-1">
-                        <Badge tone="info">Nguồn công bố · Chỉ đọc</Badge>
+                        <Badge tone="info">{t.commerce.referenceCatalogOnly}</Badge>
                         <h3 className="mt-1.5 line-clamp-2 text-base font-bold text-[#25352B]">{item.name}</h3>
                         <p className="mt-0.5 text-xs font-semibold text-[#245B3D]">{item.subjectName}</p>
                       </div>
@@ -399,10 +405,10 @@ function MarketplaceContent() {
 
                     <div className="mt-3 space-y-1.5 rounded-[12px] bg-[#FAF8F1] p-3 text-xs text-[#52645A]">
                       <p>
-                        <strong className="text-[#25352B]">Địa chỉ nguồn gốc:</strong> {item.sourceAddressOriginal}
+                        <strong className="text-[#25352B]">{isEn ? "Source address:" : "Địa chỉ nguồn gốc:"}</strong> {item.sourceAddressOriginal}
                       </p>
                       <p>
-                        <strong className="text-[#25352B]">Văn bản / chứng nhận:</strong> {item.decisionOrSourceLabel}
+                        <strong className="text-[#25352B]">{isEn ? "Reference decision:" : "Văn bản / chứng nhận:"}</strong> {item.decisionOrSourceLabel}
                       </p>
                       <p>{item.credentialSummary}</p>
                       {item.scopeWarning ? (
@@ -414,14 +420,14 @@ function MarketplaceContent() {
                   </div>
 
                   <div className="mt-3 flex items-center justify-between border-t border-[#EAEFE6] pt-3 text-xs">
-                    <span className="text-[#52645A]">Đối chiếu: {item.checkedAt}</span>
+                    <span className="text-[#52645A]">{isEn ? "Checked:" : "Đối chiếu:"} {item.checkedAt}</span>
                     <a
                       href={item.sourceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 font-semibold text-[#245B3D] hover:underline"
                     >
-                      <span>Xem nguồn công bố</span>
+                      <span>{isEn ? "View official source" : "Xem nguồn công bố"}</span>
                       <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                     </a>
                   </div>
@@ -434,9 +440,19 @@ function MarketplaceContent() {
         <>
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[#52645A]">
             <p>
-              Hiển thị <strong className="text-[#25352B]">{filteredProducts.length}</strong> nông sản phù hợp
-              {selectedCategory !== "all" ? ` · Ngành: ${selectedCategory}` : ""}
-              {selectedZone !== "all" ? ` · Vùng: ${selectedZone}` : ""}
+              {isEn ? (
+                <>
+                  Showing <strong className="text-[#25352B]">{filteredProducts.length}</strong> matching products
+                  {selectedCategory !== "all" ? ` · Category: ${localizeCategory(selectedCategory as ProductCategory, locale)}` : ""}
+                  {selectedZone !== "all" ? ` · Area: ${selectedZone}` : ""}
+                </>
+              ) : (
+                <>
+                  Hiển thị <strong className="text-[#25352B]">{filteredProducts.length}</strong> nông sản phù hợp
+                  {selectedCategory !== "all" ? ` · Ngành: ${selectedCategory}` : ""}
+                  {selectedZone !== "all" ? ` · Vùng: ${selectedZone}` : ""}
+                </>
+              )}
             </p>
             {(selectedCategory !== "all" || selectedZone !== "all" || searchText.trim() !== "") ? (
               <button
@@ -448,7 +464,7 @@ function MarketplaceContent() {
                 }}
                 className="cursor-pointer text-xs font-semibold text-[#245B3D] hover:underline"
               >
-                Xóa bộ lọc
+                {t.home.clearFilters}
               </button>
             ) : null}
           </div>
@@ -456,8 +472,8 @@ function MarketplaceContent() {
           {filteredProducts.length === 0 ? (
             <EmptyState
               icon={<Search className="h-6 w-6" aria-hidden="true" />}
-              title="Chưa tìm thấy nông sản khớp bộ lọc"
-              description="Thử chuyển sang tất cả ngành hàng hoặc tìm theo tên xã/phường Đồng Nai."
+              title={isEn ? "No matching produce found" : "Chưa tìm thấy nông sản khớp bộ lọc"}
+              description={isEn ? "Try selecting All categories or searching by Dong Nai ward/commune name." : "Thử chuyển sang tất cả ngành hàng hoặc tìm theo tên xã/phường Đồng Nai."}
               action={
                 <Button
                   variant="secondary"
@@ -468,7 +484,7 @@ function MarketplaceContent() {
                     switchCollection("all");
                   }}
                 >
-                  Xem toàn bộ nông sản
+                  {isEn ? "View all produce" : "Xem toàn bộ nông sản"}
                 </Button>
               }
             />
@@ -481,10 +497,10 @@ function MarketplaceContent() {
           )}
 
           {recentlyViewedProducts.length > 0 ? (
-            <section aria-label="Nông sản vừa xem" className="space-y-4 pt-4">
+            <section aria-label={isEn ? "Recently viewed produce" : "Nông sản vừa xem"} className="space-y-4 pt-4">
               <h2 className="flex items-center gap-2 font-editorial text-xl font-bold text-[#25352B]">
                 <Clock className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
-                <span>Vừa xem gần đây</span>
+                <span>{isEn ? "Recently Viewed" : "Vừa xem gần đây"}</span>
               </h2>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {recentlyViewedProducts.map((p) => (
@@ -499,25 +515,25 @@ function MarketplaceContent() {
       {compareProducts.length > 0 ? (
         <div
           role="region"
-          aria-label="Thanh so sánh nông sản"
+          aria-label={isEn ? "Product compare tray" : "Thanh so sánh nông sản"}
           className="sticky bottom-16 z-30 mx-auto max-w-4xl rounded-[16px] border border-[#245B3D] bg-white p-3.5 shadow-[0_10px_28px_rgba(37,53,43,0.18)] lg:bottom-4"
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[#245B3D]">
                 <GitCompare className="h-4 w-4" aria-hidden="true" />
-                <span>So sánh ({compareProducts.length}/3):</span>
+                <span>{isEn ? `Compare (${compareProducts.length}/3):` : `So sánh (${compareProducts.length}/3):`}</span>
               </span>
               {compareProducts.map((item) => (
                 <span
                   key={item.id}
                   className="inline-flex items-center gap-1.5 rounded-full border border-[#D6DED2] bg-[#EAF0E5] px-3 py-1 text-xs font-semibold text-[#25352B]"
                 >
-                  <span className="max-w-[140px] truncate">{item.name}</span>
+                  <span className="max-w-[140px] truncate">{isEn && item.enName ? item.enName : item.name}</span>
                   <button
                     type="button"
                     onClick={() => toggleCompareProduct(item.id)}
-                    aria-label={`Bỏ ${item.name} khỏi so sánh`}
+                    aria-label={isEn ? `Remove ${item.name} from comparison` : `Bỏ ${item.name} khỏi so sánh`}
                     className="cursor-pointer rounded-full p-0.5 hover:bg-white"
                   >
                     <X className="h-3.5 w-3.5" aria-hidden="true" />
@@ -527,7 +543,7 @@ function MarketplaceContent() {
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={clearCompareProducts}>
-                Xóa hết
+                {isEn ? "Clear all" : "Xóa hết"}
               </Button>
               <Button
                 variant="primary"
@@ -535,7 +551,7 @@ function MarketplaceContent() {
                 onClick={() => setCompareModalOpen(true)}
                 disabled={compareProducts.length < 2}
               >
-                Đối chiếu bảng ({compareProducts.length})
+                {isEn ? `Compare side by side (${compareProducts.length})` : `Đối chiếu bảng (${compareProducts.length})`}
               </Button>
             </div>
           </div>
@@ -546,23 +562,27 @@ function MarketplaceContent() {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Bảng đối chiếu nông sản cùng ngành hàng"
+          aria-label={isEn ? "Side-by-side product comparison" : "Bảng đối chiếu nông sản cùng ngành hàng"}
           className="fixed inset-0 z-50 flex items-center justify-center bg-[#18241D]/75 p-4"
         >
           <div className="max-h-[85vh] w-full max-w-4xl overflow-y-auto rounded-[20px] bg-white p-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#D6DED2] pb-3">
               <div>
                 <h2 className="text-lg font-bold text-[#25352B]">
-                  Đối chiếu nông sản ({compareProducts[0]?.category})
+                  {isEn
+                    ? `Compare produce (${localizeCategory(compareProducts[0]?.category as ProductCategory, locale)})`
+                    : `Đối chiếu nông sản (${compareProducts[0]?.category})`}
                 </h2>
                 <p className="text-xs text-[#52645A]">
-                  Chỉ hiển thị các chứng nhận còn hiệu lực và đủ hồ sơ đối chiếu.
+                  {isEn
+                    ? "Only active, dossier-verified quality credentials are shown."
+                    : "Chỉ hiển thị các chứng nhận còn hiệu lực và đủ hồ sơ đối chiếu."}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setCompareModalOpen(false)}
-                aria-label="Đóng bảng so sánh"
+                aria-label={t.nav.closeButton}
                 className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#D6DED2] hover:bg-[#EAF0E5]"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
@@ -573,11 +593,11 @@ function MarketplaceContent() {
               <table className="w-full min-w-[540px] border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-[#D6DED2]">
-                    <th className="py-2 pr-3 text-xs font-semibold text-[#52645A]">Tiêu chí</th>
+                    <th className="py-2 pr-3 text-xs font-semibold text-[#52645A]">{isEn ? "Criteria" : "Tiêu chí"}</th>
                     {compareProducts.map((p) => (
                       <th key={p.id} className="px-3 py-2 font-bold text-[#25352B]">
-                        <Link href={`/products/${p.slug}`} className="hover:text-[#245B3D] hover:underline">
-                          {p.name}
+                        <Link href={buildLocalizedHref(`/products/${p.slug}`, locale)} className="hover:text-[#245B3D] hover:underline">
+                          {isEn && p.enName ? p.enName : p.name}
                         </Link>
                       </th>
                     ))}
@@ -585,15 +605,15 @@ function MarketplaceContent() {
                 </thead>
                 <tbody className="divide-y divide-[#EAEFE6] text-xs">
                   <tr>
-                    <td className="py-2.5 pr-3 font-semibold text-[#52645A]">Đơn giá</td>
+                    <td className="py-2.5 pr-3 font-semibold text-[#52645A]">{isEn ? "Price" : "Đơn giá"}</td>
                     {compareProducts.map((p) => (
                       <td key={p.id} className="px-3 py-2.5 font-bold text-[#245B3D] tabular-nums">
-                        {formatVnd(p.priceVnd)} / {p.unitLabel}
+                        {formatVnd(p.priceVnd, locale)} / {p.unitLabel}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="py-2.5 pr-3 font-semibold text-[#52645A]">Nhà vườn &amp; Địa bàn</td>
+                    <td className="py-2.5 pr-3 font-semibold text-[#52645A]">{isEn ? "Orchard & Area" : "Nhà vườn & Địa bàn"}</td>
                     {compareProducts.map((p) => (
                       <td key={p.id} className="px-3 py-2.5 text-[#25352B]">
                         {p.farmName} ({p.administrativeUnitName})
@@ -601,7 +621,7 @@ function MarketplaceContent() {
                     ))}
                   </tr>
                   <tr>
-                    <td className="py-2.5 pr-3 font-semibold text-[#52645A]">Tồn khả dụng</td>
+                    <td className="py-2.5 pr-3 font-semibold text-[#52645A]">{isEn ? "Available Stock" : "Tồn khả dụng"}</td>
                     {compareProducts.map((p) => (
                       <td key={p.id} className="px-3 py-2.5 tabular-nums text-[#25352B]">
                         {p.stockKg} {p.unitLabel}
@@ -609,15 +629,15 @@ function MarketplaceContent() {
                     ))}
                   </tr>
                   <tr>
-                    <td className="py-2.5 pr-3 font-semibold text-[#52645A]">Đặc tính / Bảo quản</td>
+                    <td className="py-2.5 pr-3 font-semibold text-[#52645A]">{isEn ? "Notes & Storage" : "Đặc tính / Bảo quản"}</td>
                     {compareProducts.map((p) => (
                       <td key={p.id} className="px-3 py-2.5 text-[#52645A]">
-                        {p.brixNote || p.storageNote || "Bảo quản thoáng mát theo hướng dẫn vườn"}
+                        {p.brixNote || p.storageNote || (isEn ? "Store in cool dry place per orchard guidance" : "Bảo quản thoáng mát theo hướng dẫn vườn")}
                       </td>
                     ))}
                   </tr>
                   <tr>
-                    <td className="py-2.5 pr-3 font-semibold text-[#52645A]">Chứng nhận hợp lệ</td>
+                    <td className="py-2.5 pr-3 font-semibold text-[#52645A]">{isEn ? "Valid Credentials" : "Chứng nhận hợp lệ"}</td>
                     {compareProducts.map((p) => {
                       const validCreds = credentialRecords
                         .filter((r) => r.productIds.includes(p.id) || (r.productIds.length === 0 && r.holderId === p.farmId))
@@ -633,7 +653,7 @@ function MarketplaceContent() {
                               ))}
                             </div>
                           ) : (
-                            <span className="text-[#52645A]">Chưa gắn nhãn hợp lệ</span>
+                            <span className="text-[#52645A]">{isEn ? "None verified" : "Chưa gắn nhãn hợp lệ"}</span>
                           )}
                         </td>
                       );
