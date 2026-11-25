@@ -2,7 +2,7 @@
 
 **Thông điệp thương hiệu:** *Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị.*
 
-Ứng dụng web **Frontend-Only** thuộc bài thi **Nhóm 8 — Hackathon Thành phố Đồng Nai năm 2026**, nâng cấp lên phiên bản **NaiFarm V3.0** kết nối thương mại nông sản OCOP, chuẩn hóa địa giới hành chính **95 Phường/Xã Thành phố Đồng Nai**, trung tâm đối chiếu **26 chuẩn chất lượng (`Q01–Q26`)**, truy xuất phả hệ mã lô QR thực, quản trị nhà vườn U50+ kiêm bộ công cụ Hợp tác xã (tồn kho FEFO, gom lô, tài chính nội bộ) và phân quyền Maker ≠ Checker across 6 không gian (`W01–W06`)..
+Ứng dụng web thuộc bài thi **Nhóm 8 — Hackathon Thành phố Đồng Nai năm 2026**, nâng cấp lên phiên bản **NaiFarm V3.0** kết nối thương mại nông sản OCOP, chuẩn hóa địa giới hành chính **95 Phường/Xã Thành phố Đồng Nai**, trung tâm đối chiếu **26 chuẩn chất lượng (`Q01–Q26`)**, truy xuất phả hệ mã lô QR thực, quản trị nhà vườn U50+ kiêm bộ công cụ Hợp tác xã (tồn kho FEFO, gom lô, tài chính nội bộ) và phân quyền Maker ≠ Checker across 6 không gian (`W01–W06`)..
 
 ---
 
@@ -61,3 +61,66 @@ node ".\node_modules\next\dist\bin\next" start -H 127.0.0.1 -p 3000
 - [Từ điển chỉ số kinh doanh (`docs/METRICS_DICTIONARY.md`)](docs/METRICS_DICTIONARY.md)
 - [Lộ trình & Gap Matrix V3 (`docs/V3_TODO.md`)](docs/V3_TODO.md) | [`docs/GAP_MATRIX.md`](docs/GAP_MATRIX.md)
 - [Nhật ký thực thi kỹ năng (`docs/SKILL_EXECUTION_LOG.md`)](docs/SKILL_EXECUTION_LOG.md)
+
+## 5. Cấu hình Supabase & Triển khai
+
+### 5.1. Biến môi trường
+
+Sao chép `.env.example` thành `.env.local` (hoặc khai báo trực tiếp trên hosting):
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+```
+
+`SUPABASE_SERVICE_ROLE_KEY` chỉ dùng cho script upload ảnh, không được đưa vào mã chạy trên trình duyệt.
+
+### 5.2. Khởi tạo cơ sở dữ liệu
+
+Chạy lần lượt trong SQL Editor của Supabase:
+
+1. `supabase/migrations/0001_init.sql` — enums, bảng, trigger, RLS, bucket Storage.
+2. `supabase/migrations/0002_seed.sql` — 8 đơn vị hành chính, 4 nhà vườn, 12 sản phẩm, lô QR, nhiệm vụ, hồ sơ, RFQ và 10 tài khoản demo.
+
+### 5.3. Tài khoản demo
+
+Mật khẩu chung: `naifarm123`
+
+| Email | Vai trò |
+|---|---|
+| `customer@naifarm.vn` | Khách mua (W01) |
+| `farmer.batu@naifarm.vn` | Nhà nông (W02) |
+| `farmer.baminh@naifarm.vn` | Nhà nông (W02) |
+| `farmer.cotu@naifarm.vn` | Nhà nông (W02) |
+| `farmer.htx@naifarm.vn` | Nhà nông / HTX (W02) |
+| `volunteer@naifarm.vn` | Tình nguyện viên (W03) |
+| `volunteer.an@naifarm.vn` | Tình nguyện viên (W03) |
+| `coordinator@naifarm.vn` | Điều phối viên (W04) |
+| `org@naifarm.vn` | Tổ chức / HTX (W05) |
+| `admin@naifarm.vn` | Quản trị viên (W06) |
+
+### 5.4. Bật xác nhận email
+
+Trong Supabase Dashboard → **Authentication → Providers → Email**: bật _Confirm email_. Thêm URL triển khai vào **Site URL** và **Redirect URLs**:
+
+```text
+https://<ten-mien-trien-khai>/auth/callback
+```
+
+### 5.5. Upload ảnh
+
+```bash
+npm run images:upload
+```
+
+Script đọc `public/images/stitch/*.webp` và upload vào bucket công khai `stitch` bằng service role key.
+
+### 5.6. Kiểm tra mã nguồn
+
+```bash
+npm install
+npm run typecheck
+npm run lint
+npm run build
+```

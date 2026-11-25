@@ -43,3 +43,5 @@ next-env.d.ts
 # local QA artifacts
 /.hallmark/
 *.wav
+/projects
+/docs

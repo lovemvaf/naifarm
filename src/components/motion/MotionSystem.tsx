@@ -73,7 +73,7 @@ export function EditorialCursorStage({
       {enabled && active ? (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#245B3D]/95 px-3 py-1.5 text-xs font-semibold text-white shadow-md"
+          className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/95 px-3 py-1.5 text-xs font-semibold text-white shadow-md"
           style={{ left: pos.x, top: pos.y }}
         >
           {label}
