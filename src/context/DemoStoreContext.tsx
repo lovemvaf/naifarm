@@ -911,6 +911,14 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           refundRequests: core.refundRequests.length ? core.refundRequests : prev.refundRequests,
           volunteerHours: core.volunteerHours.length ? core.volunteerHours : prev.volunteerHours,
           logisticsTrips: core.logisticsTrips.length ? core.logisticsTrips : prev.logisticsTrips,
+          productReviews: core.productReviews.length ? core.productReviews : prev.productReviews,
+          internationalInquiries: core.internationalInquiries.length ? core.internationalInquiries : prev.internationalInquiries,
+          tourPackages: core.tourPackages.length ? core.tourPackages : prev.tourPackages,
+          certifications: core.certifications.length ? core.certifications : prev.certifications,
+          learningProgress: {
+            ...prev.learningProgress,
+            ...core.learningProgress,
+          },
         }));
       })
       .catch(() => {});
@@ -919,6 +927,23 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
     };
   }, [storageReady, state.session?.user.id]);
+
+  useEffect(() => {
+    if (!supabase || !state.session?.user?.id) return;
+    void supabase
+      .from("lesson_progress")
+      .upsert({
+        user_id: state.session.user.id,
+        completed_lesson_ids: state.learningProgress.completedLessonIds,
+        quiz_answers: state.learningProgress.quizAnswers,
+        mastered_phrase_ids: state.learningProgress.masteredPhraseIds,
+        matched_pair_ids: state.learningProgress.matchedPairIds,
+        roleplay_choices: state.learningProgress.roleplayChoices,
+        practice_points: state.learningProgress.practicePoints,
+        updated_at: new Date().toISOString(),
+      })
+      .then(() => {});
+  }, [state.learningProgress, state.session?.user?.id]);
 
   useEffect(() => {
     if (!supabase) return;

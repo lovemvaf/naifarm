@@ -21,8 +21,10 @@ import type {
   ExperiencePackage,
   Farm,
   FarmCertification,
+  InternationalInquiry,
   InventoryMovement,
   LearningLesson,
+  LearningProgressRecord,
   LogisticsTrip,
   MemberDelivery,
   ObservanceRecord,
@@ -30,6 +32,7 @@ import type {
   DiaryEntry,
   ProductionSeason,
   Product,
+  ProductReviewEntry,
   Profile,
   PromotionRecord,
   PurchaseOrder,
@@ -42,6 +45,7 @@ import type {
   SupportRequest,
   SupportTicket,
   StudentSubmission,
+  TourPackage,
   TraceBatch,
   UserNotification,
   VolunteerHourRecord,
@@ -987,5 +991,127 @@ export function mapSchoolClass(row: Row): SchoolClass {
     enrolledCount: num(row.enrolled_count),
     minorConsentCount: num(row.minor_consent_count),
     fieldTripDate: str(row.field_trip_date),
+  };
+}
+
+export function mapProductReview(row: Row): ProductReviewEntry {
+  return {
+    id: str(row.id),
+    productId: str(row.product_id),
+    orderId: str(row.order_id),
+    authorName: str(row.author_name),
+    rating: Number(row.rating) as ProductReviewEntry["rating"],
+    comment: str(row.comment),
+    createdDateLabel: String(row.created_date_label),
+    verifiedOrderPurchase: Boolean(row.verified_order_purchase) as true,
+  };
+}
+
+export function mapInternationalInquiry(
+  row: Row,
+  farmNameById?: Map<string, string>,
+  productNameById?: Map<string, string>,
+): InternationalInquiry {
+  const farmId = str(row.farm_id);
+  const productId = row.product_id ? String(row.product_id) : undefined;
+  const resolvedFarmName = farmNameById?.get(farmId);
+  const resolvedProductName = productId && productNameById ? productNameById.get(productId) : undefined;
+  return {
+    id: str(row.id),
+    productId,
+    productName: resolvedProductName ?? (row.product_name ? String(row.product_name) : undefined),
+    farmId,
+    farmName: resolvedFarmName ?? farmId,
+    buyerName: str(row.buyer_name),
+    country: str(row.country),
+    preferredLanguage: str(row.preferred_language, "en") as InternationalInquiry["preferredLanguage"],
+    quantityNote: str(row.quantity_note),
+    packagingNote: str(row.packaging_note),
+    sampleRequested: Boolean(row.sample_requested),
+    message: str(row.message),
+    createdAtIso: str(row.created_at_iso),
+    status: str(row.status, "submitted_local") as InternationalInquiry["status"],
+    responseNote: row.response_note ? String(row.response_note) : undefined,
+  };
+}
+
+export function mapTourPackage(row: Row): TourPackage {
+  return {
+    id: str(row.id),
+    slug: str(row.slug),
+    farmId: str(row.farm_id),
+    farmName: str(row.farm_name),
+    administrativeUnitCode: str(row.administrative_unit_code),
+    administrativeUnitName: str(row.administrative_unit_name),
+    zoneLabel: str(row.zone_label) as TourPackage["zoneLabel"],
+    experienceKind: str(row.experience_kind) as TourPackage["experienceKind"],
+    titleVi: str(row.title_vi),
+    titleEn: str(row.title_en),
+    summaryVi: str(row.summary_vi),
+    summaryEn: str(row.summary_en),
+    seasonNoteVi: str(row.season_note_vi),
+    seasonNoteEn: str(row.season_note_en),
+    durationHours: num(row.duration_hours),
+    adultPriceVnd: num(row.adult_price_vnd),
+    childPriceVnd: num(row.child_price_vnd),
+    minGuests: num(row.min_guests),
+    maxGuests: num(row.max_guests),
+    languages: strArray(row.languages) as ("vi" | "en")[],
+    ageSuitability: str(row.age_suitability) as TourPackage["ageSuitability"],
+    accessibilityNoteVi: str(row.accessibility_note_vi),
+    accessibilityNoteEn: str(row.accessibility_note_en),
+    allergenNoteVi: str(row.allergen_note_vi),
+    allergenNoteEn: str(row.allergen_note_en),
+    safetyNoteVi: str(row.safety_note_vi),
+    safetyNoteEn: str(row.safety_note_en),
+    weatherContingencyVi: str(row.weather_contingency_vi),
+    weatherContingencyEn: str(row.weather_contingency_en),
+    meetingPointVi: str(row.meeting_point_vi),
+    meetingPointEn: str(row.meeting_point_en),
+    coordinateVerified: bool(row.coordinate_verified),
+    includesVi: strArray(row.includes_vi),
+    includesEn: strArray(row.includes_en),
+    itinerary: (row.itinerary as unknown as TourPackage["itinerary"]) ?? [],
+    slots: (row.slots as unknown as TourPackage["slots"]) ?? [],
+    linkedProductIds: strArray(row.linked_product_ids),
+    linkedLiveIds: strArray(row.linked_live_ids),
+    image: str(row.image),
+    gallery: strArray(row.gallery),
+    ratingFixture: num(row.rating_fixture),
+    reviewCountFixture: num(row.review_count_fixture),
+  };
+}
+
+export function mapFarmCertification(row: Row): FarmCertification {
+  return {
+    id: str(row.id),
+    farmId: str(row.farm_id),
+    farmName: str(row.farm_name),
+    administrativeUnitCode: str(row.administrative_unit_code),
+    administrativeUnitName: str(row.administrative_unit_name),
+    standardType: str(row.standard_type) as FarmCertification["standardType"],
+    certificateCode: str(row.certificate_code),
+    starLevelLabel: row.star_level_label ? String(row.star_level_label) : undefined,
+    status: str(row.status) as CertificationStatus,
+    statusLabel: str(row.status_label),
+    scopeSummary: str(row.scope_summary),
+    issuerLabel: str(row.issuer_label),
+    issuedDateDemo: str(row.issued_date_demo),
+    validUntilDemo: str(row.valid_until_demo),
+    qrBatchCode: row.qr_batch_code ? String(row.qr_batch_code) : undefined,
+    disclaimer: str(row.disclaimer),
+    isDemo: true,
+  };
+}
+
+export function mapLessonProgress(row: Row): LearningProgressRecord {
+  return {
+    completedLessonIds: strArray(row.completed_lesson_ids),
+    quizAnswers: (row.quiz_answers as Record<string, number>) ?? {},
+    masteredPhraseIds: strArray(row.mastered_phrase_ids),
+    matchedPairIds: strArray(row.matched_pair_ids),
+    roleplayChoices: (row.roleplay_choices as Record<string, string>) ?? {},
+    practicePoints: num(row.practice_points),
+    submittedArtifactNotes: {},
   };
 }

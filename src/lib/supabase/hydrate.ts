@@ -15,9 +15,12 @@ import {
   mapExperienceBooking,
   mapExpense,
   mapFarm,
+  mapFarmCertification,
   mapGrant,
+  mapInternationalInquiry,
   mapInventoryMovement,
   mapLesson,
+  mapLessonProgress,
   mapLogisticsTrip,
   mapMemberDelivery,
   mapMission,
@@ -27,6 +30,7 @@ import {
   mapOrderItem,
   mapPartnerOrg,
   mapProduct,
+  mapProductReview,
   mapPurchaseOrder,
   mapPromotion,
   mapReceivablePayable,
@@ -39,6 +43,7 @@ import {
   mapSupplier,
   mapSupportRequest,
   mapTicket,
+  mapTourPackage,
   mapVolunteerHour,
   mapWarehouse,
   mapWarehouseStock,
@@ -60,13 +65,17 @@ import type {
   ExperienceBooking,
   ExperiencePackage,
   Farm,
+  FarmCertification,
+  InternationalInquiry,
   InventoryMovement,
   LearningLesson,
+  LearningProgressRecord,
   LogisticsTrip,
   MemberDelivery,
   ObservanceRecord,
   PartnerOrganization,
   Product,
+  ProductReviewEntry,
   PromotionRecord,
   PurchaseOrder,
   ReceivablePayable,
@@ -78,6 +87,7 @@ import type {
   Supplier,
   SupportRequest,
   SupportTicket,
+  TourPackage,
   TraceBatch,
   UserNotification,
   VolunteerHourRecord,
@@ -129,6 +139,11 @@ export interface CoreData {
   refundRequests: RefundRequest[];
   volunteerHours: VolunteerHourRecord[];
   logisticsTrips: LogisticsTrip[];
+  productReviews: ProductReviewEntry[];
+  internationalInquiries: InternationalInquiry[];
+  tourPackages: TourPackage[];
+  certifications: FarmCertification[];
+  learningProgress: LearningProgressRecord;
 }
 
 const supabase = createClient();
@@ -188,6 +203,11 @@ export async function fetchCoreData(): Promise<CoreData> {
     refundRows,
     volunteerHourRows,
     logisticsTripRows,
+    productReviewRows,
+    inquiryRows,
+    tourPackageRows,
+    certificationRows,
+    lessonProgressRow,
   ] = await Promise.all([
     selectAll("farms"),
     selectAll("experiences"),
@@ -246,6 +266,13 @@ export async function fetchCoreData(): Promise<CoreData> {
     selectAll("refund_requests"),
     selectAll("volunteer_hours"),
     selectAll("logistics_trips"),
+    selectAll("product_reviews"),
+    selectAll("international_inquiries"),
+    selectAll("tour_packages"),
+    selectAll("farm_certifications"),
+    userId
+      ? supabase.from("lesson_progress").select("*").eq("user_id", userId).maybeSingle().then((r) => r.data ?? null)
+      : Promise.resolve(null),
   ]);
 
   const experiencesByFarm = new Map<string, ExperiencePackage[]>();
@@ -282,6 +309,15 @@ export async function fetchCoreData(): Promise<CoreData> {
   const orders = orderRows.map((row) =>
     mapOrder(row, itemsByOrder.get(String(row.id ?? "")) ?? []),
   );
+
+  const farmNameById = new Map<string, string>();
+  for (const farm of farms) {
+    farmNameById.set(farm.id, farm.name);
+  }
+  const productNameById = new Map<string, string>();
+  for (const product of products) {
+    productNameById.set(product.id, product.name);
+  }
 
   return {
     farms,
@@ -333,5 +369,22 @@ export async function fetchCoreData(): Promise<CoreData> {
     refundRequests: refundRows.map(mapRefundRequest),
     volunteerHours: volunteerHourRows.map(mapVolunteerHour),
     logisticsTrips: logisticsTripRows.map(mapLogisticsTrip),
+    productReviews: productReviewRows.map(mapProductReview),
+    internationalInquiries: inquiryRows.map((row) =>
+      mapInternationalInquiry(row, farmNameById, productNameById),
+    ),
+    tourPackages: tourPackageRows.map(mapTourPackage),
+    certifications: certificationRows.map(mapFarmCertification),
+    learningProgress: lessonProgressRow
+      ? mapLessonProgress(lessonProgressRow)
+      : {
+          completedLessonIds: [],
+          quizAnswers: {},
+          masteredPhraseIds: [],
+          matchedPairIds: [],
+          roleplayChoices: {},
+          practicePoints: 0,
+          submittedArtifactNotes: {},
+        },
   };
 }

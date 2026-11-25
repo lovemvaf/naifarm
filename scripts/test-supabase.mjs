@@ -77,6 +77,8 @@ const TABLES = [
   "international_inquiries",
   "volunteer_hours",
   "refund_requests",
+  "tour_packages",
+  "farm_certifications",
 ];
 
 const ACCOUNTS = [
@@ -164,6 +166,7 @@ async function main() {
   });
   check("RLS: anon không thấy profiles", anonProfiles.status === 200 && anonProfiles.data.length === 0);
 
+  let customerToken = null;
   for (const [email, expectedRole] of ACCOUNTS) {
     const response = await request("/auth/v1/token?grant_type=password", {
       method: "POST",
@@ -177,6 +180,7 @@ async function main() {
     if (!ok) continue;
 
     const token = JSON.parse(text).access_token;
+    if (expectedRole === "customer") customerToken = token;
     const profile = await json("/rest/v1/profiles?select=id,role,farm_id", {
       apikey: anon,
       Authorization: `Bearer ${token}`,
@@ -187,6 +191,25 @@ async function main() {
       `RLS: ${expectedRole} đọc đúng profile`,
       profile.status === 200 && own?.role === expectedRole,
       `${own?.role ?? "?"} (${rows.length} dòng thấy được)`
+    );
+  }
+
+  if (customerToken) {
+    const uid = tokenUserId(customerToken);
+    const upsert = await request("/rest/v1/lesson_progress", {
+      method: "POST",
+      headers: { apikey: anon, Authorization: `Bearer ${customerToken}`, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify({ user_id: uid, practice_points: 7 }),
+    });
+    const ownProgress = await json("/rest/v1/lesson_progress?select=user_id,practice_points&limit=1", {
+      apikey: anon,
+      Authorization: `Bearer ${customerToken}`,
+    });
+    const row = ownProgress.data?.[0];
+    check(
+      "RLS: lesson_progress đọc đúng bản ghi của user",
+      ownProgress.status === 200 && row?.user_id === uid && row?.practice_points === 7,
+      row?.user_id === uid ? `1 dòng của user (${row?.practice_points} điểm)` : "không đúng user"
     );
   }
 
