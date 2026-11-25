@@ -66,7 +66,7 @@ export async function proxy(request: NextRequest) {
 
   if (!user && (needsAuth || roleRoute)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = "/sign-in";
     url.search = `?redirect=${encodeURIComponent(pathname)}`;
     return NextResponse.redirect(url);
   }

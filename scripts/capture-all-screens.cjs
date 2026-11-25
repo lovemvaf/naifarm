@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- standalone Node script, CommonJS intentional */
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');

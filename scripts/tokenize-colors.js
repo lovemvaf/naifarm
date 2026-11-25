@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports -- standalone Node script, CommonJS intentional */
 /**
  * Tokenize hard-coded hex arbitrary values in className strings.
  * Replaces `[#HEX]` (optionally followed by `/opacity`) with the matching
