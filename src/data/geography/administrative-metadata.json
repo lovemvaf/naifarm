@@ -1,0 +1,36 @@
+{
+  "datasetVersion": "2026-11-25",
+  "mocRaSoat": "2026-11-25",
+  "maCapTren": "75",
+  "tenCapTren": "Thành phố Đồng Nai",
+  "loaiCapTren": "Thành phố trực thuộc trung ương",
+  "totalUnits": 95,
+  "phuongCount": 33,
+  "xaCount": 62,
+  "upgradedXaToPhuong2026Count": 10,
+  "upgradedXaToPhuong2026Codes": [
+    "25270",
+    "25357",
+    "25363",
+    "26116",
+    "26170",
+    "26248",
+    "26326",
+    "26368",
+    "26425",
+    "26485"
+  ],
+  "duplicateRawSlugs": {
+    "xa-loc-thanh": [
+      "25280",
+      "25294"
+    ]
+  },
+  "pendingAdjustmentUnits": [
+    "25420"
+  ],
+  "gisVerifiedCoordinatesCount": 0,
+  "gisVerifiedPolygonCount": 0,
+  "gisNotice": "Bộ dữ liệu địa giới hành chính 25/11/2026 hiện có trang_thai_gis = chua_xac_minh_toa_do_va_polygon (0/95 đơn vị có tọa độ WGS84 hoặc WKT polygon xác minh). Bản đồ NaiFarm chỉ sử dụng tọa độ điểm minh họa vùng sinh thái.",
+  "sourceFile": "data/raw/Dong_Nai_Dia_Gioi_Hanh_Chinh_2026-11-25.csv"
+}

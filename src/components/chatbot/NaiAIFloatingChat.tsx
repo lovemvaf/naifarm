@@ -46,7 +46,7 @@ export function NaiAIFloatingChat() {
     },
   ];
 
-  // Auto-hide on checkout or during farmer voice recording / fullscreen 3D viewer per DESIGN.md
+  // Auto-hide on checkout or during farmer voice recording / active subflows per DESIGN.md
   const suppressedByRoute = pathname.startsWith("/checkout") || hideAiChatOnSubflow;
 
   useEffect(() => {

@@ -14,33 +14,41 @@ import {
   Users,
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
-import { EditorialCursorStage, EditorialReveal } from "@/components/motion/MotionSystem";
+import { EditorialCursorStage } from "@/components/motion/MotionSystem";
 import { ProductCard } from "@/components/marketplace/ProductCard";
 import { Badge, Button, Card, DemoBanner, EmptyState } from "@/components/ui/Primitives";
+import { normalizeSearchText } from "@/lib/geography/normalize-address";
 import { cn } from "@/lib/format";
+import type { ProductCategory } from "@/types/naifarm";
 
-const CATEGORIES = ["Tất cả", "Trái cây tươi", "Hạt & Cà phê", "Mật ong & Đặc sản"] as const;
+const CATEGORIES: ("Tất cả" | ProductCategory)[] = [
+  "Tất cả",
+  "Trái cây tươi",
+  "Bưởi & Cây có múi",
+  "Chôm chôm & Sầu riêng",
+  "Hạt điều & Rang củi",
+  "Cà phê & Ca cao",
+  "Mật ong & Rượu trái cây",
+  "Quà tặng OCOP & Combo",
+];
 
 export default function HomePage() {
   const router = useRouter();
   const { products, farms, livestreams } = useDemoStore();
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState<(typeof CATEGORIES)[number]>("Tất cả");
+  const [category, setCategory] = useState<"Tất cả" | ProductCategory>("Tất cả");
   const [onlyInSeason, setOnlyInSeason] = useState(false);
   const [qrInput, setQrInput] = useState("NF-DEMO-001");
 
   const filteredProducts = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = normalizeSearchText(search);
     return products.filter((p) => {
       if (category !== "Tất cả" && p.category !== category) return false;
       if (onlyInSeason && (p.seasonStatus !== "in_season" || p.stockKg <= 0)) return false;
       if (!q) return true;
-      return (
-        p.name.toLowerCase().includes(q) ||
-        p.farmName.toLowerCase().includes(q) ||
-        p.region.toLowerCase().includes(q) ||
-        p.batchCode.toLowerCase().includes(q)
-      );
+      return normalizeSearchText(
+        `${p.name} ${p.farmName} ${p.administrativeUnitName} ${p.batchCode} ${p.category}`,
+      ).includes(q);
     });
   }, [products, category, onlyInSeason, search]);
 
@@ -48,7 +56,7 @@ export default function HomePage() {
     <div className="mx-auto max-w-[1280px] space-y-14 px-4 py-6 lg:px-8 lg:py-10">
       {/* 60/40 Agricultural Editorial Hero — visible above fold at 1280x800 */}
       <section aria-labelledby="hero-heading" className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
-        <EditorialReveal className="space-y-5 lg:col-span-7">
+        <div className="space-y-5 lg:col-span-7">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#D6DED2] bg-[#EAF0E5] px-3.5 py-1.5 text-xs font-semibold text-[#245B3D]">
             <Sprout className="h-4 w-4" aria-hidden="true" />
             <span>Chợ OCOP Thanh niên · Thành phố Đồng Nai (Nguyên mẫu Demo)</span>
@@ -56,7 +64,7 @@ export default function HomePage() {
 
           <h1
             id="hero-heading"
-            className="font-editorial text-[28px] font-semibold leading-[1.15] text-[#25352B] sm:text-4xl lg:text-[48px]"
+            className="font-editorial text-[30px] font-semibold leading-[1.15] text-[#25352B] sm:text-4xl lg:text-[52px]"
           >
             Nông sản Đồng Nai — Minh bạch từ vườn
           </h1>
@@ -89,7 +97,7 @@ export default function HomePage() {
               const code = qrInput.trim() || "NF-DEMO-001";
               router.push(`/trace/${encodeURIComponent(code)}`);
             }}
-            className="flex flex-wrap items-center gap-2 rounded-[14px] border border-[#D6DED2] bg-white p-2.5 shadow-[0_2px_8px_rgba(37,53,43,0.05)] max-w-lg"
+            className="flex flex-wrap items-center gap-2 rounded-[14px] border border-[#D6DED2] bg-white p-2.5 shadow-[0_2px_8px_rgba(37,53,43,0.05)] max-w-2xl"
           >
             <QrCode className="ml-1.5 h-5 w-5 shrink-0 text-[#245B3D]" aria-hidden="true" />
             <label htmlFor="hero-qr-input" className="sr-only">
@@ -106,10 +114,16 @@ export default function HomePage() {
             <Button type="submit" size="md" variant="gold">
               Tra cứu Hộ chiếu QR
             </Button>
+            <Link
+              href="/trace/scan"
+              className="inline-flex min-h-[42px] items-center gap-1 rounded-[10px] border border-[#245B3D]/30 bg-[#EAF0E5] px-3 text-xs font-semibold text-[#245B3D] hover:bg-[#DDE8D6]"
+            >
+              Quét ảnh/Cam
+            </Link>
           </form>
-        </EditorialReveal>
+        </div>
 
-        <EditorialReveal delay={0.08} className="lg:col-span-5">
+        <div className="lg:col-span-5">
           <EditorialCursorStage
             label="Xem bản đồ vườn Đồng Nai"
             className="relative overflow-hidden rounded-[24px] border border-[#D6DED2] bg-[#EAF0E5] shadow-[0_8px_24px_rgba(37,53,43,0.12)]"
@@ -130,7 +144,7 @@ export default function HomePage() {
               </div>
             </Link>
           </EditorialCursorStage>
-        </EditorialReveal>
+        </div>
       </section>
 
       <DemoBanner
@@ -300,7 +314,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* OCOP Live Schedule & Explore + 3D Learning Banner */}
+      {/* OCOP Live Schedule & Explore + 2D Learning Banner */}
       <section aria-labelledby="live-strip-heading" className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="p-5 lg:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -338,13 +352,13 @@ export default function HomePage() {
 
         <Card className="flex flex-col justify-between bg-[#EAF0E5] p-5">
           <div>
-            <Badge tone="success">Trải nghiệm & Học tập mở</Badge>
+            <Badge tone="success">Trải nghiệm &amp; Học tập 2D</Badge>
             <h2 className="mt-2 font-editorial text-xl font-semibold text-[#25352B]">
-              Khám phá Bản đồ Đồng Nai & Bưởi Tân Triều 3D
+              Bản đồ Đồng Nai thực &amp; Giải phẫu nông sản 2D
             </h2>
             <p className="mt-2 text-sm text-[#52645A]">
-              Định vị các vùng trồng đặc sản Đồng Nai, đặt lịch trải nghiệm tại vườn và tương tác mô
-              hình 3D quả bưởi ngay trên trình duyệt.
+              Định vị 24 nhà vườn trên nền OpenStreetMap, đo khoảng cách GPS và khám phá 12 bài học
+              cấu tạo nông sản trực quan nhẹ, rõ nét.
             </p>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -353,13 +367,13 @@ export default function HomePage() {
               className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[10px] bg-[#245B3D] px-4 text-xs font-semibold text-white hover:bg-[#19472E]"
             >
               <Compass className="h-4 w-4" aria-hidden="true" />
-              <span>Bản đồ sinh thái</span>
+              <span>Bản đồ OpenStreetMap</span>
             </Link>
             <Link
               href="/learn"
               className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[10px] border border-[#245B3D] bg-white px-4 text-xs font-semibold text-[#245B3D] hover:bg-[#F5F3E9]"
             >
-              <span>Học & Mô hình 3D</span>
+              <span>Học tập &amp; Giải phẫu 2D</span>
             </Link>
           </div>
         </Card>

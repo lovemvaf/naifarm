@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
+import { NaiFarmMapHost } from "@/components/map/NaiFarmMapHost";
 import { Badge, Button, Card, DemoBanner, EmptyState } from "@/components/ui/Primitives";
 import type { MissionStatus, VolunteerMission } from "@/types/naifarm";
 
@@ -55,10 +56,13 @@ export default function VolunteerWorkspacePage() {
   const {
     hydrated,
     missions,
+    farms,
+    volunteerHours,
     setActiveWorkspace,
     acceptMission,
     submitMissionEvidence,
   } = useDemoStore();
+  const [showMissionMap, setShowMissionMap] = useState(false);
 
   const [participationTab, setParticipationTab] = useState<ParticipationFilter>("all");
   const [skillFilter, setSkillFilter] = useState<(typeof SKILL_OPTIONS)[number]>("Tất cả");
@@ -369,7 +373,7 @@ export default function VolunteerWorkspacePage() {
           icon: <Award className="h-4 w-4" aria-hidden="true" />,
         },
         {
-          label: "Góc học mở & 3D Bưởi",
+          label: "Góc học mở & 2D",
           href: "/learn",
           icon: <BookOpen className="h-4 w-4" aria-hidden="true" />,
         },
@@ -399,7 +403,7 @@ export default function VolunteerWorkspacePage() {
                     {volunteerName} & Tuấn · Đội Trí thức trẻ Số hóa Đồng Nai
                   </h2>
                 </div>
-                <Badge tone="gold">Đoàn viên Số hóa · TP. Đồng Nai</Badge>
+                <Badge tone="gold">Đoàn viên Số hóa · Thành phố Đồng Nai</Badge>
               </div>
             </div>
 
@@ -478,7 +482,7 @@ export default function VolunteerWorkspacePage() {
                     className="inline-flex items-center gap-1 font-bold text-[#245B3D] hover:underline"
                   >
                     <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
-                    Mở Góc học tập & 3D
+                    Mở Góc học tập &amp; 2D
                   </Link>
                 </div>
               </div>
@@ -491,17 +495,31 @@ export default function VolunteerWorkspacePage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-bold text-[#25352B]">
-                Bảng nhiệm vụ số hóa nông sản ({visibleCount})
+                Bảng nhiệm vụ số hóa nông sản ({visibleCount}) · Sổ giờ ghi nhận ({volunteerHours.length})
               </h2>
-              <p className="text-sm text-[#52645A]">
+              <p className="text-xs text-[#52645A]">
                 Tách rõ nhiệm vụ mới chưa tham gia và các nhiệm vụ đã tham gia / đang theo dõi.
               </p>
             </div>
-            <div className="flex items-center gap-2 text-xs text-[#52645A]">
-              <Filter className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
-              <span>Bộ lọc hoạt động thực tế</span>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowMissionMap((v) => !v)}
+              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full border border-[#D6DED2] bg-white px-3.5 text-xs font-semibold text-[#245B3D] hover:bg-[#EAF0E5]"
+            >
+              <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{showMissionMap ? "Ẩn bản đồ điểm vườn" : "Xem bản đồ điểm hỗ trợ"}</span>
+            </button>
           </div>
+
+          {showMissionMap ? (
+            <Card className="p-4">
+              <NaiFarmMapHost
+                farms={farms.filter((f) => missions.some((m) => m.farmId === f.id))}
+                heightClassName="h-[320px]"
+                zoom={10}
+              />
+            </Card>
+          ) : null}
 
           <Card className="p-4 space-y-3">
             <div className="flex flex-wrap items-center gap-2 border-b border-[#EAF0E5] pb-3">

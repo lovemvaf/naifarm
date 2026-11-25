@@ -38,7 +38,7 @@ const B2B_RFQ_SAMPLES = [
 ];
 
 export default function OrganizationWorkspacePage() {
-  const { hydrated, farms, products, batches, setActiveWorkspace } = useDemoStore();
+  const { hydrated, farms, products, batches, organizations, setActiveWorkspace } = useDemoStore();
   const [mode, setMode] = useState<OrgViewMode>("coop");
   const [rfqCompany, setRfqCompany] = useState("Chuỗi Cửa hàng Đặc sản Miền Đông (Demo)");
   const [rfqNote, setRfqNote] = useState(
@@ -217,6 +217,37 @@ export default function OrganizationWorkspacePage() {
                 })}
               </div>
             </Card>
+
+            <Card className="p-5 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-lg font-bold text-[#25352B]">
+                  Mạng lưới 10 Tổ chức, HTX &amp; Đoàn trường đối tác ({organizations.length})
+                </h2>
+                <Badge tone="info">Thành phố Đồng Nai (25/11/2026)</Badge>
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {organizations.map((org) => (
+                  <div
+                    key={org.id}
+                    className="rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] p-3.5 text-xs space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="rounded-full bg-[#EAF0E5] px-2.5 py-0.5 font-bold text-[#245B3D]">
+                        {org.type}
+                      </span>
+                      <span className="font-semibold text-[#52645A]">
+                        {org.linkedFarmsCount} hộ liên kết
+                      </span>
+                    </div>
+                    <p className="text-sm font-bold text-[#25352B]">{org.name}</p>
+                    <p className="text-[#52645A]">
+                      {org.administrativeUnitName} ({org.administrativeUnitCode}) · {org.contactRoleDemo}
+                    </p>
+                    <p className="text-[#25352B]">{org.focusArea}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
           </div>
         ) : null}
 
@@ -323,7 +354,7 @@ export default function OrganizationWorkspacePage() {
                     href="/learn"
                     className="inline-flex min-h-[42px] items-center rounded-[10px] bg-[#245B3D] px-4 text-xs font-bold text-white"
                   >
-                    Mở Học liệu & 3D Bưởi
+                    Mở Học liệu &amp; Giải phẫu 2D
                   </Link>
                   <Link
                     href="/explore"

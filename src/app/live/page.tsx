@@ -524,7 +524,7 @@ export default function LiveStoryRoomPage() {
             icon: <Award className="h-4 w-4" aria-hidden="true" />,
           },
           {
-            label: "Góc học mở & 3D",
+            label: "Góc học mở & 2D",
             href: "/learn",
             icon: <BookOpen className="h-4 w-4" aria-hidden="true" />,
           },

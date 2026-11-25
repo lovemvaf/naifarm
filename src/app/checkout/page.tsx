@@ -12,12 +12,13 @@ import type { DeliveryMethod } from "@/types/naifarm";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, products, placeDemoOrder } = useDemoStore();
+  const { cart, products, addressBook, placeDemoOrder } = useDemoStore();
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("delivery");
   const [customerName, setCustomerName] = useState("Ngọc Linh (Demo)");
   const [customerPhone, setCustomerPhone] = useState("090x xxx 128");
   const [deliveryAddress, setDeliveryAddress] = useState(
-    "Quận Bình Thạnh, TP. Hồ Chí Minh (Địa chỉ minh họa)"
+    addressBook[0]?.fullAddress ??
+      "Số 45/2 Đường Nguyễn Ái Quốc, Phường Trấn Biên, Thành phố Đồng Nai, Việt Nam (Địa chỉ minh họa)",
   );
   const [submitting, setSubmitting] = useState(false);
 

@@ -12,61 +12,105 @@ import React, {
 import { INITIAL_FARMS } from "@/data/demo/farms";
 import { INITIAL_PRODUCTS } from "@/data/demo/products";
 import { INITIAL_BATCHES } from "@/data/demo/batches";
+import { INITIAL_CERTIFICATIONS } from "@/data/demo/certifications";
+import { INITIAL_DIARY_ENTRIES, INITIAL_SEASONS } from "@/data/demo/seasons-diaries";
 import { INITIAL_ORDERS } from "@/data/demo/orders";
-import { INITIAL_MISSIONS, INITIAL_SUPPORT_REQUESTS } from "@/data/demo/missions";
+import {
+  INITIAL_MISSIONS,
+  INITIAL_SUPPORT_REQUESTS,
+  INITIAL_VOLUNTEER_HOURS,
+} from "@/data/demo/missions";
 import { INITIAL_LIVESTREAMS } from "@/data/demo/livestreams";
+import { INITIAL_LESSONS } from "@/data/demo/learning";
+import {
+  DEMO_AUTH_ACCOUNTS,
+  INITIAL_ADDRESS_BOOK,
+  INITIAL_NOTIFICATIONS,
+  INITIAL_PARTNER_ORGS,
+  INITIAL_TICKETS,
+} from "@/data/demo/partners-tickets";
 import {
   INITIAL_ADMIN_GRANTS,
   INITIAL_AUDIT_LOGS,
   INITIAL_DOC_CASES,
   INITIAL_EXPERIENCE_BOOKINGS,
 } from "@/data/demo/community";
+import { getAdministrativeUnitByCode } from "@/lib/geography/administrative-lookup";
+import { formatAdministrativeAddress } from "@/lib/geography/normalize-address";
 import type {
+  AddressBookEntry,
   AdminGrant,
   AuditLogEntry,
   BatchEvent,
   CartItem,
+  CertificationStatus,
   DeliveryMethod,
+  DemoAuthAccount,
   DemoOrder,
+  DiaryEntry,
   DocumentReviewCase,
   ExperienceBooking,
   Farm,
+  FarmCertification,
+  LearningLesson,
   LivestreamSession,
   OrderStatus,
+  PartnerOrganization,
   Product,
+  ProductionSeason,
   SupportRequest,
+  SupportTicket,
   TraceBatch,
+  UserNotification,
+  VolunteerHourRecord,
   VolunteerMission,
   WorkspaceId,
 } from "@/types/naifarm";
 
-const STORAGE_KEY = "naifarm_demo_state_v1";
+const STORAGE_KEY = "naifarm_demo_state_v2";
 
 interface DemoState {
   activeWorkspace: WorkspaceId;
+  authUser: DemoAuthAccount | null;
+  demoAccounts: DemoAuthAccount[];
   farms: Farm[];
   products: Product[];
   batches: TraceBatch[];
+  certifications: FarmCertification[];
+  seasons: ProductionSeason[];
+  diaryEntries: DiaryEntry[];
+  lessons: LearningLesson[];
   cart: CartItem[];
   followedProductIds: string[];
   favoriteProductIds: string[];
   orders: DemoOrder[];
   missions: VolunteerMission[];
+  volunteerHours: VolunteerHourRecord[];
   supportRequests: SupportRequest[];
   livestreams: LivestreamSession[];
   experienceBookings: ExperienceBooking[];
   docCases: DocumentReviewCase[];
   adminGrants: AdminGrant[];
   auditLogs: AuditLogEntry[];
+  organizations: PartnerOrganization[];
+  notifications: UserNotification[];
+  tickets: SupportTicket[];
+  addressBook: AddressBookEntry[];
   hideAiChatOnSubflow: boolean;
 }
 
 function getInitialState(): DemoState {
   return {
     activeWorkspace: "W01",
+    authUser: null,
+    demoAccounts: DEMO_AUTH_ACCOUNTS,
     farms: INITIAL_FARMS,
     products: INITIAL_PRODUCTS,
     batches: INITIAL_BATCHES,
+    certifications: INITIAL_CERTIFICATIONS,
+    seasons: INITIAL_SEASONS,
+    diaryEntries: INITIAL_DIARY_ENTRIES,
+    lessons: INITIAL_LESSONS,
     cart: [
       {
         productId: "P01",
@@ -78,12 +122,17 @@ function getInitialState(): DemoState {
     favoriteProductIds: ["P06", "P01"],
     orders: INITIAL_ORDERS,
     missions: INITIAL_MISSIONS,
+    volunteerHours: INITIAL_VOLUNTEER_HOURS,
     supportRequests: INITIAL_SUPPORT_REQUESTS,
     livestreams: INITIAL_LIVESTREAMS,
     experienceBookings: INITIAL_EXPERIENCE_BOOKINGS,
     docCases: INITIAL_DOC_CASES,
     adminGrants: INITIAL_ADMIN_GRANTS,
     auditLogs: INITIAL_AUDIT_LOGS,
+    organizations: INITIAL_PARTNER_ORGS,
+    notifications: INITIAL_NOTIFICATIONS,
+    tickets: INITIAL_TICKETS,
+    addressBook: INITIAL_ADDRESS_BOOK,
     hideAiChatOnSubflow: false,
   };
 }
@@ -107,10 +156,41 @@ interface PlaceOrderInput {
   deliveryAddress: string;
 }
 
+interface SignUpGuestInput {
+  name: string;
+  emailDemo: string;
+  requestedRole: WorkspaceId;
+  unitCode: string;
+}
+
+interface AddSeasonDiaryInput {
+  seasonId: string;
+  batchCode: string;
+  stage: DiaryEntry["stage"];
+  title: string;
+  detail: string;
+  actorName: string;
+  sourceDeclaration: DiaryEntry["sourceDeclaration"];
+  photo?: string;
+}
+
 interface DemoStoreContextValue extends DemoState {
   hydrated: boolean;
   setActiveWorkspace: (ws: WorkspaceId) => void;
   setHideAiChatOnSubflow: (hidden: boolean) => void;
+  signInDemoAccount: (accountId: string) => DemoAuthAccount | null;
+  signUpDemoGuest: (input: SignUpGuestInput) => { ok: boolean; account?: DemoAuthAccount; message: string };
+  signOutDemo: () => void;
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
+  addAddressEntry: (input: {
+    label: string;
+    recipientName: string;
+    phoneDemo: string;
+    detailAddress: string;
+    administrativeUnitCode: string;
+  }) => { ok: boolean; message: string };
+  removeAddressEntry: (id: string) => void;
   addToCart: (productId: string, quantity?: number, optionLabel?: string) => { ok: boolean; message: string };
   updateCartQty: (productId: string, nextQty: number) => void;
   removeFromCart: (productId: string) => void;
@@ -120,6 +200,22 @@ interface DemoStoreContextValue extends DemoState {
   updateOrderStatus: (orderId: string, status: OrderStatus, cancelReason?: string) => void;
   publishFarmerProduct: (input: PublishProductInput) => Product;
   addHarvestDiaryEvent: (batchCode: string, event: Omit<BatchEvent, "id">) => void;
+  addSeasonDiaryEntry: (input: AddSeasonDiaryInput) => DiaryEntry;
+  createProductionSeason: (input: {
+    farmId: string;
+    cropName: string;
+    variety: string;
+    seasonName: string;
+    expectedHarvestDate: string;
+    areaHa: number;
+    summary: string;
+  }) => ProductionSeason;
+  addOrUpdateCertification: (input: {
+    farmId: string;
+    standardType: FarmCertification["standardType"];
+    status: CertificationStatus;
+    scopeSummary: string;
+  }) => FarmCertification;
   submitSupportRequest: (req: Omit<SupportRequest, "id" | "status" | "createdAtLabel">) => SupportRequest;
   acceptMission: (missionId: string, volunteerName?: string) => void;
   submitMissionEvidence: (missionId: string, evidenceNote: string, hours: number, evidenceImage?: string) => void;
@@ -138,9 +234,18 @@ interface DemoStoreContextValue extends DemoState {
   reviewDocumentCase: (
     caseId: string,
     status: "Hồ sơ đã đối chiếu (Demo)" | "Yêu cầu bổ sung",
-    note: string
+    note: string,
   ) => void;
   toggleAdminGrant: (grantId: string, reason: string) => void;
+  createSupportTicket: (input: {
+    requesterName: string;
+    roleLabel: string;
+    category: string;
+    subject: string;
+    administrativeUnitCode: string;
+    note: string;
+  }) => SupportTicket;
+  updateTicketStatus: (ticketId: string, status: SupportTicket["status"]) => void;
   resetDemoState: () => void;
 }
 
@@ -155,7 +260,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const hydrated = useSyncExternalStore(
     emptySubscribe,
     () => true,
-    () => false
+    () => false,
   );
 
   useEffect(() => {
@@ -174,7 +279,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           }));
         }
       } catch {
-        // Fallback safely to default seed if storage is unavailable
+        // Fallback safely to initial dataset if storage is blocked
       } finally {
         setStorageReady(true);
       }
@@ -187,7 +292,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
-      // Ignore quota errors in private browsing
+      // Ignore storage quota exceptions
     }
   }, [state, storageReady]);
 
@@ -198,15 +303,142 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
 
   const setHideAiChatOnSubflow = useCallback((hidden: boolean) => {
     setState((prev) =>
-      prev.hideAiChatOnSubflow === hidden ? prev : { ...prev, hideAiChatOnSubflow: hidden }
+      prev.hideAiChatOnSubflow === hidden ? prev : { ...prev, hideAiChatOnSubflow: hidden },
     );
   }, []);
+
+  const signInDemoAccount = (accountId: string) => {
+    const found = state.demoAccounts.find((a) => a.id === accountId) ?? null;
+    if (!found) return null;
+    workspaceTouchedRef.current = true;
+    setState((prev) => ({
+      ...prev,
+      authUser: found,
+      activeWorkspace: found.workspaceId,
+    }));
+    return found;
+  };
+
+  const signUpDemoGuest = (input: SignUpGuestInput) => {
+    const restricted: WorkspaceId[] = ["W04", "W05", "W06"];
+    if (restricted.includes(input.requestedRole)) {
+      return {
+        ok: false,
+        message:
+          "Vai trò Điều phối (W04), Tổ chức (W05) và Quản trị (W06) không cấp từ đăng ký công khai; cần phân quyền nội bộ.",
+      };
+    }
+    const unit = getAdministrativeUnitByCode(input.unitCode) ?? getAdministrativeUnitByCode("26041")!;
+    const cleanName = input.name.trim();
+    if (cleanName.length < 2) {
+      return { ok: false, message: "Vui lòng nhập họ tên tối thiểu 2 ký tự." };
+    }
+    const initials = cleanName
+      .split(/\s+/)
+      .slice(-2)
+      .map((s) => s[0]?.toUpperCase() ?? "")
+      .join("");
+    const roleMap: Record<"W01" | "W02" | "W03", string> = {
+      W01: "W01 · Cá nhân & Khách mua",
+      W02: "W02 · Nhà nông (Đăng ký Demo)",
+      W03: "W03 · Thanh niên Tình nguyện",
+    };
+    const roleKey = (input.requestedRole === "W02" || input.requestedRole === "W03"
+      ? input.requestedRole
+      : "W01") as "W01" | "W02" | "W03";
+
+    const created: DemoAuthAccount = {
+      id: `demo-custom-${Date.now()}`,
+      name: cleanName,
+      emailDemo: input.emailDemo.trim() || "thanhvien.moi@naifarm-demo.local",
+      roleLabel: roleMap[roleKey],
+      workspaceId: roleKey,
+      farmId: roleKey === "W02" ? "farm-ba-tu-demo" : undefined,
+      avatarText: initials || "ND",
+      avatarBg: roleKey === "W02" ? "#80520C" : roleKey === "W03" ? "#245B78" : "#245B3D",
+      unitCode: unit.maDvhc,
+      unitName: unit.tenDayDu,
+      bio: `Tài khoản trải nghiệm demo mới tạo tại ${unit.tenDayDu} (chỉ lưu trong trình duyệt).`,
+      canPublicSignUp: true,
+    };
+
+    workspaceTouchedRef.current = true;
+    setState((prev) => ({
+      ...prev,
+      demoAccounts: [created, ...prev.demoAccounts],
+      authUser: created,
+      activeWorkspace: created.workspaceId,
+    }));
+    return {
+      ok: true,
+      account: created,
+      message: `Đã kích hoạt tài khoản demo ${created.name} (${created.roleLabel}).`,
+    };
+  };
+
+  const signOutDemo = () => {
+    workspaceTouchedRef.current = true;
+    setState((prev) => ({
+      ...prev,
+      authUser: null,
+      activeWorkspace: "W01",
+    }));
+  };
+
+  const markNotificationRead = (id: string) => {
+    setState((prev) => ({
+      ...prev,
+      notifications: prev.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
+    }));
+  };
+
+  const markAllNotificationsRead = () => {
+    setState((prev) => ({
+      ...prev,
+      notifications: prev.notifications.map((n) => ({ ...n, read: true })),
+    }));
+  };
+
+  const addAddressEntry = (input: {
+    label: string;
+    recipientName: string;
+    phoneDemo: string;
+    detailAddress: string;
+    administrativeUnitCode: string;
+  }) => {
+    const unit = getAdministrativeUnitByCode(input.administrativeUnitCode);
+    if (!unit) {
+      return { ok: false, message: "Vui lòng chọn Phường/Xã hợp lệ thuộc Thành phố Đồng Nai." };
+    }
+    const created: AddressBookEntry = {
+      id: `ADDR-${Date.now()}`,
+      label: input.label.trim() || "Địa chỉ nhận hàng",
+      recipientName: input.recipientName.trim() || "Ngọc Linh",
+      phoneDemo: input.phoneDemo.trim() || "090x xxx 000 (Demo)",
+      detailAddress: input.detailAddress.trim(),
+      administrativeUnitCode: unit.maDvhc,
+      fullAddress: `${formatAdministrativeAddress(input.detailAddress, unit)} (Địa chỉ minh họa)`,
+      isDefault: false,
+    };
+    setState((prev) => ({
+      ...prev,
+      addressBook: [created, ...prev.addressBook],
+    }));
+    return { ok: true, message: `Đã lưu địa chỉ tại ${unit.tenDayDu}.` };
+  };
+
+  const removeAddressEntry = (id: string) => {
+    setState((prev) => ({
+      ...prev,
+      addressBook: prev.addressBook.filter((a) => a.id !== id),
+    }));
+  };
 
   const addToCart = (productId: string, quantity = 1, optionLabel?: string) => {
     const product = state.products.find((p) => p.id === productId);
     if (!product) return { ok: false, message: "Không tìm thấy sản phẩm." };
     if (product.stockKg <= 0 || product.seasonStatus !== "in_season") {
-      return { ok: false, message: "Sản phẩm đang hẹn mùa, chưa thể thêm vào giỏ." };
+      return { ok: false, message: "Sản phẩm đang hẹn mùa hoặc hết mùa, chưa thể thêm vào giỏ." };
     }
     const existing = state.cart.find((c) => c.productId === productId);
     const nextQty = (existing?.quantity ?? 0) + quantity;
@@ -230,7 +462,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       }
       return { ...prev, cart: nextCart };
     });
-    return { ok: true, message: `Đã thêm ${product.name} vào giỏ demo.` };
+    return { ok: true, message: `Đã thêm ${product.name} vào giỏ hàng demo.` };
   };
 
   const updateCartQty = (productId: string, nextQty: number) => {
@@ -314,14 +546,15 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     const subtotalVnd = items.reduce((sum, i) => sum + i.unitPriceVnd * i.quantity, 0);
     const shippingFeeVnd = input.deliveryMethod === "delivery" ? 20000 : 0;
     const totalVnd = subtotalVnd + shippingFeeVnd;
-    const newId = `NF-ORD-${String(10 + state.orders.length).padStart(2, "0")}`;
+    const newId = `NF-ORD-DEMO-${String(10 + state.orders.length).padStart(2, "0")}`;
 
     const newOrder: DemoOrder = {
       id: newId,
-      customerName: input.customerName.trim() || "Ngọc Linh (Demo)",
+      customerName: input.customerName.trim() || state.authUser?.name || "Ngọc Linh (Demo)",
       customerPhoneDemo: input.customerPhoneDemo.trim() || "090x xxx 128",
       farmId: items[0].farmId,
       farmName: items[0].farmName,
+      administrativeUnitCode: state.authUser?.unitCode ?? "26041",
       items: items.map((item) => ({
         productId: item.productId,
         productName: item.productName,
@@ -334,13 +567,14 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       deliveryAddress:
         input.deliveryMethod === "pickup"
           ? `Nhận trực tiếp tại ${items[0].farmName}`
-          : input.deliveryAddress.trim() || "Phường Tân Phong, TP. Biên Hòa (Địa chỉ demo)",
+          : input.deliveryAddress.trim() ||
+            "Số 12 Đường Hà Huy Giáp, Phường Trấn Biên, Thành phố Đồng Nai, Việt Nam (Địa chỉ minh họa)",
       subtotalVnd,
       shippingFeeVnd,
       totalVnd,
       paymentLabel: "COD Demo (Thanh toán mô phỏng khi nhận hàng)",
       status: "pending_confirm",
-      createdAtLabel: "24/11/2026 · Vừa đặt (Demo)",
+      createdAtLabel: "25/11/2026 · Vừa đặt (Demo)",
       timeline: [
         { step: "Khách đặt đơn COD (Demo)", time: "Vừa xong", done: true },
         { step: `${items[0].farmName} xác nhận đơn`, time: "Đang chờ", done: false },
@@ -426,16 +660,19 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       category: input.category,
       farmId: farm.id,
       farmName: farm.name,
-      region: farm.region,
+      administrativeUnitCode: farm.administrativeUnitCode,
+      administrativeUnitName: farm.administrativeUnitName,
+      region: farm.administrativeUnitName,
       unitLabel: input.unitLabel || "kg",
       priceVnd: input.priceVnd,
       stockKg: input.stockKg,
       seasonStatus: "in_season",
       batchCode: input.batchCode || "NF-DEMO-001",
       shortDescription: input.shortDescription,
-      storyNote: "Sản phẩm vừa được chú Ba Tư duyệt bản nháp AI và đăng từ Không gian Nhà nông (Demo).",
+      storyNote: "Sản phẩm vừa được nhà vườn duyệt bản nháp và đăng từ Không gian Nhà nông (Demo).",
       image: input.image || "/images/stitch/stitch-53.jpg",
       gallery: [input.image || "/images/stitch/stitch-53.jpg"],
+      tags: [input.name.toLowerCase(), farm.administrativeUnitName.toLowerCase()],
       isDemo: true,
     };
 
@@ -455,9 +692,140 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
               ...b,
               events: [...b.events, { ...event, id: `ev-${Date.now()}` }],
             }
-          : b
+          : b,
       ),
     }));
+  };
+
+  const addSeasonDiaryEntry = (input: AddSeasonDiaryInput) => {
+    const season =
+      state.seasons.find((s) => s.id === input.seasonId) ?? state.seasons[0];
+    const created: DiaryEntry = {
+      id: `DIARY-${Date.now()}`,
+      seasonId: season.id,
+      batchCode: input.batchCode,
+      farmId: season.farmId,
+      farmName: season.farmName,
+      dateLabel: "25/11/2026 · Vừa ghi nhận",
+      stage: input.stage,
+      title: input.title,
+      detail: input.detail,
+      actorName: input.actorName,
+      sourceDeclaration: input.sourceDeclaration,
+      photo: input.photo || "/images/stitch/stitch-32.jpg",
+      isDemo: true,
+    };
+
+    setState((prev) => ({
+      ...prev,
+      diaryEntries: [created, ...prev.diaryEntries],
+      batches: prev.batches.map((b) =>
+        b.batchCode === input.batchCode
+          ? {
+              ...b,
+              events: [
+                ...b.events,
+                {
+                  id: `ev-${created.id}`,
+                  dateLabel: created.dateLabel,
+                  stage: created.stage,
+                  title: created.title,
+                  detail: created.detail,
+                  actorCategory: created.actorName,
+                  sourceDeclaration: created.sourceDeclaration,
+                  photo: created.photo,
+                },
+              ],
+            }
+          : b,
+      ),
+    }));
+    return created;
+  };
+
+  const createProductionSeason = (input: {
+    farmId: string;
+    cropName: string;
+    variety: string;
+    seasonName: string;
+    expectedHarvestDate: string;
+    areaHa: number;
+    summary: string;
+  }) => {
+    const farm = state.farms.find((f) => f.id === input.farmId) ?? state.farms[1];
+    const created: ProductionSeason = {
+      id: `SEASON-${String(state.seasons.length + 1).padStart(2, "0")}`,
+      farmId: farm.id,
+      farmName: farm.name,
+      administrativeUnitCode: farm.administrativeUnitCode,
+      administrativeUnitName: farm.administrativeUnitName,
+      cropName: input.cropName,
+      variety: input.variety,
+      seasonName: input.seasonName,
+      startDate: "25/11/2026",
+      expectedHarvestDate: input.expectedHarvestDate,
+      areaHa: input.areaHa,
+      growingZoneCode: farm.growingZoneCode ?? `DEMO-MSVT-${farm.administrativeUnitCode}-01`,
+      status: "đang chăm sóc",
+      summary: input.summary,
+      batchCodes: [farm.id === "farm-ba-tu-demo" ? "NF-DEMO-001" : "NF-TT-2026-01"],
+      isDemo: true,
+    };
+    setState((prev) => ({
+      ...prev,
+      seasons: [created, ...prev.seasons],
+    }));
+    return created;
+  };
+
+  const addOrUpdateCertification = (input: {
+    farmId: string;
+    standardType: FarmCertification["standardType"];
+    status: CertificationStatus;
+    scopeSummary: string;
+  }) => {
+    const farm = state.farms.find((f) => f.id === input.farmId) ?? state.farms[1];
+    const labels: Record<CertificationStatus, string> = {
+      ocop_declared_demo: "Tự khai OCOP (Demo)",
+      vietgap_declared_demo: "Tự khai VietGAP (Demo)",
+      coop_checked_demo: "HTX đã đối chiếu nội bộ (Demo)",
+      pending_review: "Đang chờ đối chiếu hồ sơ (Demo)",
+      needs_revision: "Cần bổ sung chứng từ (Demo)",
+      expired_demo: "Hồ sơ mẫu đã hết hạn (Demo)",
+      unverified: "Chưa có chứng nhận chính thức",
+    };
+    const prefix =
+      input.standardType === "VietGAP"
+        ? "DEMO-VG"
+        : input.standardType === "OCOP"
+        ? "DEMO-OCOP"
+        : input.standardType === "Mã số vùng trồng"
+        ? "DEMO-MSVT"
+        : "DEMO-ATTP";
+
+    const created: FarmCertification = {
+      id: `CERT-${Date.now()}`,
+      farmId: farm.id,
+      farmName: farm.name,
+      administrativeUnitCode: farm.administrativeUnitCode,
+      administrativeUnitName: farm.administrativeUnitName,
+      standardType: input.standardType,
+      certificateCode: `${prefix}-${String(state.certifications.length + 1).padStart(3, "0")}`,
+      status: input.status,
+      statusLabel: labels[input.status],
+      scopeSummary: input.scopeSummary,
+      issuerLabel: "Nhà vườn cập nhật minh họa trên NaiFarm (Demo)",
+      issuedDateDemo: "25/11/2026",
+      validUntilDemo: "25/11/2028",
+      qrBatchCode: farm.id === "farm-ba-tu-demo" ? "NF-DEMO-001" : "NF-TT-2026-01",
+      disclaimer: "Hồ sơ chứng nhận minh họa — không có giá trị chứng nhận pháp lý.",
+      isDemo: true,
+    };
+    setState((prev) => ({
+      ...prev,
+      certifications: [created, ...prev.certifications],
+    }));
+    return created;
   };
 
   const submitSupportRequest = (req: Omit<SupportRequest, "id" | "status" | "createdAtLabel">) => {
@@ -465,7 +833,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       ...req,
       id: `REQ-DEMO-${String(state.supportRequests.length + 1).padStart(2, "0")}`,
       status: "Chờ điều phối phân công",
-      createdAtLabel: "24/11/2026 · Vừa gửi",
+      createdAtLabel: "25/11/2026 · Vừa gửi",
     };
     setState((prev) => ({
       ...prev,
@@ -478,7 +846,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({
       ...prev,
       missions: prev.missions.map((m) =>
-        m.id === missionId ? { ...m, status: "assigned", assigneeName: volunteerName } : m
+        m.id === missionId ? { ...m, status: "assigned", assigneeName: volunteerName } : m,
       ),
     }));
   };
@@ -487,7 +855,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     missionId: string,
     evidenceNote: string,
     hours: number,
-    evidenceImage = "/images/stitch/stitch-32.jpg"
+    evidenceImage = "/images/stitch/stitch-32.jpg",
   ) => {
     setState((prev) => ({
       ...prev,
@@ -501,7 +869,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
               evidenceImage,
               revisionReason: undefined,
             }
-          : m
+          : m,
       ),
     }));
   };
@@ -510,12 +878,12 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({
       ...prev,
       missions: prev.missions.map((m) =>
-        m.id === missionId ? { ...m, status: "farm_accepted" } : m
+        m.id === missionId ? { ...m, status: "farm_accepted" } : m,
       ),
       auditLogs: [
         {
           id: `AUD-${Date.now()}`,
-          time: "24/11/2026 Hiện tại",
+          time: "25/11/2026 Hiện tại",
           actor: "Nhà vườn (W02)",
           action: "CONFIRM_DELIVERABLE",
           target: missionId,
@@ -540,12 +908,12 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       missions: prev.missions.map((x) =>
         x.id === missionId
           ? { ...x, status: "coordinator_approved", approvedHours: x.submittedHours }
-          : x
+          : x,
       ),
       auditLogs: [
         {
           id: `AUD-${Date.now()}`,
-          time: "24/11/2026 Hiện tại",
+          time: "25/11/2026 Hiện tại",
           actor: "Thu Hà (Điều phối W04)",
           action: "APPROVE_HOURS_LEDGER",
           target: `${missionId} (+${m.submittedHours} giờ)`,
@@ -561,7 +929,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({
       ...prev,
       missions: prev.missions.map((x) =>
-        x.id === missionId ? { ...x, status: "revision_requested", revisionReason: reason } : x
+        x.id === missionId ? { ...x, status: "revision_requested", revisionReason: reason } : x,
       ),
     }));
   };
@@ -617,20 +985,20 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const reviewDocumentCase = (
     caseId: string,
     status: "Hồ sơ đã đối chiếu (Demo)" | "Yêu cầu bổ sung",
-    note: string
+    note: string,
   ) => {
     const targetCase = state.docCases.find((d) => d.id === caseId);
     setState((prev) => ({
       ...prev,
       docCases: prev.docCases.map((c) =>
-        c.id === caseId ? { ...c, status, reviewerNote: note } : c
+        c.id === caseId ? { ...c, status, reviewerNote: note } : c,
       ),
       farms:
         targetCase && status === "Hồ sơ đã đối chiếu (Demo)"
           ? prev.farms.map((f) =>
               f.id === targetCase.farmId
                 ? { ...f, ocopStatus: "coop_checked_demo", ocopLabel: "Hồ sơ đã đối chiếu (Demo)" }
-                : f
+                : f,
             )
           : prev.farms,
     }));
@@ -642,12 +1010,12 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({
       ...prev,
       adminGrants: prev.adminGrants.map((g) =>
-        g.id === grantId ? { ...g, active: !g.active, lastReason: reason } : g
+        g.id === grantId ? { ...g, active: !g.active, lastReason: reason } : g,
       ),
       auditLogs: [
         {
           id: `AUD-${Date.now()}`,
-          time: "24/11/2026 Hiện tại",
+          time: "25/11/2026 Hiện tại",
           actor: "Admin Demo (W06)",
           action: grant.active ? "REVOKE_GRANT_DEMO" : "ENABLE_GRANT_DEMO",
           target: grant.id,
@@ -658,13 +1026,49 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
+  const createSupportTicket = (input: {
+    requesterName: string;
+    roleLabel: string;
+    category: string;
+    subject: string;
+    administrativeUnitCode: string;
+    note: string;
+  }) => {
+    const unit = getAdministrativeUnitByCode(input.administrativeUnitCode);
+    const created: SupportTicket = {
+      id: `TKT-${String(state.tickets.length + 1).padStart(2, "0")}`,
+      requesterName: input.requesterName,
+      roleLabel: input.roleLabel,
+      category: input.category,
+      subject: input.subject,
+      administrativeUnitCode: unit?.maDvhc ?? "26041",
+      administrativeUnitName: unit?.tenDayDu ?? "Phường Trấn Biên",
+      status: "Mới tiếp nhận (Demo)",
+      priority: "Thường",
+      createdAtLabel: "25/11/2026 · Vừa gửi",
+      note: input.note,
+    };
+    setState((prev) => ({
+      ...prev,
+      tickets: [created, ...prev.tickets],
+    }));
+    return created;
+  };
+
+  const updateTicketStatus = (ticketId: string, status: SupportTicket["status"]) => {
+    setState((prev) => ({
+      ...prev,
+      tickets: prev.tickets.map((t) => (t.id === ticketId ? { ...t, status } : t)),
+    }));
+  };
+
   const resetDemoState = () => {
     const fresh = getInitialState();
     setState(fresh);
     try {
       window.localStorage.removeItem(STORAGE_KEY);
     } catch {
-      // Ignore
+      // Ignore storage errors
     }
   };
 
@@ -675,6 +1079,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         hydrated,
         setActiveWorkspace,
         setHideAiChatOnSubflow,
+        signInDemoAccount,
+        signUpDemoGuest,
+        signOutDemo,
+        markNotificationRead,
+        markAllNotificationsRead,
+        addAddressEntry,
+        removeAddressEntry,
         addToCart,
         updateCartQty,
         removeFromCart,
@@ -684,6 +1095,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         updateOrderStatus,
         publishFarmerProduct,
         addHarvestDiaryEvent,
+        addSeasonDiaryEntry,
+        createProductionSeason,
+        addOrUpdateCertification,
         submitSupportRequest,
         acceptMission,
         submitMissionEvidence,
@@ -694,6 +1108,8 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         submitExperienceBooking,
         reviewDocumentCase,
         toggleAdminGrant,
+        createSupportTicket,
+        updateTicketStatus,
         resetDemoState,
       }}
     >

@@ -2,28 +2,37 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import {
+  Award,
   Camera,
   CheckCircle2,
   FilePlus2,
   HandHelping,
   MapPin,
   PackageCheck,
+  Plus,
   QrCode,
   Radio,
-  ShieldCheck,
   UserCheck,
   XCircle,
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
+import { CertificationCard } from "@/components/traceability/CertificationCard";
+import { ProductionDiaryTimeline } from "@/components/traceability/ProductionDiaryTimeline";
+import { QrPassportCard } from "@/components/traceability/QrPassportCard";
 import { Badge, Button, Card, DemoBanner } from "@/components/ui/Primitives";
 import { formatVnd } from "@/lib/format";
-import type { DemoOrder, OrderStatus } from "@/types/naifarm";
+import type {
+  CertificationStatus,
+  DemoOrder,
+  DiaryEntry,
+  FarmCertification,
+  OrderStatus,
+} from "@/types/naifarm";
 
-type FarmerTab = "orders" | "diary" | "support" | "pass";
+type FarmerTab = "orders" | "diary" | "certs" | "support" | "pass";
 
 const ORDER_STATUS_META: Record<
   OrderStatus,
@@ -49,12 +58,17 @@ export default function FarmerWorkspacePage() {
     farms,
     products,
     batches,
+    seasons,
+    diaryEntries,
+    certifications,
     orders,
     missions,
     supportRequests,
     setActiveWorkspace,
     updateOrderStatus,
-    addHarvestDiaryEvent,
+    addSeasonDiaryEntry,
+    createProductionSeason,
+    addOrUpdateCertification,
     submitSupportRequest,
     confirmMissionByFarmer,
   } = useDemoStore();
@@ -65,11 +79,21 @@ export default function FarmerWorkspacePage() {
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState(QUICK_CANCEL_REASONS[0]);
 
-  // Harvest Diary form
+  // Harvest Seasons & Diary form
+  const [diaryStage, setDiaryStage] = useState<DiaryEntry["stage"]>("Thu hoạch & Đóng gói");
   const [diaryBatchCode, setDiaryBatchCode] = useState("NF-DEMO-001");
   const [diaryTitle, setDiaryTitle] = useState("Kiểm tra độ chín & hái lứa mới sáng nay");
   const [diaryDetail, setDiaryDetail] = useState(
-    "Nhà vườn tự khai: thu hái thủ công vào sáng sớm, xếp sọt thoáng và đóng gói theo đơn đặt."
+    "Nhà vườn tự khai: thu hái thủ công vào sáng sớm, xếp sọt thoáng và đóng gói theo đơn đặt.",
+  );
+  const [newSeasonCrop, setNewSeasonCrop] = useState("");
+  const [newSeasonName, setNewSeasonName] = useState("");
+
+  // Certification Demo Form
+  const [certStd, setCertStd] = useState<FarmCertification["standardType"]>("VietGAP");
+  const [certStatus, setCertStatus] = useState<CertificationStatus>("vietgap_declared_demo");
+  const [certScope, setCertScope] = useState(
+    "Hồ sơ tự khai quy trình chăm sóc an toàn cho lứa thu hoạch cuối năm (Demo).",
   );
 
   // Youth Support request form (S12)
@@ -86,6 +110,13 @@ export default function FarmerWorkspacePage() {
 
   const activeFarm = farms.find((f) => f.id === selectedFarmId) ?? farms[0];
   const farmProducts = products.filter((p) => p.farmId === activeFarm.id);
+  const farmSeasons = seasons.filter((s) => s.farmId === activeFarm.id);
+  const farmDiaries = diaryEntries.filter((d) => d.farmId === activeFarm.id);
+  const farmCerts = certifications.filter((c) => c.farmId === activeFarm.id);
+  const primaryBatch =
+    batches.find((b) => b.batchCode === diaryBatchCode && b.farmId === activeFarm.id) ??
+    batches.find((b) => b.farmId === activeFarm.id) ??
+    batches[0];
   const visibleOrders = showAllOrders
     ? orders
     : orders.filter((o) => o.farmId === activeFarm.id || o.id === "NF-ORD-DEMO-01");
@@ -132,15 +163,50 @@ export default function FarmerWorkspacePage() {
       toast.error("Bác vui lòng nhập tiêu đề và nội dung mốc nhật ký.");
       return;
     }
-    addHarvestDiaryEvent(diaryBatchCode, {
-      dateLabel: "24/11/2026 (Mới ghi)",
+    const targetSeason = farmSeasons[0] ?? seasons[0];
+    const targetBatchCode = primaryBatch?.batchCode ?? diaryBatchCode;
+    addSeasonDiaryEntry({
+      seasonId: targetSeason.id,
+      batchCode: targetBatchCode,
+      stage: diaryStage,
       title: diaryTitle.trim(),
       detail: diaryDetail.trim(),
-      actorCategory: `${activeFarm.ownerName} (Chủ vườn W02)`,
+      actorName: `${activeFarm.ownerName} (Chủ vườn W02)`,
       sourceDeclaration: "Nhà vườn tự khai",
       photo: "/images/stitch/stitch-53.jpg",
     });
-    toast.success(`Đã ghi thêm mốc nhật ký vào lô ${diaryBatchCode}.`);
+    toast.success(`Đã ghi nhật ký hôm nay vào mùa vụ & đồng bộ tem QR lô ${targetBatchCode}.`);
+  };
+
+  const handleCreateSeason = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSeasonCrop.trim() || !newSeasonName.trim()) {
+      toast.error("Bác vui lòng nhập tên cây trồng và tên mùa vụ mới.");
+      return;
+    }
+    const created = createProductionSeason({
+      farmId: activeFarm.id,
+      cropName: newSeasonCrop.trim(),
+      variety: activeFarm.mainCrops[0] ?? "Giống địa phương",
+      seasonName: newSeasonName.trim(),
+      expectedHarvestDate: "30/01/2027",
+      areaHa: activeFarm.areaHa,
+      summary: `Mùa vụ mới do ${activeFarm.ownerName} tạo trên Không gian Nhà vườn.`,
+    });
+    setNewSeasonCrop("");
+    setNewSeasonName("");
+    toast.success(`Đã tạo mùa vụ ${created.seasonName}.`);
+  };
+
+  const handleAddCertification = (e: React.FormEvent) => {
+    e.preventDefault();
+    const created = addOrUpdateCertification({
+      farmId: activeFarm.id,
+      standardType: certStd,
+      status: certStatus,
+      scopeSummary: certScope.trim() || `Hồ sơ minh họa cho ${activeFarm.name}`,
+    });
+    toast.success(`Đã ghi nhận hồ sơ mẫu ${created.certificateCode} (${created.statusLabel}).`);
   };
 
   const handleSendSupport = (e: React.FormEvent) => {
@@ -185,11 +251,18 @@ export default function FarmerWorkspacePage() {
           icon: <PackageCheck className="h-5 w-5" aria-hidden="true" />,
         },
         {
-          label: "Nhật ký thu hoạch",
+          label: `Mùa vụ & Nhật ký (${farmDiaries.length})`,
           href: "#diary",
           active: activeTab === "diary",
           onClick: () => setActiveTab("diary"),
           icon: <FilePlus2 className="h-5 w-5" aria-hidden="true" />,
+        },
+        {
+          label: `Chứng nhận (Demo · ${farmCerts.length})`,
+          href: "#certs",
+          active: activeTab === "certs",
+          onClick: () => setActiveTab("certs"),
+          icon: <Award className="h-5 w-5" aria-hidden="true" />,
         },
         {
           label: `Thanh niên hỗ trợ (${pendingConfirmMissions.length})`,
@@ -199,7 +272,7 @@ export default function FarmerWorkspacePage() {
           icon: <HandHelping className="h-5 w-5" aria-hidden="true" />,
         },
         {
-          label: "Thẻ Nhà vườn & QR",
+          label: "Thẻ Nhà vườn & In QR",
           href: "#pass",
           active: activeTab === "pass",
           onClick: () => setActiveTab("pass"),
@@ -623,135 +696,204 @@ export default function FarmerWorkspacePage() {
           </section>
         ) : null}
 
-        {/* TAB 3: HARVEST DIARY (S30) */}
+        {/* TAB 3: PRODUCTION SEASONS & DIARY */}
         {activeTab === "diary" ? (
-          <section id="diary" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <Card className="p-5 sm:p-6">
-              <h3 className="mb-4 text-xl font-bold text-[#25352B]">
-                Ghi thêm mốc Nhật ký thu hoạch (tự đồng bộ tem QR)
+          <section id="diary" className="space-y-6">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <Card className="p-5 sm:p-6">
+                <h3 className="mb-4 text-xl font-bold text-[#25352B]">
+                  Ghi nhật ký hôm nay (Đồng bộ thẳng ra Hộ chiếu QR)
+                </h3>
+                <form onSubmit={handleAddDiary} className="space-y-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <label htmlFor="diary-batch" className="mb-1.5 block font-semibold text-[#25352B]">
+                        Chọn mã lô sản phẩm
+                      </label>
+                      <select
+                        id="diary-batch"
+                        value={primaryBatch?.batchCode ?? diaryBatchCode}
+                        onChange={(e) => setDiaryBatchCode(e.target.value)}
+                        className="min-h-[50px] w-full rounded-[12px] border border-[#D6DED2] bg-white px-3.5 text-base text-[#25352B]"
+                      >
+                        {batches
+                          .filter((b) => b.farmId === activeFarm.id)
+                          .map((b) => (
+                            <option key={b.batchCode} value={b.batchCode}>
+                              {b.batchCode} — {b.productName}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="diary-stage" className="mb-1.5 block font-semibold text-[#25352B]">
+                        Công đoạn canh tác
+                      </label>
+                      <select
+                        id="diary-stage"
+                        value={diaryStage}
+                        onChange={(e) => setDiaryStage(e.target.value as DiaryEntry["stage"])}
+                        className="min-h-[50px] w-full rounded-[12px] border border-[#D6DED2] bg-white px-3.5 text-base text-[#25352B]"
+                      >
+                        <option value="Làm đất & Tỉa cành">Làm đất &amp; Tỉa cành</option>
+                        <option value="Bón phân hữu cơ">Bón phân hữu cơ</option>
+                        <option value="Kiểm soát sinh học">Kiểm soát sinh học</option>
+                        <option value="Tưới & Chăm sóc">Tưới &amp; Chăm sóc</option>
+                        <option value="Đo độ Brix & Khảo sát">Đo độ Brix &amp; Khảo sát</option>
+                        <option value="Thu hoạch & Đóng gói">Thu hoạch &amp; Đóng gói</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="diary-title" className="mb-1.5 block font-semibold text-[#25352B]">
+                      Tên công việc hôm nay
+                    </label>
+                    <input
+                      id="diary-title"
+                      value={diaryTitle}
+                      onChange={(e) => setDiaryTitle(e.target.value)}
+                      className="min-h-[50px] w-full rounded-[12px] border border-[#D6DED2] bg-white px-3.5 text-base text-[#25352B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="diary-detail" className="mb-1.5 block font-semibold text-[#25352B]">
+                      Mô tả ngắn thực tế tại vườn
+                    </label>
+                    <textarea
+                      id="diary-detail"
+                      rows={3}
+                      value={diaryDetail}
+                      onChange={(e) => setDiaryDetail(e.target.value)}
+                      className="w-full rounded-[12px] border border-[#D6DED2] bg-white p-3.5 text-base text-[#25352B]"
+                    />
+                  </div>
+
+                  <Button type="submit" variant="farmer" className="w-full">
+                    Lưu nhật ký hôm nay &amp; đồng bộ QR ({primaryBatch?.batchCode ?? diaryBatchCode})
+                  </Button>
+                </form>
+
+                <form onSubmit={handleCreateSeason} className="mt-6 space-y-3 border-t border-[#D6DED2] pt-5">
+                  <p className="flex items-center gap-1.5 text-base font-bold text-[#25352B]">
+                    <Plus className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
+                    <span>Mở nhanh Mùa vụ mới ({farmSeasons.length} mùa đang theo dõi)</span>
+                  </p>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <input
+                      type="text"
+                      value={newSeasonCrop}
+                      onChange={(e) => setNewSeasonCrop(e.target.value)}
+                      placeholder="Cây trồng (vd: Sầu riêng Ri6)"
+                      className="min-h-[44px] rounded-[10px] border border-[#D6DED2] bg-white px-3 text-sm"
+                    />
+                    <input
+                      type="text"
+                      value={newSeasonName}
+                      onChange={(e) => setNewSeasonName(e.target.value)}
+                      placeholder="Tên vụ (vd: Vụ Hè Thu 2027)"
+                      className="min-h-[44px] rounded-[10px] border border-[#D6DED2] bg-white px-3 text-sm"
+                    />
+                  </div>
+                  <Button type="submit" variant="secondary" className="w-full">
+                    Tạo mùa vụ theo dõi mới
+                  </Button>
+                </form>
+              </Card>
+
+              <Card className="p-5 sm:p-6">
+                <div className="mb-4 flex items-center justify-between gap-2">
+                  <h3 className="text-xl font-bold text-[#25352B]">
+                    Nhật ký mùa vụ · {activeFarm.name}
+                  </h3>
+                  <Link
+                    href={`/trace/${primaryBatch?.batchCode ?? diaryBatchCode}`}
+                    className="text-sm font-bold text-[#245B3D] underline"
+                  >
+                    Mở Hộ chiếu QR công khai →
+                  </Link>
+                </div>
+                <ProductionDiaryTimeline entries={farmDiaries} limit={8} />
+              </Card>
+            </div>
+          </section>
+        ) : null}
+
+        {/* TAB 4: VIETGAP & OCOP CERTIFICATIONS (DEMO) */}
+        {activeTab === "certs" ? (
+          <section id="certs" className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            <Card className="h-fit space-y-4 p-5 sm:p-6 lg:col-span-5">
+              <h3 className="text-xl font-bold text-[#25352B]">
+                Khai báo / Cập nhật hồ sơ VietGAP &amp; OCOP (Demo)
               </h3>
-              <form onSubmit={handleAddDiary} className="space-y-4">
+              <p className="text-xs leading-relaxed text-[#52645A]">
+                Hệ thống tách bạch rõ: Nhãn tự khai, Đối chiếu nội bộ HTX và Mã số vùng trồng — tất
+                cả mã tạo mới đều mang tiền tố <code>DEMO-*</code> và không thay thế văn bản pháp lý.
+              </p>
+              <form onSubmit={handleAddCertification} className="space-y-3">
                 <div>
-                  <label htmlFor="diary-batch" className="mb-1.5 block font-semibold text-[#25352B]">
-                    Chọn mã lô nông sản
+                  <label htmlFor="cert-std" className="block text-sm font-semibold text-[#25352B]">
+                    Loại tiêu chuẩn / Hồ sơ
                   </label>
                   <select
-                    id="diary-batch"
-                    value={diaryBatchCode}
-                    onChange={(e) => setDiaryBatchCode(e.target.value)}
-                    className="min-h-[50px] w-full rounded-[12px] border border-[#D6DED2] bg-white px-3.5 text-base text-[#25352B]"
+                    id="cert-std"
+                    value={certStd}
+                    onChange={(e) => setCertStd(e.target.value as FarmCertification["standardType"])}
+                    className="mt-1 min-h-[46px] w-full rounded-[10px] border border-[#D6DED2] bg-white px-3 text-sm"
                   >
-                    {batches.map((b) => (
-                      <option key={b.batchCode} value={b.batchCode}>
-                        {b.batchCode} — {b.productName} ({b.farmName})
-                      </option>
-                    ))}
+                    <option value="VietGAP">VietGAP (Tham khảo thực hành tốt)</option>
+                    <option value="OCOP">OCOP Thanh niên (Mẫu tham khảo)</option>
+                    <option value="Mã số vùng trồng">Mã số vùng trồng</option>
+                    <option value="ATTP cơ sở">ATTP cơ sở</option>
                   </select>
                 </div>
-
                 <div>
-                  <label htmlFor="diary-title" className="mb-1.5 block font-semibold text-[#25352B]">
-                    Tên công việc hôm nay
+                  <label htmlFor="cert-st" className="block text-sm font-semibold text-[#25352B]">
+                    Trạng thái xác minh hiện tại
                   </label>
-                  <input
-                    id="diary-title"
-                    value={diaryTitle}
-                    onChange={(e) => setDiaryTitle(e.target.value)}
-                    className="min-h-[50px] w-full rounded-[12px] border border-[#D6DED2] bg-white px-3.5 text-base text-[#25352B]"
-                  />
+                  <select
+                    id="cert-st"
+                    value={certStatus}
+                    onChange={(e) => setCertStatus(e.target.value as CertificationStatus)}
+                    className="mt-1 min-h-[46px] w-full rounded-[10px] border border-[#D6DED2] bg-white px-3 text-sm"
+                  >
+                    <option value="vietgap_declared_demo">Tự khai VietGAP (Demo)</option>
+                    <option value="ocop_declared_demo">Tự khai OCOP (Demo)</option>
+                    <option value="coop_checked_demo">HTX đã đối chiếu nội bộ (Demo)</option>
+                    <option value="pending_review">Đang chờ đối chiếu hồ sơ (Demo)</option>
+                  </select>
                 </div>
-
                 <div>
-                  <label htmlFor="diary-detail" className="mb-1.5 block font-semibold text-[#25352B]">
-                    Mô tả ngắn thực tế tại vườn
+                  <label htmlFor="cert-scope" className="block text-sm font-semibold text-[#25352B]">
+                    Phạm vi áp dụng trên vườn
                   </label>
                   <textarea
-                    id="diary-detail"
+                    id="cert-scope"
                     rows={3}
-                    value={diaryDetail}
-                    onChange={(e) => setDiaryDetail(e.target.value)}
-                    className="w-full rounded-[12px] border border-[#D6DED2] bg-white p-3.5 text-base text-[#25352B]"
+                    value={certScope}
+                    onChange={(e) => setCertScope(e.target.value)}
+                    className="mt-1 w-full rounded-[10px] border border-[#D6DED2] bg-white p-3 text-sm"
                   />
                 </div>
-
                 <Button type="submit" variant="farmer" className="w-full">
-                  Lưu mốc nhật ký vào lô {diaryBatchCode}
+                  Lưu hồ sơ chứng nhận minh họa
                 </Button>
               </form>
             </Card>
 
-            <Card className="p-5 sm:p-6">
-              <div className="mb-4 flex items-center justify-between gap-2">
-                <h3 className="text-xl font-bold text-[#25352B]">Lịch sử lô {diaryBatchCode}</h3>
-                <Link
-                  href={`/trace/${diaryBatchCode}`}
-                  className="text-sm font-bold text-[#245B3D] underline"
-                >
-                  Mở trang QR công khai
-                </Link>
-              </div>
-
-              {(() => {
-                const currentBatch =
-                  batches.find((b) => b.batchCode === diaryBatchCode) ?? batches[0];
-                return (
-                  <ol className="space-y-3">
-                    {currentBatch.events.map((ev) => (
-                      <li
-                        key={ev.id}
-                        className="rounded-[12px] border border-[#D6DED2] bg-[#F5F3E9] p-3.5"
-                      >
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="tabular-nums text-xs font-bold text-[#245B3D]">
-                            {ev.dateLabel}
-                          </span>
-                          <Badge tone="neutral">{ev.sourceDeclaration}</Badge>
-                        </div>
-                        <p className="mt-1 font-bold text-[#25352B]">{ev.title}</p>
-                        <p className="text-sm text-[#52645A]">{ev.detail}</p>
-                      </li>
-                    ))}
-                  </ol>
-                );
-              })()}
-            </Card>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:col-span-7">
+              {farmCerts.map((cert) => (
+                <CertificationCard key={cert.id} cert={cert} />
+              ))}
+            </div>
           </section>
         ) : null}
 
-        {/* TAB 4: FARMER PASS & PRODUCTS (S25) */}
+        {/* TAB 5: FARMER PASS, REAL QR & PRODUCTS (S25) */}
         {activeTab === "pass" ? (
-          <section id="pass" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <Card className="p-6">
-              <div className="mb-4 flex items-center justify-between gap-2">
-                <h3 className="text-xl font-bold text-[#25352B]">Thẻ Nhà vườn Số (Farmer Pass)</h3>
-                <Badge tone="info">Mã trình diễn</Badge>
-              </div>
-              <div className="flex flex-col items-center gap-5 sm:flex-row">
-                <div className="rounded-[14px] border border-[#D6DED2] bg-white p-3.5">
-                  <QRCodeSVG
-                    value={`https://naifarm-demo.local/farms/${activeFarm.slug}`}
-                    size={132}
-                    bgColor="#FFFFFF"
-                    fgColor="#000000"
-                    level="M"
-                    marginSize={3}
-                    title={`QR Thẻ Nhà vườn ${activeFarm.name}`}
-                  />
-                </div>
-                <div className="space-y-2 text-base">
-                  <p className="text-xl font-bold text-[#25352B]">{activeFarm.name}</p>
-                  <p className="text-[#52645A]">
-                    Chủ vườn: <span className="font-semibold text-[#25352B]">{activeFarm.ownerName}</span>{" "}
-                    ({activeFarm.ownerAgeLabel})
-                  </p>
-                  <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#245B3D]">
-                    <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                    {activeFarm.ocopLabel}
-                  </p>
-                  <p className="text-xs text-[#52645A]">{activeFarm.ocopNote}</p>
-                </div>
-              </div>
-            </Card>
+          <section id="pass" className="space-y-6">
+            {primaryBatch ? <QrPassportCard batch={primaryBatch} /> : null}
 
             <Card className="p-6">
               <div className="mb-4 flex items-center justify-between gap-2">

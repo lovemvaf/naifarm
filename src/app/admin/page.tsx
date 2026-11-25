@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { History, KeyRound, Lock, ShieldCheck } from "lucide-react";
+import { History, KeyRound, Lock, ShieldCheck, Ticket } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
+import { AdministrativeBoundaryLayer } from "@/components/map/AdministrativeBoundaryLayer";
 import { Badge, Button, Card } from "@/components/ui/Primitives";
 
 export default function AdminWorkspacePage() {
@@ -12,8 +13,10 @@ export default function AdminWorkspacePage() {
     hydrated,
     adminGrants,
     auditLogs,
+    tickets,
     setActiveWorkspace,
     toggleAdminGrant,
+    updateTicketStatus,
   } = useDemoStore();
 
   const [pendingGrantId, setPendingGrantId] = useState<string | null>(null);
@@ -62,9 +65,15 @@ export default function AdminWorkspacePage() {
           href: "#audit-logs",
           icon: <History className="h-4 w-4" aria-hidden="true" />,
         },
+        {
+          label: `Phiếu hỗ trợ (${tickets.length})`,
+          href: "#tickets",
+          icon: <Ticket className="h-4 w-4" aria-hidden="true" />,
+        },
       ]}
     >
       <div className="space-y-6">
+        <AdministrativeBoundaryLayer />
         {/* Scoped Capability Grants Matrix (S66-S68) */}
         <section id="grants" className="space-y-4">
           <div className="flex items-center justify-between gap-2">
@@ -199,6 +208,73 @@ export default function AdminWorkspacePage() {
               </table>
             </div>
           </Card>
+        </section>
+
+        {/* Support Tickets Queue (W06) */}
+        <section id="tickets" className="space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-xl font-bold text-[#25352B]">
+              Phiếu Hỗ trợ &amp; Rà soát Địa giới ({tickets.length})
+            </h2>
+            <Badge tone="info">Kênh điều phối nội bộ Demo</Badge>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {tickets.map((tkt) => (
+              <Card key={tkt.id} className="space-y-2 p-4 text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="tabular-nums font-bold text-[#245B3D]">{tkt.id}</span>
+                  <div className="flex items-center gap-1.5">
+                    <Badge tone={tkt.priority === "Ưu tiên" ? "warning" : "neutral"}>
+                      {tkt.priority}
+                    </Badge>
+                    <Badge
+                      tone={
+                        tkt.status === "Đã phản hồi"
+                          ? "success"
+                          : tkt.status === "Đang xử lý"
+                          ? "info"
+                          : "warning"
+                      }
+                    >
+                      {tkt.status}
+                    </Badge>
+                  </div>
+                </div>
+                <p className="text-sm font-bold text-[#25352B]">{tkt.subject}</p>
+                <p className="text-[#52645A]">
+                  {tkt.requesterName} ({tkt.roleLabel}) · {tkt.administrativeUnitName} (
+                  {tkt.administrativeUnitCode})
+                </p>
+                <p className="rounded-lg bg-[#FAF8F1] p-2.5 text-[#52645A]">{tkt.note}</p>
+                {tkt.status !== "Đã phản hồi" ? (
+                  <div className="flex gap-2 pt-1">
+                    {tkt.status === "Mới tiếp nhận (Demo)" ? (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          updateTicketStatus(tkt.id, "Đang xử lý");
+                          toast.info(`Đã tiếp nhận xử lý ${tkt.id}`);
+                        }}
+                      >
+                        Nhận xử lý
+                      </Button>
+                    ) : null}
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        updateTicketStatus(tkt.id, "Đã phản hồi");
+                        toast.success(`Đã đánh dấu hoàn tất ${tkt.id}`);
+                      }}
+                    >
+                      Đánh dấu đã phản hồi
+                    </Button>
+                  </div>
+                ) : null}
+              </Card>
+            ))}
+          </div>
         </section>
       </div>
     </WorkspaceShell>

@@ -19,24 +19,25 @@ import { Badge, Button, Card, DemoBanner } from "@/components/ui/Primitives";
 const DEMO_FLOWS = [
   {
     code: "Flow A",
-    title: "Khám phá Chợ → Nhà vườn Ba Tư / Chú Ba Minh → Sản phẩm → Quét QR & 3D",
-    desc: "Kiểm chứng bố cục 60/40, tách biệt tự khai vs đối chiếu, QR SVG thật trên lô NF-DEMO-001 và mô hình 3D Bưởi Tân Triều.",
+    title: "Khám phá Chợ → Nhà vườn Ba Tư / Chú Ba Minh → Sản phẩm → Quét QR & Giải phẫu 2D",
+    desc: "Kiểm chứng bố cục 60/40, tách biệt tự khai vs đối chiếu, QR PNG/SVG thật trên lô NF-DEMO-001, trình quét /trace/scan và sơ đồ 2D Bưởi Tân Triều.",
     links: [
       { label: "Trang chủ (/)", href: "/" },
       { label: "Vườn Ba Tư", href: "/farms/nha-vuon-ba-tu-long-khanh" },
-      { label: "Bưởi Tân Triều + 3D", href: "/products/buoi-da-xanh-tan-trieu" },
+      { label: "Bưởi Tân Triều + 2D", href: "/products/buoi-da-xanh-tan-trieu" },
+      { label: "Quét mã QR (/trace/scan)", href: "/trace/scan" },
       { label: "Truy xuất NF-DEMO-001", href: "/trace/NF-DEMO-001" },
     ],
   },
   {
     code: "Flow B",
-    title: "Giỏ hàng → Thanh toán COD Demo ↔ Nhà vườn Xử lý đơn (W01 ↔ W02)",
-    desc: "Thêm sản phẩm vào giỏ, đặt hàng tại /checkout, chuyển trạng thái ở /farmer và thấy đồng bộ ngay tại /account/orders.",
+    title: "Giỏ hàng → Thanh toán COD Demo ↔ Nhà vườn Xử lý đơn & Mùa vụ (W01 ↔ W02)",
+    desc: "Thêm sản phẩm vào giỏ, đặt hàng tại /checkout, chuyển trạng thái ở /farmer, ghi nhật ký mùa vụ đồng bộ QR và xem tại /account/orders.",
     links: [
+      { label: "Đăng nhập Demo 6 vai trò (/sign-in)", href: "/sign-in" },
       { label: "Giỏ hàng (/cart)", href: "/cart" },
       { label: "Thanh toán (/checkout)", href: "/checkout" },
-      { label: "Đơn của Khách (/account/orders)", href: "/account/orders" },
-      { label: "Xử lý đơn W02 (/farmer)", href: "/farmer" },
+      { label: "Xử lý đơn & Mùa vụ W02 (/farmer)", href: "/farmer" },
     ],
   },
   {
@@ -45,7 +46,7 @@ const DEMO_FLOWS = [
     desc: "Nút 56px dễ bấm, chế độ lỗi mic dự phòng, AI gợi ý bản nháp có cảnh báo minh họa, đăng bán lên ngay Chợ /marketplace.",
     links: [
       { label: "Mở Wizard 3 bước (/farmer/publish)", href: "/farmer/publish" },
-      { label: "Xem trên Chợ (/marketplace)", href: "/marketplace" },
+      { label: "Xem Chợ 103 sản phẩm (/marketplace)", href: "/marketplace" },
     ],
   },
   {
@@ -60,12 +61,13 @@ const DEMO_FLOWS = [
   },
   {
     code: "Flow E–G",
-    title: "Bản đồ số Đồng Nai, Livestream Replay & Góc học mở 3D",
-    desc: "Split map + đặt lịch trải nghiệm (/explore), phòng replay ghim giỏ (/live), bài học hạt điều + Quiz + 3D (/learn).",
+    title: "Bản đồ OpenStreetMap + GPS thực, Livestream Replay & Góc học mở 2D",
+    desc: "Bản đồ OSM thực 95 Phường/Xã + đo khoảng cách đường chim bay GPS (/explore), phòng replay (/live), 12 chuyên đề & 2D (/learn).",
     links: [
-      { label: "Bản đồ & Du lịch (/explore)", href: "/explore" },
+      { label: "Bản đồ OSM & GPS (/explore)", href: "/explore" },
+      { label: "Tìm kiếm toàn cục (/search)", href: "/search?q=Phuoc+Son" },
       { label: "Livestream OCOP (/live)", href: "/live" },
-      { label: "Góc học mở (/learn)", href: "/learn" },
+      { label: "Góc học mở 2D (/learn)", href: "/learn" },
     ],
   },
   {

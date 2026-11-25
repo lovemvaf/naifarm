@@ -19,17 +19,18 @@ import { toast } from "sonner";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { formatVnd } from "@/lib/format";
 import { QrPassportCard } from "@/components/traceability/QrPassportCard";
-import { PomeloViewer3DHost } from "@/components/three/PomeloViewer3DHost";
+import { CertificationCard } from "@/components/traceability/CertificationCard";
+import { ProduceAnatomy2D } from "@/components/products/ProduceAnatomy2D";
+import { ProductGallery2D } from "@/components/products/ProductGallery2D";
 import { Badge, Button, Card, EmptyState } from "@/components/ui/Primitives";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const router = useRouter();
-  const { products, farms, batches, addToCart, toggleFollowSeason, followedProductIds } =
+  const { products, farms, batches, certifications, addToCart, toggleFollowSeason, followedProductIds } =
     useDemoStore();
 
   const product = products.find((p) => p.slug === slug);
-  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
   const [qty, setQty] = useState(2);
 
   if (!product) {
@@ -54,10 +55,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
   const farm = farms.find((f) => f.id === product.farmId);
   const batch = batches.find((b) => b.batchCode === product.batchCode) ?? batches[0];
+  const farmCerts = certifications.filter((c) => c.farmId === product.farmId);
   const isAvailable = product.seasonStatus === "in_season" && product.stockKg > 0;
   const isFollowed = followedProductIds.includes(product.id);
   const gallery = product.gallery.length > 0 ? product.gallery : [product.image];
-  const activePhoto = gallery[selectedImageIdx] ?? product.image;
 
   return (
     <div className="mx-auto max-w-[1280px] space-y-10 px-4 py-6 lg:px-8">
@@ -71,30 +72,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
 
       {/* Main Product Section */}
       <section className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-        <div className="space-y-3 lg:col-span-6">
-          <div className="overflow-hidden rounded-[20px] border border-[#D6DED2] bg-white">
-            <img
-              src={activePhoto}
-              alt={product.name}
-              className="aspect-[4/3] w-full object-cover"
-            />
-          </div>
-          {gallery.length > 1 ? (
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {gallery.map((img, i) => (
-                <button
-                  key={img + i}
-                  type="button"
-                  onClick={() => setSelectedImageIdx(i)}
-                  className={`h-20 w-24 shrink-0 overflow-hidden rounded-[12px] border-2 cursor-pointer ${
-                    selectedImageIdx === i ? "border-[#245B3D]" : "border-[#D6DED2]"
-                  }`}
-                >
-                  <img src={img} alt={`${product.name} góc ${i + 1}`} className="h-full w-full object-cover" />
-                </button>
-              ))}
-            </div>
-          ) : null}
+        <div className="lg:col-span-6">
+          <ProductGallery2D images={gallery} productName={product.name} />
         </div>
 
         <div className="space-y-5 lg:col-span-6">
@@ -250,13 +229,21 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
         </div>
       </section>
 
-      {/* Optional Lazy-Loaded Interactive 3D Pomelo Model for Tan Trieu Citrus */}
-      {product.has3DViewer ? (
-        <section aria-labelledby="p3d-heading" className="space-y-3">
-          <h2 id="p3d-heading" className="text-xl font-bold text-[#25352B]">
-            Xem cấu tạo nông sản tương tác 3D (NaiExplore)
+      {/* 2D Interactive Produce Anatomy & Farm Certification Showcase */}
+      {product.anatomyType ? (
+        <ProduceAnatomy2D initialProduce={product.anatomyType} allowSwitch={false} />
+      ) : null}
+
+      {farmCerts.length > 0 ? (
+        <section aria-labelledby="prod-certs-heading" className="space-y-3">
+          <h2 id="prod-certs-heading" className="text-xl font-bold text-[#25352B]">
+            Hồ sơ chứng nhận &amp; Vùng trồng tham khảo (Demo)
           </h2>
-          <PomeloViewer3DHost />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {farmCerts.map((cert) => (
+              <CertificationCard key={cert.id} cert={cert} />
+            ))}
+          </div>
         </section>
       ) : null}
 

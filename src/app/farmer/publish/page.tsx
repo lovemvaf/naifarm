@@ -176,7 +176,7 @@ export default function FarmerPublishWizardPage() {
       );
     } else if (lower.includes("điều")) {
       setDraftName("Hạt điều rang củi vỏ lụa Đồng Nai");
-      setDraftCategory("Hạt & Cà phê");
+      setDraftCategory("Hạt điều & Rang củi");
       setDraftDescription(
         `AI gợi ý từ mô tả của bác: Hạt điều rang củi giữ nguyên vỏ lụa giòn bùi ("${spokenText}").`
       );
@@ -567,8 +567,15 @@ export default function FarmerPublishWizardPage() {
                         className="min-h-[50px] w-full rounded-[12px] border border-[#D6DED2] bg-white px-4 text-base text-[#25352B]"
                       >
                         <option value="Trái cây tươi">Trái cây tươi</option>
-                        <option value="Hạt & Cà phê">Hạt & Cà phê</option>
-                        <option value="Mật ong & Đặc sản">Mật ong & Đặc sản</option>
+                        <option value="Bưởi & Cây có múi">Bưởi &amp; Cây có múi</option>
+                        <option value="Chôm chôm & Sầu riêng">Chôm chôm &amp; Sầu riêng</option>
+                        <option value="Hạt điều & Rang củi">Hạt điều &amp; Rang củi</option>
+                        <option value="Cà phê & Ca cao">Cà phê &amp; Ca cao</option>
+                        <option value="Mật ong & Rượu trái cây">Mật ong &amp; Rượu trái cây</option>
+                        <option value="Nông sản chế biến & Mứt">Nông sản chế biến &amp; Mứt</option>
+                        <option value="Rau củ & Nấm sạch">Rau củ &amp; Nấm sạch</option>
+                        <option value="Tiêu & Gia vị vùng đồi">Tiêu &amp; Gia vị vùng đồi</option>
+                        <option value="Quà tặng OCOP & Combo">Quà tặng OCOP &amp; Combo</option>
                       </select>
                     </div>
                   </div>
