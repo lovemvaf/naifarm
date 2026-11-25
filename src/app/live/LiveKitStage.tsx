@@ -1,19 +1,33 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Heart, Maximize2, Minimize2, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { ConnectionQuality, Room, RoomEvent, Track, VideoPresets, type RemoteTrackPublication, type RemoteTrack } from "livekit-client";
 import { Button } from "@/components/ui/Primitives";
+import { formatVnd } from "@/lib/format";
 import { liveFetch, type LiveConnection } from "@/lib/live/client";
+import type { Product } from "@/types/naifarm";
 
 type FullscreenVideo = HTMLVideoElement & { webkitEnterFullscreen?: () => void; webkitSupportsFullscreen?: boolean };
 const qualityLabel: Record<ConnectionQuality, string> = {
   excellent: "Rất tốt", good: "Tốt", poor: "Yếu", lost: "Mất kết nối", unknown: "Đang đo",
 };
+const mockComments = [
+  { name: "Cô Lan", text: "Bưởi vườn mình nhìn tươi quá!" },
+  { name: "Minh Khoa", text: "Nhà vườn ở khu vực nào vậy ạ?" },
+  { name: "Thanh Hà", text: "Cho mình xin cách đặt mua nhé 🌿" },
+  { name: "Tuấn Anh", text: "Chúc phiên live đông khách!" },
+  { name: "Ngọc Mai", text: "Trái cây thu hoạch hôm nay luôn ạ?" },
+];
+const mockGifts = ["Giỏ trái cây Đồng Nai", "Hộp quà OCOP", "Rổ bưởi Tân Triều", "Combo hạt điều Xuân Lộc"];
+const mockDiscounts = [10, 15, 20, 12];
 
-export function LiveKitStage({ sessionId, role, token, cameraDevice, micDevice, selectedCameraIdentity }: {
-  sessionId: string; role: "viewer" | "host"; token?: string; cameraDevice?: string; micDevice?: string; selectedCameraIdentity?: string | null;
+export function LiveKitStage({ sessionId, role, token, cameraDevice, micDevice, selectedCameraIdentity, mockEngagement = false, mockProducts = [] }: {
+  sessionId: string; role: "viewer" | "host"; token?: string; cameraDevice?: string; micDevice?: string; selectedCameraIdentity?: string | null; mockEngagement?: boolean; mockProducts?: Product[];
 }) {
   const video = useRef<FullscreenVideo>(null);
+  const stage = useRef<HTMLDivElement>(null);
   const audio = useRef<HTMLAudioElement>(null);
   const currentRoom = useRef<Room | null>(null);
   const accessToken = useRef(token);
@@ -32,6 +46,43 @@ export function LiveKitStage({ sessionId, role, token, cameraDevice, micDevice, 
   const [fullscreen, setFullscreen] = useState(false);
   const [quality, setQuality] = useState(ConnectionQuality.Unknown);
   const [secondaryCamera, setSecondaryCamera] = useState(false);
+  const [mockFeed, setMockFeed] = useState<{ id: number; name: string; text: string }[]>([]);
+  const [hearts, setHearts] = useState<{ id: number; position: number }[]>([]);
+  const [gift, setGift] = useState<{ id: number; name: string } | null>(null);
+  const [productIndex, setProductIndex] = useState(0);
+  const mockSequence = useRef(0);
+  const featuredProduct = mockProducts[productIndex % Math.max(1, mockProducts.length)];
+  const discountPercent = mockDiscounts[productIndex % mockDiscounts.length];
+  const salePrice = featuredProduct ? Math.round(featuredProduct.priceVnd * (1 - discountPercent / 100) / 1000) * 1000 : 0;
+
+  useEffect(() => {
+    if (!mockEngagement) {
+      setMockFeed([]);
+      setHearts([]);
+      return;
+    }
+    let tick = 0;
+    const timer = window.setInterval(() => {
+      const id = ++mockSequence.current;
+      tick += 1;
+      if (tick % 2 === 0) {
+        const comment = mockComments[(tick / 2 - 1) % mockComments.length];
+        setMockFeed((items) => [...items.slice(-2), { id, ...comment }]);
+      }
+      setHearts((items) => [...items.slice(-5), { id, position: (id * 37) % 55 }]);
+      if (tick % 6 === 0) {
+        setGift({ id, name: mockGifts[(tick / 6 - 1) % mockGifts.length] });
+        if (mockProducts.length > 1) setProductIndex((index) => (index + 1) % mockProducts.length);
+      }
+    }, 750);
+    return () => window.clearInterval(timer);
+  }, [mockEngagement, mockProducts.length]);
+
+  useEffect(() => {
+    const updateFullscreen = () => setFullscreen(document.fullscreenElement === stage.current);
+    document.addEventListener("fullscreenchange", updateFullscreen);
+    return () => document.removeEventListener("fullscreenchange", updateFullscreen);
+  }, []);
 
   useEffect(() => { accessToken.current = token; }, [token]);
   useEffect(() => { selectedCamera.current = selectedCameraIdentity; synchronizeAngle.current(); }, [selectedCameraIdentity]);
@@ -186,17 +237,53 @@ export function LiveKitStage({ sessionId, role, token, cameraDevice, micDevice, 
   }
 
   async function openFullscreen() {
-    const element = video.current;
+    const element = stage.current;
     if (!element) return;
     try {
-      if (document.fullscreenEnabled) await element.requestFullscreen();
-      else element.webkitEnterFullscreen?.();
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else if (document.fullscreenEnabled) await element.requestFullscreen();
+      else video.current?.webkitEnterFullscreen?.();
     } catch { setStatus("Không thể mở video toàn màn hình."); }
   }
 
   return <div className="space-y-3">
-    <video ref={video} autoPlay playsInline muted className="aspect-video w-full rounded-xl bg-[#25352B] object-contain"
-      onLoadedMetadata={(event) => setFullscreen(document.fullscreenEnabled || !!(event.currentTarget as FullscreenVideo).webkitSupportsFullscreen)} />
+    <div ref={stage} className={`live-stage relative overflow-hidden rounded-xl bg-[#25352B] ${fullscreen ? "flex min-h-0 items-center justify-center bg-black p-3" : ""}`}>
+      <video ref={video} autoPlay playsInline muted className={`w-full object-contain ${fullscreen ? "max-h-[94vh]" : "aspect-video"}`} />
+      {mockEngagement && <>
+        <span className="absolute left-3 top-3 rounded-full bg-black/65 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">Tương tác mô phỏng</span>
+        <div className="pointer-events-none absolute inset-y-0 right-4 w-12 overflow-hidden" aria-hidden="true">
+          {hearts.map((item) => <Heart key={item.id} fill="currentColor" className="absolute bottom-3 h-7 w-7 text-rose-400 drop-shadow-md animate-live-heart"
+            style={{ left: `${item.position}%` }} onAnimationEnd={() => setHearts((items) => items.filter((heart) => heart.id !== item.id))} />)}
+        </div>
+        {featuredProduct && <Link key={featuredProduct.id} href={`/products/${featuredProduct.slug}`} className="absolute left-3 top-12 flex w-[min(21rem,82%)] items-center gap-3 rounded-2xl border border-white/70 bg-[#FFFDF5]/95 p-2.5 shadow-2xl backdrop-blur-sm animate-live-product">
+          <img src={featuredProduct.image} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-[#9B2C21]"><span className="rounded bg-[#B72D24] px-1.5 py-0.5 text-white">-{discountPercent}%</span> Ưu đãi mô phỏng · sản phẩm mẫu</span>
+            <span className="block truncate text-sm font-bold text-[#25352B]">{featuredProduct.name}</span>
+            <span className="flex flex-wrap items-baseline gap-x-1.5"><span className="text-sm font-extrabold text-[#B72D24]">{formatVnd(salePrice)}</span><span className="text-[10px] text-[#52645A]">/{featuredProduct.unitLabel}</span><span className="text-[10px] text-[#718075] line-through">{formatVnd(featuredProduct.priceVnd)}</span></span>
+            <span className="block text-[9px] font-semibold uppercase tracking-wide text-[#52645A]">Giá demo · mở trang sản phẩm để đặt mua</span>
+          </span>
+          <span className="rounded-full bg-[#245B3D] px-2.5 py-1.5 text-[11px] font-bold text-white">Xem &amp; đặt</span>
+        </Link>}
+        {gift && <div key={gift.id} className="pointer-events-none absolute left-1/2 top-1/2 flex max-w-[90%] items-center gap-3 rounded-2xl border border-amber-200 bg-[#542F18]/90 px-5 py-4 text-white shadow-2xl animate-live-gift">
+          <span className="absolute -left-5 -top-7 text-4xl animate-live-firework" aria-hidden="true">🎆</span>
+          <span className="absolute -right-5 -top-7 text-4xl animate-live-firework" aria-hidden="true">✨</span>
+          <span className="absolute -bottom-6 left-1/2 text-3xl animate-live-firework" aria-hidden="true">🎇</span>
+          <span className="text-4xl" aria-hidden="true">🎁</span>
+          <span><span className="block text-[10px] font-bold uppercase tracking-wider text-amber-200">Quà tặng mô phỏng · vừa nhận</span><span className="text-sm font-extrabold">{gift.name}</span></span>
+          <Sparkles className="h-6 w-6 shrink-0 text-amber-200" aria-hidden="true" />
+        </div>}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 space-y-1 bg-gradient-to-t from-black/75 to-transparent px-3 pb-3 pt-10">
+          {mockFeed.map((item) => <p key={item.id} className="w-fit max-w-[85%] rounded-full bg-black/45 px-3 py-1 text-xs text-white">
+            <span className="font-bold text-emerald-200">{item.name}</span> {item.text}
+          </p>)}
+        </div>
+      </>}
+      <button type="button" onClick={() => void openFullscreen()} aria-label={fullscreen ? "Thoát toàn màn hình" : "Xem livestream toàn màn hình"}
+        className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80 focus-visible:outline-white">
+        {fullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+      </button>
+    </div>
     {role === "viewer" && <audio ref={audio} autoPlay muted={!listening} />}
     <p role="status" className="text-sm">{status}{count !== null && ` · ${count} người xem`}{role === "viewer" && count !== null && !angle && " · Đang chờ camera"}</p>
     {role === "host" && count !== null && <div className="space-y-2 text-sm">
@@ -210,7 +297,6 @@ export function LiveKitStage({ sessionId, role, token, cameraDevice, micDevice, 
       {role === "viewer" && count !== null && <Button size="sm" variant="secondary" onClick={() => void toggleListening()}>
         {listening ? "Tắt âm thanh" : "Bật âm thanh"}
       </Button>}
-      {role === "viewer" && angle && fullscreen && <Button size="sm" variant="secondary" onClick={() => void openFullscreen()}>Toàn màn hình</Button>}
       {role === "host" && count !== null && <>
         <Button size="sm" variant="secondary" onClick={() => void toggle(Track.Source.Camera)}>{camera ? "Tắt camera" : "Bật camera"}</Button>
         <Button size="sm" variant="secondary" onClick={() => void toggle(Track.Source.Microphone)}>{mic ? "Tắt mic" : "Bật mic"}</Button>
