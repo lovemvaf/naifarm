@@ -502,6 +502,7 @@ interface DemoStoreContextValue extends DemoState {
     ok: boolean;
     orderId?: string;
     orderIds?: string[];
+    orders?: DemoOrder[];
     message: string;
   };
   markOrderPaid: (
@@ -1658,6 +1659,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       ok: true,
       orderId: createdOrders[0].id,
       orderIds: createdOrders.map((o) => o.id),
+      orders: createdOrders,
       message:
         createdOrders.length > 1
           ? `Đã tách ${createdOrders.length} đơn theo từng nhà vườn (${createdOrders.map((o) => o.id).join(", ")}).`
