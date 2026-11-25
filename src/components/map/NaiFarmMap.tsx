@@ -142,7 +142,7 @@ export default function NaiFarmMap({
   useEffect(() => {
     let active = true;
     Promise.allSettled([
-      fetch("/geo/dong-nai-outline.json").then((r) => (r.ok ? r.json() : null)),
+      fetch("/geo/dong-nai-province.json").then((r) => (r.ok ? r.json() : null)),
       fetch("/geo/dong-nai-wards.json").then((r) => (r.ok ? r.json() : null)),
     ]).then(([outlineRes, wardsRes]) => {
       if (!active) return;
