@@ -28,7 +28,6 @@ ALL_ROUTES = [
     "/account/orders",
     "/explore",
     "/live",
-    "/live/demo",
     "/farmer",
     "/farmer/publish",
     "/volunteer",
@@ -47,7 +46,7 @@ KEY_SCREENSHOT_ROUTES = [
     ("03_product_buoi_3d", "/products/buoi-da-xanh-tan-trieu"),
     ("04_trace_nf_demo_001", "/trace/NF-DEMO-001"),
     ("05_explore_map", "/explore"),
-    ("06_live_room", "/live/demo"),
+    ("06_live_room", "/live"),
     ("07_farmer_w02", "/farmer"),
     ("08_farmer_publish", "/farmer/publish"),
     ("09_volunteer_w03", "/volunteer"),
@@ -271,31 +270,15 @@ def main():
         page.wait_for_timeout(300)
         assert page.get_by_text("Đã ghi nhận yêu cầu").first.is_visible()
 
-        # Role W01 Live check (no create form/button, Buyer can click Mua)
+        # Live uses the real Supabase-backed viewer and host studio, not a demo room.
         page.goto(f"{BASE_URL}/", wait_until="domcontentloaded")
         page.wait_for_timeout(300)
         page.goto(f"{BASE_URL}/live", wait_until="domcontentloaded")
-        page.get_by_role("link", name="Xem minh họa").click()
-        page.wait_for_timeout(350)
-        assert page.get_by_text("Tạo phiên Livestream tại vườn").count() == 0
-        assert page.get_by_text("Tạo lịch").count() == 0, "W01 buyer must not see Live schedule creation button"
-        page.get_by_role("button", name="Mua").first.click()
-        page.wait_for_timeout(250)
-
-        # Role W02 Live check (stays W02 in Header & UI, shows farmer Live creation)
-        page.goto(f"{BASE_URL}/farmer", wait_until="domcontentloaded")
-        page.wait_for_timeout(400)
-        page.get_by_role("link", name="Mở Livestream tại vườn").click()
-        page.get_by_role("link", name="Xem minh họa").click()
-        page.wait_for_timeout(500)
-        assert page.get_by_text("W02 · Nhà nông").first.is_visible(), "Opening the live demo from W02 must stay in W02"
-        page.get_by_role("button", name="Tạo phiên Livestream tại vườn").click()
-        page.wait_for_timeout(200)
-        page.locator("#live-title").fill("Cắt bưởi sáng sớm cùng chú Ba Tư (E2E W02)")
-        page.get_by_role("button", name="Lưu lịch Livestream (Demo)").click()
-        page.wait_for_timeout(300)
-        assert page.get_by_text("Cắt bưởi sáng sớm cùng chú Ba Tư (E2E W02)").first.is_visible()
-        assert page.get_by_text("W02 · Nhà nông").first.is_visible()
+        assert page.get_by_role("heading", name="NaiFarm Live").is_visible()
+        assert page.get_by_role("link", name="Studio phát sóng").is_visible()
+        assert page.get_by_role("link", name="Xem minh họa").count() == 0
+        removed_demo = page.goto(f"{BASE_URL}/live/demo", wait_until="domcontentloaded")
+        assert removed_demo and removed_demo.status == 404
 
         page.goto(f"{BASE_URL}/learn", wait_until="domcontentloaded")
         page.wait_for_timeout(350)

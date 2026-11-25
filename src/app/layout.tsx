@@ -8,7 +8,7 @@ import { MotionProvider } from "@/components/motion/MotionSystem";
 import { AppHeader } from "@/components/navigation/AppHeader";
 import { AppFooter } from "@/components/navigation/AppFooter";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
-import { NaiAIFloatingChat } from "@/components/chatbot/NaiAIFloatingChat";
+import { NaiFarmHomeChat } from "@/components/chatbot/NaiFarmHomeChat";
 import "./globals.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -55,7 +55,7 @@ export default function RootLayout({
               </main>
               <AppFooter />
               <MobileBottomNav />
-              <NaiAIFloatingChat />
+              <NaiFarmHomeChat />
               <Toaster position="top-right" richColors closeButton duration={2400} visibleToasts={3} />
               </CmsProvider>
             </DemoStoreProvider>
