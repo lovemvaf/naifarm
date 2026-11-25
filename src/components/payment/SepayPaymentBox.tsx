@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import Image from "next/image";
 import { Check, Copy, QrCode, RefreshCw, Sparkles } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { formatVnd } from "@/lib/format";
 import { notifySuccess } from "@/lib/toast";
 import { Badge, Button } from "@/components/ui/Primitives";
@@ -33,10 +33,13 @@ export function SepayPaymentBox({
   const [qrSrcIndex, setQrSrcIndex] = useState(0);
   const [simulating, setSimulating] = useState(false);
 
+  useEffect(() => {
+    if (initialPaid) setIsPaid(true);
+  }, [initialPaid]);
+
   const transferContent = orderId;
   const primaryQr = getSepayQrUrl({ amount: amountVnd, orderId });
   const fallbackQr = getVietQrFallbackUrl({ amount: amountVnd, orderId });
-  const currentQr = qrSrcIndex === 0 ? primaryQr : fallbackQr;
 
   const copyToClipboard = (text: string, fieldName: string) => {
     if (navigator?.clipboard) {
@@ -65,12 +68,12 @@ export function SepayPaymentBox({
     }
   }, [isPaid, orderId, onPaymentSuccess]);
 
-  // Polling every 4 seconds if unpaid
+  // Polling every 3.5 seconds if unpaid
   useEffect(() => {
     if (isPaid) return;
     const timer = setInterval(() => {
       void checkStatus();
-    }, 4000);
+    }, 3500);
     return () => clearInterval(timer);
   }, [isPaid, checkStatus]);
 
@@ -127,25 +130,44 @@ export function SepayPaymentBox({
           </h3>
         </div>
         <div className="flex items-center gap-2">
-          <span className="flex h-2 w-2 rounded-full bg-[#D7A34D] animate-pulse" />
+          <span className="flex h-2.5 w-2.5 rounded-full bg-[#D7A34D] animate-ping" />
           <span className="text-xs font-semibold text-[#80520C]">Chờ chuyển khoản...</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-12 items-center">
-        {/* QR Code Container */}
+        {/* QR Code Container with guaranteed non-collapsing dimensions */}
         <div className="flex flex-col items-center justify-center md:col-span-5 bg-white p-4 rounded-[14px] border border-[#D6DED2]">
-          <div className="relative aspect-square w-full max-w-[200px] overflow-hidden rounded-[10px] bg-white">
-            <Image
-              src={currentQr}
-              alt={`Mã VietQR thanh toán đơn hàng ${orderId}`}
-              fill
-              unoptimized
-              className="object-contain"
-              onError={() => setQrSrcIndex((prev) => (prev === 0 ? 1 : 0))}
-            />
+          <div className="flex items-center justify-center w-[210px] h-[210px] bg-white rounded-[10px] p-1.5 border border-[#EAEFE6] shadow-inner">
+            {qrSrcIndex === 0 ? (
+              <img
+                src={primaryQr}
+                alt={`Mã VietQR thanh toán đơn hàng ${orderId}`}
+                width={200}
+                height={200}
+                className="w-[200px] h-[200px] object-contain rounded-[6px]"
+                onError={() => setQrSrcIndex(1)}
+              />
+            ) : qrSrcIndex === 1 ? (
+              <img
+                src={fallbackQr}
+                alt={`Mã VietQR thanh toán đơn hàng ${orderId}`}
+                width={200}
+                height={200}
+                className="w-[200px] h-[200px] object-contain rounded-[6px]"
+                onError={() => setQrSrcIndex(2)}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center">
+                <QRCodeSVG
+                  value={`https://qr.sepay.vn/img?acc=0369966231&bank=MBBank&amount=${amountVnd}&des=${orderId}`}
+                  size={190}
+                  level="M"
+                />
+              </div>
+            )}
           </div>
-          <p className="mt-2 text-center text-[11px] text-[#52645A]">
+          <p className="mt-2.5 text-center text-[11px] font-medium text-[#52645A]">
             Quét QR bằng app Ngân hàng (MB, VCB, BIDV...) hoặc Ví điện tử
           </p>
         </div>
@@ -227,7 +249,7 @@ export function SepayPaymentBox({
 
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#EAEFE6] pt-3">
         <div className="text-[11px] text-[#52645A]">
-          Giao dịch được kiểm tra tự động qua SePay Webhook.
+          Giao dịch tự động xác nhận qua SePay Webhook ngay khi tiền vào tài khoản.
         </div>
         <div className="flex items-center gap-2">
           <Button
