@@ -1,6 +1,6 @@
 # NAIFARM V4.0 — VERIFICATION & TEST REPORT
 
-All checks below ran cleanly on the integrated `main` tree (V4.0 commit `47c39a1` merged with upstream `origin/main` PR #1 `9a7fa5e` `ant_speech`) inside `E:\04_Projects\Group 8 - Hackathon Dong Nai\naifarm`. Temporary screenshot folder `qa-out/` was cleaned before final git staging.
+All checks below ran cleanly on the unified `main` tree combining NaiFarm V4.0 (`47c39a1`), upstream PR #1 `ant_speech` (`9a7fa5e`), and Supabase Auth/Storage/Migrations from `ngoctan` (`21c8512`, zero 3D dependencies restored) inside `E:\04_Projects\Group 8 - Hackathon Dong Nai\naifarm`. Temporary screenshot folder `qa-out/` was cleaned before final git staging.
 
 ## 1. Automated CLI & Build Verification Gate
 
@@ -15,7 +15,7 @@ All checks below ran cleanly on the integrated `main` tree (V4.0 commit `47c39a1
 | `npm run test:calendar` | VN clock adapter, D-30..D-1 deduped reminders, promo rules, `.ics` | `PASS` (exit 0) | `defaultClockIso: "2026-11-25T12:00:00+07:00"`, `remindersComputed: 53`, `promoNovDiscountVnd: 15000`, `icsBytes: 1336` |
 | `npm run typecheck` | TypeScript strict mode (`tsc --noEmit`) | `PASS` (exit 0) | `0` errors |
 | `npm run lint` | Next.js / React 19 ESLint | `PASS` (exit 0) | `0` errors (`43` warnings across image hints & upstream `ant_speech` test scripts) |
-| `npm run build` | Production Turbopack Next.js build | `PASS` (exit 0) | `34` static prerendered pages + dynamic routes (including preserved PR #1 `/api/ai/asr`, `/api/ai/publish-draft`) |
+| `npm run build` | Production Turbopack Next.js build | `PASS` (exit 0) | `35` static prerendered pages + dynamic routes (`/auth/callback`, `/api/ai/asr`, `/api/ai/publish-draft`) + `Proxy (Middleware)` |
 
 ## 2. Real-Browser Playwright & Axe WCAG 2.0 AA Verification (`tests/e2e-v4-verify.py`)
 

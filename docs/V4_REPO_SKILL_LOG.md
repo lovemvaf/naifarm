@@ -6,7 +6,8 @@ Zero 3D/WebGL dependencies (`three`, `@react-three/*` are completely absent from
 
 | Package | Version (`package.json`) | Usage in NaiFarm V4 |
 |---|---|---|
-| `next` / `react` / `react-dom` | `16.4.6` / `19.3.0` / `19.3.0` | App Router, Turbopack static/dynamic build (`32` static + dynamic routes), `useSyncExternalStore` locale synchronization |
+| `next` / `react` / `react-dom` | `16.4.6` / `19.3.0` / `19.3.0` | App Router, Turbopack static/dynamic build (`35` static pages + dynamic routes + `Proxy` middleware), `useSyncExternalStore` locale synchronization |
+| `@supabase/ssr` / `@supabase/supabase-js` | `^0.12.7` / `^2.119.0` | Optional Supabase Auth, Storage & SSR Proxy session handling integrated cleanly from `ngoctan` (`21c8512`) with local fallback when env vars are unset |
 | `tailwindcss` / `@tailwindcss/turbopack` | `4.3.3` / `4.3.3` | Design tokens, responsive grids (`items-start`, `minmax(0,1fr)`), mobile-first adaptive drawers & bottom nav |
 | `leaflet` / `react-leaflet` / `@turf/distance` / `@turf/helpers` | `1.9.4` / `5.0.0` / `^7.4.0` / `^7.3.4` | Interactive OSM map, `MapMarkers.tsx` (accessible `title` + `alt` + `aria-label` on 40+ pins), straight-line `"đường chim bay"` computation |
 | `recharts` | `^3.11.1` | HTX Tân Triều BI bar charts & financial dashboards across `/farmer`, `/coordinator`, `/admin` |

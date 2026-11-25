@@ -73,6 +73,7 @@ import { impactAnalysisForRecall } from "@/lib/quality/recall-engine";
 import type {
   AddressBookEntry,
   AdminGrant,
+  AppRole,
   AuditLogEntry,
   BatchEvent,
   CalendarEvent,
@@ -106,6 +107,7 @@ import type {
   PartnerOrganization,
   Product,
   ProductReviewEntry,
+  Profile,
   ProductionSeason,
   PromotionRecord,
   PurchaseOrder,
@@ -126,8 +128,79 @@ import type {
   WarehouseStock,
   WorkspaceId,
 } from "@/types/naifarm";
+import type { Session } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
+import { mapProfile } from "@/lib/supabase/mappers";
 
 const STORAGE_KEY = "naifarm_demo_state_v4";
+
+const SUPABASE_READY = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+);
+const supabase = SUPABASE_READY ? createClient() : null;
+const DEMO_REAL_PASSWORD = "naifarm123";
+
+const DEMO_REAL_EMAIL_MAP: Record<string, string> = {
+  "ngoclinh.buyer@example.com": "customer@naifarm.vn",
+  "chubatu.vuon@example.com": "farmer.batu@naifarm.vn",
+  "minhanh.tnv@example.com": "volunteer@naifarm.vn",
+  "thuha.dieuphoi@example.com": "coordinator@naifarm.vn",
+  "htxtantrieu@example.com": "org@naifarm.vn",
+  "admin.quantri@example.com": "admin@naifarm.vn",
+};
+
+const ROLE_WORKSPACE: Record<AppRole, WorkspaceId> = {
+  customer: "W01",
+  farmer: "W02",
+  volunteer: "W03",
+  coordinator: "W04",
+  organization: "W05",
+  admin: "W06",
+};
+
+const ROLE_LABEL: Record<AppRole, string> = {
+  customer: "W01 · Cá nhân & Khách mua",
+  farmer: "W02 · Nhà nông",
+  volunteer: "W03 · Thanh niên Tình nguyện",
+  coordinator: "W04 · Điều phối cộng đồng",
+  organization: "W05 · Đối tác & HTX",
+  admin: "W06 · Quản trị minh bạch",
+};
+
+const ROLE_AVATAR_BG: Record<AppRole, string> = {
+  customer: "#245B3D",
+  farmer: "#80520C",
+  volunteer: "#245B78",
+  coordinator: "#5B3D80",
+  organization: "#0C5280",
+  admin: "#B3492F",
+};
+
+function buildAccountFromProfile(
+  profile: Profile,
+  email: string,
+  fallback?: DemoAuthAccount | null,
+): DemoAuthAccount {
+  const initials = profile.fullName
+    .split(/\s+/)
+    .slice(-2)
+    .map((s) => s[0]?.toUpperCase() ?? "")
+    .join("");
+  return {
+    id: profile.id,
+    name: profile.fullName || fallback?.name || "Thành viên NaiFarm",
+    emailDemo: email,
+    roleLabel: ROLE_LABEL[profile.role],
+    workspaceId: ROLE_WORKSPACE[profile.role],
+    farmId: profile.farmId ?? fallback?.farmId,
+    avatarText: initials || "ND",
+    avatarBg: ROLE_AVATAR_BG[profile.role],
+    unitCode: fallback?.unitCode ?? "26041",
+    unitName: fallback?.unitName ?? "Phường Trấn Biên",
+    bio: `Tài khoản NaiFarm · ${ROLE_LABEL[profile.role]}`,
+    canPublicSignUp: fallback?.canPublicSignUp ?? true,
+  };
+}
 
 interface DemoState {
   clockOverrideIso: string | null;
@@ -135,6 +208,8 @@ interface DemoState {
   activeOrgKind: OrganizationKind;
   activeScopeUnitCode: string;
   authUser: DemoAuthAccount | null;
+  session: Session | null;
+  profile: Profile | null;
   demoAccounts: DemoAuthAccount[];
   roleBundleAccounts: DemoAuthAccount[];
   farms: Farm[];
@@ -233,6 +308,8 @@ function getInitialState(): DemoState {
     activeOrgKind: "coop",
     activeScopeUnitCode: "ALL",
     authUser: null,
+    session: null,
+    profile: null,
     demoAccounts: DEMO_AUTH_ACCOUNTS,
     roleBundleAccounts: ROLE_BUNDLE_QUICK_ACCOUNTS,
     farms: INITIAL_FARMS,
@@ -352,6 +429,20 @@ interface DemoStoreContextValue extends DemoState {
   setActiveScopeUnitCode: (unitCode: string) => void;
   setHideAiChatOnSubflow: (hidden: boolean) => void;
   signInDemoAccount: (accountId: string) => DemoAuthAccount | null;
+  supabaseRealSignIn: (
+    email: string,
+    password: string,
+  ) => Promise<{ ok: boolean; account?: DemoAuthAccount | null; message: string }>;
+  supabaseQuickSignIn: (
+    accountId: string,
+  ) => Promise<{ ok: boolean; account?: DemoAuthAccount | null; message: string }>;
+  supabaseRealSignUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    role: AppRole,
+  ) => Promise<{ ok: boolean; message: string }>;
+  supabaseResetPassword: (email: string) => Promise<{ ok: boolean; message: string }>;
   signUpDemoGuest: (input: SignUpGuestInput) => { ok: boolean; account?: DemoAuthAccount; message: string };
   signOutDemo: () => void;
   toggleAppliedPromoCode: (code: string) => void;
@@ -544,6 +635,8 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           setState((prev) => ({
             ...prev,
             ...parsed,
+            session: prev.session,
+            profile: prev.profile,
             activeWorkspace: workspaceTouchedRef.current
               ? prev.activeWorkspace
               : parsed.activeWorkspace ?? prev.activeWorkspace,
@@ -562,7 +655,8 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!storageReady) return;
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const serializable = { ...state, session: null, profile: null };
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
     } catch {
       // Ignore storage quota exceptions
     }
@@ -591,6 +685,201 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
 
   const setClockOverrideIso = useCallback((iso: string | null) => {
     setState((prev) => ({ ...prev, clockOverrideIso: iso }));
+  }, []);
+
+  const supabaseRealSignIn = useCallback(
+    async (
+      email: string,
+      password: string,
+    ): Promise<{ ok: boolean; account?: DemoAuthAccount | null; message: string }> => {
+      if (!supabase) return { ok: false, message: "Chế độ trải nghiệm — Supabase chưa kết nối." };
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error || !data.user) {
+        return { ok: false, message: error?.message ?? "Đăng nhập thất bại." };
+      }
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      const mapped = mapProfile((prof as Record<string, unknown>) ?? null);
+      const account = mapped ? buildAccountFromProfile(mapped, email) : null;
+      workspaceTouchedRef.current = true;
+      setState((prev) => ({
+        ...prev,
+        session: data.session as Session | null,
+        profile: mapped,
+        authUser: account,
+        activeWorkspace: account ? account.workspaceId : prev.activeWorkspace,
+      }));
+      return { ok: true, account, message: "Đăng nhập thành công." };
+    },
+    [],
+  );
+
+  const supabaseQuickSignIn = useCallback(
+    async (
+      accountId: string,
+    ): Promise<{ ok: boolean; account?: DemoAuthAccount | null; message: string }> => {
+      const found =
+        state.demoAccounts.find((a) => a.id === accountId) ??
+        state.roleBundleAccounts.find((a) => a.id === accountId) ??
+        null;
+      if (!found) return { ok: false, message: "Không tìm thấy tài khoản." };
+      const applyDemoAccount = () => {
+        workspaceTouchedRef.current = true;
+        setState((prev) => ({
+          ...prev,
+          authUser: found,
+          activeWorkspace: found.workspaceId,
+          activeOrgKind: found.organizationKind ?? prev.activeOrgKind,
+          activeScopeUnitCode: "ALL",
+        }));
+      };
+      if (!supabase) {
+        applyDemoAccount();
+        return { ok: true, account: found, message: "Đăng nhập thành công." };
+      }
+      const realEmail = DEMO_REAL_EMAIL_MAP[found.emailDemo];
+      if (!realEmail) {
+        applyDemoAccount();
+        return { ok: true, account: found, message: "Đăng nhập thành công." };
+      }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: realEmail,
+        password: DEMO_REAL_PASSWORD,
+      });
+      if (error || !data.user) {
+        return { ok: false, message: error?.message ?? "Đăng nhập thất bại." };
+      }
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      const mapped = mapProfile((prof as Record<string, unknown>) ?? null);
+      const account = mapped
+        ? { ...found, ...buildAccountFromProfile(mapped, realEmail, found) }
+        : found;
+      workspaceTouchedRef.current = true;
+      setState((prev) => ({
+        ...prev,
+        session: data.session as Session | null,
+        profile: mapped,
+        authUser: account,
+        activeWorkspace: account.workspaceId,
+        activeOrgKind: account.organizationKind ?? prev.activeOrgKind,
+        activeScopeUnitCode: "ALL",
+      }));
+      return { ok: true, account, message: "Đăng nhập thành công." };
+    },
+    [state.demoAccounts, state.roleBundleAccounts],
+  );
+
+  const supabaseRealSignUp = useCallback(
+    async (
+      email: string,
+      password: string,
+      fullName: string,
+      role: AppRole,
+    ): Promise<{ ok: boolean; message: string }> => {
+      if (!supabase) return { ok: false, message: "Chế độ trải nghiệm — Supabase chưa kết nối." };
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullName, role } },
+      });
+      if (error || !data.user) {
+        return { ok: false, message: error?.message ?? "Đăng ký thất bại." };
+      }
+      return { ok: true, message: "Đăng ký thành công! Vui lòng xác minh email để đăng nhập." };
+    },
+    [],
+  );
+
+  const supabaseResetPassword = useCallback(
+    async (email: string): Promise<{ ok: boolean; message: string }> => {
+      if (!supabase) return { ok: false, message: "Chế độ trải nghiệm — Supabase chưa kết nối." };
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${origin}/auth/callback?next=/sign-in`,
+      });
+      if (error) return { ok: false, message: error.message };
+      return {
+        ok: true,
+        message: "Đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra email.",
+      };
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!supabase) return;
+    let mounted = true;
+
+    const bootstrap = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!mounted || !data.session) return;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", data.session.user.id)
+        .maybeSingle();
+      if (!mounted) return;
+      const mapped = mapProfile((prof as Record<string, unknown>) ?? null);
+      const account = mapped
+        ? buildAccountFromProfile(mapped, data.session.user.email ?? "")
+        : null;
+      workspaceTouchedRef.current = true;
+      setState((prev) => ({
+        ...prev,
+        session: data.session as Session | null,
+        profile: mapped,
+        authUser: account,
+        activeWorkspace: mapped ? ROLE_WORKSPACE[mapped.role] : prev.activeWorkspace,
+      }));
+    };
+
+    void bootstrap();
+
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+      if (!mounted) return;
+      if (!nextSession) {
+        setState((prev) => ({
+          ...prev,
+          session: null,
+          profile: null,
+          authUser: null,
+          activeWorkspace: "W01",
+        }));
+        workspaceTouchedRef.current = false;
+        return;
+      }
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", nextSession.user.id)
+        .maybeSingle();
+      if (!mounted) return;
+      const mapped = mapProfile((prof as Record<string, unknown>) ?? null);
+      const account = mapped
+        ? buildAccountFromProfile(mapped, nextSession.user.email ?? "")
+        : null;
+      workspaceTouchedRef.current = true;
+      setState((prev) => ({
+        ...prev,
+        session: nextSession as Session | null,
+        profile: mapped,
+        authUser: account,
+        activeWorkspace: mapped ? ROLE_WORKSPACE[mapped.role] : prev.activeWorkspace,
+      }));
+    });
+
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const signInDemoAccount = (accountId: string) => {
@@ -668,9 +957,14 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOutDemo = () => {
+    if (supabase) {
+      void supabase.auth.signOut();
+    }
     workspaceTouchedRef.current = true;
     setState((prev) => ({
       ...prev,
+      session: null,
+      profile: null,
       authUser: null,
       activeWorkspace: "W01",
       activeOrgKind: "coop",
@@ -2279,6 +2573,10 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         setActiveScopeUnitCode,
         setHideAiChatOnSubflow,
         signInDemoAccount,
+        supabaseRealSignIn,
+        supabaseQuickSignIn,
+        supabaseRealSignUp,
+        supabaseResetPassword,
         signUpDemoGuest,
         signOutDemo,
         toggleAppliedPromoCode,
@@ -2351,4 +2649,10 @@ export function useDemoStore() {
   const ctx = useContext(DemoStoreContext);
   if (!ctx) throw new Error("useDemoStore must be used inside DemoStoreProvider");
   return ctx;
+}
+
+export function useAuth() {
+  const ctx = useContext(DemoStoreContext);
+  if (!ctx) throw new Error("useAuth must be used inside DemoStoreProvider");
+  return { session: ctx.session, profile: ctx.profile };
 }

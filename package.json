@@ -18,9 +18,15 @@
     "test:calendar": "tsx scripts/test-calendar-promo.ts",
     "test:deepseek": "node --env-file=.env test/test-deepseek.mjs",
     "test:deepseek:py": "python test/test_deepseek.py",
-    "balance": "node --env-file=.env test/check-balance.mjs"
+    "balance": "node --env-file=.env test/check-balance.mjs",
+    "test:supabase": "node scripts/test-supabase.mjs",
+    "images:upload": "node scripts/upload-seed-images.mjs",
+    "images:compress": "python3 scripts/compress-images.py",
+    "geo:build": "python3 scripts/build-geojson.py"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.0",
     "@turf/distance": "^7.4.0",
     "@turf/helpers": "^7.3.4",
     "class-variance-authority": "^0.7.1",

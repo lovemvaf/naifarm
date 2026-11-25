@@ -5,7 +5,7 @@
 - **Source Directory:** `E:\04_Projects\Group 8 - Hackathon Dong Nai\naifarm`
 - **GitHub Repository:** `https://github.com/lovemvaf/naifarm.git` (`branch: main`)
 - **Production Deployment:** `https://naifarm.vercel.app/` (`visionary19/naifarm`)
-- **Technical Architecture:** Next.js `16.4.6` (App Router, Turbopack), React `19.3.0`, TypeScript, Tailwind CSS v4, Leaflet + Turf.js 2D GIS, Recharts BI, Fuse.js search, real QR (`qrcode` + `jsqr`), localized `VI | EN` (`useSyncExternalStore`), deterministic VN clock (`2026-11-25T12:00:00+07:00`), and browser `localStorage` experience state for all V4 commerce/agritourism/academy/calendar/BI modules (zero live payments, zero 3D/WebGL dependencies), merged cleanly with teammate PR #1 (`ant_speech`) optional AI voice/publish route helpers (`src/app/api/ai/asr`, `src/app/api/ai/publish-draft`).
+- **Technical Architecture:** Next.js `16.4.6` (App Router, Turbopack), React `19.3.0`, TypeScript, Tailwind CSS v4, Leaflet + Turf.js 2D GIS, Recharts BI, Fuse.js search, real QR (`qrcode` + `jsqr`), localized `VI | EN` (`useSyncExternalStore`), deterministic VN clock (`2026-11-25T12:00:00+07:00`), optional Supabase Auth/Storage/Migrations (`@supabase/ssr`, `@supabase/supabase-js`, `src/proxy.ts`, `src/app/auth/callback`, `supabase/migrations/*`) integrated from `ngoctan` (`21c8512`), and PR #1 `ant_speech` voice/publish helpers (`src/app/api/ai/asr`, `src/app/api/ai/publish-draft`) — with zero live payments and zero 3D/WebGL dependencies.
 
 ## 1. Key V4.0 Capabilities Delivered
 
@@ -24,7 +24,7 @@
 ## 2. Explicit Scope Boundaries & Operational Disclosures
 
 - **Experience Space Only:** Checkout orders, promo redemptions, tour reservations, international RFQ inquiries, credential lifecycles, and management financials run deterministically in the browser without external payment gateways, shipping carriers, or legal certification issuance.
-- **Upstream PR #1 (`ant_speech`, commit `9a7fa5e`) Integration:** Merging `origin/main` preserved teammate additions (`src/app/farmer/publish/page.tsx`, `src/lib/vietnameseNumberParser.ts`, `src/app/api/ai/asr/route.ts`, `src/app/api/ai/publish-draft/route.ts`, `.gitignore`, `test/*`). All V4.0 public, academy, agritourism, calendar, campaign, BI, and permission capabilities operate purely client-side with zero 3D/WebGL packages.
+- **Upstream Teammate Integrations (`ant_speech` PR #1 `9a7fa5e` + `ngoctan` `21c8512`):** Unified `main` retains `ant_speech` (`/farmer/publish` voice/draft flow, `src/lib/vietnameseNumberParser.ts`, `/api/ai/*`) and `ngoctan` Supabase Auth/Storage/Migrations (`src/lib/supabase/*`, `src/lib/storage/*`, `src/proxy.ts`, `/auth/callback`, `/sign-in` + `/sign-up` + `/forgot-password` Supabase bindings, `supabase/migrations/*`) while keeping all 3D packages (`@react-three/fiber`, `@react-three/drei`, `three`) completely excluded and all V4.0 capabilities intact. Notice that if `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` are unset on Vercel, the app seamlessly serves the browser experience space without blocking navigation.
 - **Map & Sandbox Note:** OpenStreetMap requires network access for external raster tiles; offline/blocked environments automatically display Leaflet's built-in retry state without blocking orchard lists or distance calculations.
 
 ## 3. V4.0 Reference Documents

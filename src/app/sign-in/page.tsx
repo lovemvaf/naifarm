@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, CheckCircle2, ShieldAlert, Sparkles, UserCheck } from "lucide-react";
+import { ArrowRight, Loader2, LogIn, ShieldAlert, UserCheck } from "lucide-react";
+import { toast } from "sonner";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { useLocale } from "@/context/LocaleContext";
 import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
@@ -24,34 +25,60 @@ export default function SignInPage() {
   const router = useRouter();
   const { locale, t } = useLocale();
   const isEn = locale === "en";
-  const { demoAccounts, roleBundleAccounts, authUser, signInDemoAccount, signOutDemo } =
-    useDemoStore();
-  const [selectedId, setSelectedId] = useState<string>(authUser?.id ?? demoAccounts[0]?.id ?? "");
-  const [simulatedEmail, setSimulatedEmail] = useState("");
+  const {
+    demoAccounts,
+    roleBundleAccounts,
+    authUser,
+    supabaseQuickSignIn,
+    supabaseRealSignIn,
+    signOutDemo,
+  } = useDemoStore();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [pending, setPending] = useState(false);
+  const [quickPendingId, setQuickPendingId] = useState<string | null>(null);
   const [showBundles, setShowBundles] = useState(false);
 
-  const handleQuickSignIn = (accountId: string) => {
-    const logged = signInDemoAccount(accountId);
-    if (!logged) return;
-    notifyAccountSwitch(
-      `${logged.name} (${isEn && logged.roleLabelEn ? logged.roleLabelEn : logged.roleLabel})`,
-      locale,
-    );
-    router.push(buildLocalizedHref(WORKSPACE_HOME[logged.workspaceId], locale));
+  const handleQuickSignIn = async (accountId: string) => {
+    setQuickPendingId(accountId);
+    try {
+      const result = await supabaseQuickSignIn(accountId);
+      if (!result.ok || !result.account) {
+        toast.error(result.message);
+        return;
+      }
+      const acc = result.account;
+      notifyAccountSwitch(
+        `${acc.name} (${isEn && acc.roleLabelEn ? acc.roleLabelEn : acc.roleLabel})`,
+        locale,
+      );
+      router.push(buildLocalizedHref(WORKSPACE_HOME[acc.workspaceId], locale));
+    } finally {
+      setQuickPendingId(null);
+    }
   };
 
-  const handleSimulatedSubmit = (e: React.FormEvent) => {
+  const handleRealSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const target =
-      demoAccounts.find(
-        (acc) =>
-          simulatedEmail.trim() &&
-          acc.emailDemo.toLowerCase().includes(simulatedEmail.trim().toLowerCase()),
-      ) ??
-      demoAccounts.find((acc) => acc.id === selectedId) ??
-      demoAccounts[0];
-    if (target) {
-      handleQuickSignIn(target.id);
+    if (!email.trim() || !password) {
+      toast.error(isEn ? "Please enter your email and password." : "Vui lòng nhập email và mật khẩu.");
+      return;
+    }
+    setPending(true);
+    try {
+      const result = await supabaseRealSignIn(email.trim(), password);
+      if (!result.ok || !result.account) {
+        toast.error(result.message);
+        return;
+      }
+      const acc = result.account;
+      notifyAccountSwitch(
+        `${acc.name} (${isEn && acc.roleLabelEn ? acc.roleLabelEn : acc.roleLabel})`,
+        locale,
+      );
+      router.push(buildLocalizedHref(WORKSPACE_HOME[acc.workspaceId], locale));
+    } finally {
+      setPending(false);
     }
   };
 
@@ -119,7 +146,7 @@ export default function SignInPage() {
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {demoAccounts.slice(0, 6).map((acc) => {
-              const isSelected = acc.id === selectedId;
+              const isSelected = acc.id === authUser?.id;
               return (
                 <Card
                   key={acc.id}
@@ -140,27 +167,36 @@ export default function SignInPage() {
                         </span>
                         <div className="min-w-0">
                           <p className="truncate text-sm font-bold text-[#25352B]">{acc.name}</p>
-                          <p className="text-[11px] font-semibold text-[#245B3D]">{acc.roleLabel}</p>
+                          <p className="text-[11px] font-semibold text-[#245B3D]">
+                            {isEn && acc.roleLabelEn ? acc.roleLabelEn : acc.roleLabel}
+                          </p>
                         </div>
                       </div>
                       {!acc.canPublicSignUp ? (
-                        <Badge tone="warning">Phân quyền nội bộ</Badge>
+                        <Badge tone="warning">{isEn ? "Scoped role" : "Phân quyền nội bộ"}</Badge>
                       ) : (
-                        <Badge tone="success">Phổ thông</Badge>
+                        <Badge tone="success">{isEn ? "Standard" : "Phổ thông"}</Badge>
                       )}
                     </div>
-                    <p className="mt-2.5 text-xs leading-relaxed text-[#52645A]">{acc.bio}</p>
+                    <p className="mt-2.5 text-xs leading-relaxed text-[#52645A]">
+                      {isEn && acc.bioEn ? acc.bioEn : acc.bio}
+                    </p>
                     <p className="mt-2 text-[11px] font-medium text-[#52645A]">
-                      Địa bàn: {acc.unitName} ({acc.unitCode})
+                      {isEn ? "Area" : "Địa bàn"}: {acc.unitName} ({acc.unitCode})
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleQuickSignIn(acc.id)}
-                    className="mt-3 inline-flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-[10px] bg-[#245B3D] px-3 text-xs font-semibold text-white hover:bg-[#19472E] cursor-pointer"
+                    disabled={quickPendingId !== null}
+                    onClick={() => void handleQuickSignIn(acc.id)}
+                    className="mt-3 inline-flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-[10px] bg-[#245B3D] px-3 text-xs font-semibold text-white hover:bg-[#19472E] cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
                   >
-                    <UserCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>Chọn tài khoản này</span>
+                    {quickPendingId === acc.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <UserCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                    )}
+                    <span>{quickPendingId === acc.id ? (isEn ? "Signing in..." : "Đang đăng nhập...") : "Chọn tài khoản này"}</span>
                   </button>
                 </Card>
               );
@@ -170,54 +206,51 @@ export default function SignInPage() {
 
         <Card className="h-fit space-y-4 p-5 lg:col-span-5">
           <div className="flex items-center gap-2 text-sm font-bold text-[#25352B]">
-            <Sparkles className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
-            <span>Đăng nhập bằng Email hồ sơ mẫu</span>
+            <LogIn className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
+            <span>{isEn ? "Sign in with Email & Password" : "Đăng nhập bằng Email & Mật khẩu"}</span>
           </div>
-          <form onSubmit={handleSimulatedSubmit} className="space-y-4">
+          <form onSubmit={(e) => void handleRealSubmit(e)} className="space-y-4">
             <div>
-              <label htmlFor="demo-email" className="block text-xs font-semibold text-[#25352B]">
-                Email hồ sơ trải nghiệm
+              <label htmlFor="signin-email" className="block text-xs font-semibold text-[#25352B]">
+                Email
               </label>
               <input
-                id="demo-email"
-                type="text"
-                value={simulatedEmail}
-                onChange={(e) => setSimulatedEmail(e.target.value)}
-                placeholder="Ví dụ: ngoclinh@example.com"
+                id="signin-email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="customer@naifarm.vn"
                 className="mt-1 min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
               />
             </div>
             <div>
-              <label htmlFor="demo-role-pick" className="block text-xs font-semibold text-[#25352B]">
-                Hoặc chọn hồ sơ mặc định
+              <label htmlFor="signin-password" className="block text-xs font-semibold text-[#25352B]">
+                {isEn ? "Password" : "Mật khẩu"}
               </label>
-              <select
-                id="demo-role-pick"
-                value={selectedId}
-                onChange={(e) => setSelectedId(e.target.value)}
+              <input
+                id="signin-password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
                 className="mt-1 min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
-              >
-                {demoAccounts.slice(0, 6).map((acc) => (
-                  <option key={acc.id} value={acc.id}>
-                    {acc.name} — {acc.roleLabel}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="rounded-[10px] border border-[#D6DED2] bg-[#FAF8F1] p-3 text-xs text-[#52645A]">
-              <p className="flex items-center gap-1.5 font-semibold text-[#245B3D]">
-                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>Không yêu cầu hoặc lưu mật khẩu thật</span>
-              </p>
-              <p className="mt-1">
-                Phiên làm việc được lưu tạm trên trình duyệt và bạn có thể đăng xuất bất kỳ lúc nào.
-              </p>
+              />
             </div>
             <button
               type="submit"
-              className="min-h-[46px] w-full rounded-[12px] bg-[#245B3D] px-4 text-sm font-semibold text-white hover:bg-[#19472E] cursor-pointer"
+              disabled={pending}
+              className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-[12px] bg-[#245B3D] px-4 text-sm font-semibold text-white hover:bg-[#19472E] cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
             >
-              Đăng nhập ngay
+              {pending ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <LogIn className="h-4 w-4" aria-hidden="true" />
+              )}
+              <span>{pending ? (isEn ? "Signing in..." : "Đang đăng nhập...") : isEn ? "Sign in" : "Đăng nhập"}</span>
             </button>
           </form>
 
