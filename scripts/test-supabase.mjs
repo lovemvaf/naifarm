@@ -46,6 +46,10 @@ const TABLES = [
    "document_review_cases",
    "admin_grants",
   "audit_logs",
+  "calendar_events",
+  "official_observances",
+  "campaigns",
+  "promotions",
 ];
 
 const ACCOUNTS = [
@@ -109,7 +113,7 @@ async function main() {
     if (response.status === 200) tableOk += 1;
     else console.log(`  ${table}: HTTP ${response.status} ${(await response.text()).slice(0, 100)}`);
   }
-  check("19 bảng tồn tại & select được", tableOk === TABLES.length, `${tableOk}/${TABLES.length}`);
+  check(`${TABLES.length} bảng tồn tại & select được`, tableOk === TABLES.length, `${tableOk}/${TABLES.length}`);
 
   const farms = await json("/rest/v1/farms?select=id,region,lat,lng&limit=5", {
     apikey: anon,
