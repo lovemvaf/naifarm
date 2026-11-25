@@ -36,7 +36,7 @@ src/
   context/
     DemoStoreContext.tsx   # STORE DUY NHẤT của app (useDemoStore + useAuth). Không tạo Context trùng chức năng
   lib/
-    supabase/              # client.ts (browser), server.ts (RSC), mappers.ts (row → type)
+    supabase/              # client.ts (browser), server.ts (RSC), mappers.ts (row → type), hydrate.ts (fetchCoreData)
     storage/               # assets.ts (assetUrl), upload.ts (nén WebP rồi upload)
     format.ts toast.ts     # format VND/ngày, toast helper (notifySuccess, notifyAccountSwitch…)
     search/ quality/ geography/ permissions/ qr/ commerce/ metrics/ export/   # lib thuần V2
@@ -82,7 +82,7 @@ Quy tắc guard (`src/proxy.ts`):
 
 - **Một store duy nhất**: `src/context/DemoStoreContext.tsx`. Component KHÔNG tự gọi Supabase rải rác — mọi đọc/ghi đi qua store (`useDemoStore()`), trừ auth (`useAuth()`).
 - **Hai lớp dữ liệu**:
-  1. **Lớp Supabase (core)**: profiles, farms, products, batches + batch_events, orders + order_items, cart_items, missions, support_requests, experience_bookings, document_review_cases, admin_grants, audit_logs, rfq_requests. Có env → load thật; mất env → fallback demo data, không crash.
+  1. **Lớp Supabase (core) — ĐÃ WIRE qua `src/lib/supabase/hydrate.ts`** (`fetchCoreData()` → merge vào `DemoStoreContext` khi có session): profiles, farms, products, batches + batch_events, orders + order_items, cart_items, favorites, season_follows, missions, support_requests, rfq_requests (chỉ fetch, chưa có UI write), experience_bookings, document_review_cases, admin_grants, audit_logs. Có env → load thật; mất env → fallback demo data, không crash.
   2. **Lớp demo (localStorage)**: credentials, seasons/diary, warehouses/inventory/suppliers/purchase orders, notifications, tickets, address book… — chỉ mang tính trình diễn, KHÔNG tạo bảng cho tới khi có chỉ đạo.
 - **Mapper bắt buộc**: row Supabase → type domain phải qua `src/lib/supabase/mappers.ts` (`mapProduct`, `mapFarm`, `mapProfile`…). Cột DB snake_case, field TS camelCase. Không dùng raw row ngoài mapper.
 - **CRUD pattern chuẩn**: hàm async trong provider → try/catch → lỗi hiển thị toast (`notifySuccess`/toast.error), xong gọi reload helper tương ứng (`reloadProducts`, `reloadOrders`…). Không bao giờ mutate state cục bộ rồi mong DB tự đổi.
@@ -135,6 +135,7 @@ Quy tắc guard (`src/proxy.ts`):
 
 ## 11. Việc đang treo / chờ chỉ đạo
 
-- Wire tiếp các slice demo của V2 (credentials, seasons, warehouse, notifications…) sang Supabase khi có yêu cầu — mỗi lần wire một nhóm, theo đúng pattern mục 5.
-- Map `/explore`: đang giữ hệ map V2 (`NaiFarmMapHost` + controls); nếu cần chuyển sang GeoJSON 95 đơn vị thì thay dữ liệu, giữ UI.
+- ~~Wire các slice core sang Supabase~~ — **XONG** (25/11): đọc qua `src/lib/supabase/hydrate.ts`, ghi qua store theo pattern mục 5 (orders + order_items, cart_items, favorites, season_follows, missions, products, experience_bookings, support_requests, document_review_cases, admin_grants).
+- Còn wire tiếp khi có yêu cầu (mỗi lần một nhóm, pattern mục 5): calendar/events (NaiCalendar), lessons/academy, credentials, ERP (warehouses/inventory/suppliers/purchase orders), notifications/tickets/address-book, seasons/diary.
+- Map `/explore`: **ĐANG LÀM** — `public/geo/dong-nai-province.json` + `dong-nai-wards.json` đã có, `NaiFarmMap.tsx` đổi fetch sang `/geo/dong-nai-province.json` (thay `dong-nai-outline.json`, chưa commit); giữ nguyên UI V2 (`NaiFarmMapHost` + controls).
 - Tích hợp cổng thanh toán thật, SMTP email thật — chưa làm, chỉ ghi nhận.
