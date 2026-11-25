@@ -8,6 +8,8 @@ import type {
   CalendarEvent,
   CampaignRecord,
   CoopPool,
+  CredentialEvidence,
+  CredentialRecord,
   DemoGeoPoint,
   DemoOrder,
   DemoOrderItem,
@@ -23,6 +25,8 @@ import type {
   MemberDelivery,
   ObservanceRecord,
   PartnerOrganization,
+  DiaryEntry,
+  ProductionSeason,
   Product,
   Profile,
   PromotionRecord,
@@ -487,6 +491,96 @@ export function mapPromotion(row: Row): PromotionRecord {
     budgetCapVnd: num(row.budget_cap_vnd),
     budgetUsedVnd: num(row.budget_used_vnd),
     excludeMinors: bool(row.exclude_minors),
+  };
+}
+
+export function mapSeason(row: Row): ProductionSeason {
+  return {
+    id: str(row.id),
+    farmId: str(row.farm_id),
+    farmName: str(row.farm_name),
+    administrativeUnitCode: str(row.administrative_unit_code),
+    administrativeUnitName: str(row.administrative_unit_name),
+    cropName: str(row.crop_name),
+    variety: str(row.variety),
+    seasonName: str(row.season_name),
+    startDate: str(row.start_date),
+    expectedHarvestDate: str(row.expected_harvest_date),
+    areaHa: num(row.area_ha),
+    growingZoneCode: str(row.growing_zone_code),
+    status: str(row.status, "đang chăm sóc") as ProductionSeason["status"],
+    summary: str(row.summary),
+    batchCodes: strArray(row.batch_codes),
+    expectedYieldKg: row.expected_yield_kg != null ? num(row.expected_yield_kg) : undefined,
+    actualYieldKg: row.actual_yield_kg != null ? num(row.actual_yield_kg) : undefined,
+    estimatedCostVnd: row.estimated_cost_vnd != null ? num(row.estimated_cost_vnd) : undefined,
+    actualCostVnd: row.actual_cost_vnd != null ? num(row.actual_cost_vnd) : undefined,
+    isDemo: bool(row.is_demo, true) as true,
+  };
+}
+
+export function mapDiaryEntry(row: Row): DiaryEntry {
+  return {
+    id: str(row.id),
+    seasonId: str(row.season_id),
+    batchCode: str(row.batch_code),
+    farmId: str(row.farm_id),
+    farmName: str(row.farm_name),
+    dateLabel: str(row.date_label),
+    stage: str(row.stage, "Làm đất & Tỉa cành") as DiaryEntry["stage"],
+    title: str(row.title),
+    detail: str(row.detail),
+    actorName: str(row.actor_name),
+    sourceDeclaration: str(row.source_declaration, "Nhà vườn tự khai") as DiaryEntry["sourceDeclaration"],
+    photo: row.photo ? String(row.photo) : undefined,
+    visibility: row.visibility ? String(row.visibility) as DiaryEntry["visibility"] : undefined,
+    materialsUsed: row.materials_used ? String(row.materials_used) : undefined,
+    version: row.version != null ? num(row.version) : undefined,
+    isDemo: bool(row.is_demo, true) as true,
+  };
+}
+
+export function mapCredential(row: Row): CredentialRecord {
+  return {
+    id: str(row.id),
+    typeId: str(row.type_id),
+    holderId: str(row.holder_id),
+    holderLegalName: str(row.holder_legal_name),
+    productIds: strArray(row.product_ids),
+    siteIds: strArray(row.site_ids),
+    facilityIds: strArray(row.facility_ids),
+    lotIds: row.lot_ids ? strArray(row.lot_ids) : undefined,
+    issuer: str(row.issuer),
+    certificateNumber: row.certificate_number ? String(row.certificate_number) : undefined,
+    decisionNumber: row.decision_number ? String(row.decision_number) : undefined,
+    standardVersion: row.standard_version ? String(row.standard_version) : undefined,
+    issueDate: row.issue_date ? String(row.issue_date) : undefined,
+    validFrom: row.valid_from ? String(row.valid_from) : undefined,
+    validTo: row.valid_to ? String(row.valid_to) : undefined,
+    evidenceIds: strArray(row.evidence_ids),
+    sourceUrl: row.source_url ? String(row.source_url) : undefined,
+    sourcePublishedAt: row.source_published_at ? String(row.source_published_at) : undefined,
+    checkedAt: row.checked_at ? String(row.checked_at) : undefined,
+    verificationLevel: str(row.verification_level, "self_declared") as CredentialRecord["verificationLevel"],
+    lifecycleStatus: str(row.lifecycle_status, "not_provided") as CredentialRecord["lifecycleStatus"],
+    scopeDescription: str(row.scope_description),
+    origin: str(row.origin, "synthetic") as CredentialRecord["origin"],
+    permissionToPublish: bool(row.permission_to_publish),
+    notesInternal: row.notes_internal ? String(row.notes_internal) : undefined,
+    renewedFromId: row.renewed_from_id ? String(row.renewed_from_id) : undefined,
+    eligibleCategoryHint: str(row.eligible_category_hint),
+  };
+}
+
+export function mapCredentialEvidence(row: Row): CredentialEvidence {
+  return {
+    id: str(row.id),
+    credentialId: str(row.credential_id),
+    label: str(row.label),
+    fileKey: row.file_key ? String(row.file_key) : undefined,
+    uploadedAtLabel: str(row.uploaded_at_label),
+    status: str(row.status, "pending") as CredentialEvidence["status"],
+    reviewedBy: row.reviewed_by ? String(row.reviewed_by) : undefined,
   };
 }
 

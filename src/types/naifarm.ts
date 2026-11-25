@@ -362,6 +362,16 @@ export interface TraceBatch {
   isDemo: true;
 }
 
+export interface CredentialEvidence {
+  id: string;
+  credentialId: string;
+  label: string;
+  fileKey?: string;
+  uploadedAtLabel: string;
+  status: "pending" | "approved" | "rejected";
+  reviewedBy?: string;
+}
+
 export interface FarmCertification {
   id: string;
   farmId: string;

@@ -8,6 +8,8 @@ import {
   mapCalendarEvent,
   mapCampaign,
   mapCoopPool,
+  mapCredential,
+  mapDiaryEntry,
   mapDocCase,
   mapExperience,
   mapExperienceBooking,
@@ -30,6 +32,7 @@ import {
   mapReceivablePayable,
   mapRfqRequest,
   mapSchoolClass,
+  mapSeason,
   mapSponsorCampaign,
   mapSubmission,
   mapSupplier,
@@ -46,6 +49,9 @@ import type {
   CalendarEvent,
   CampaignRecord,
   CoopPool,
+  CredentialRecord,
+  DiaryEntry,
+  ProductionSeason,
   DemoOrder,
   DocumentReviewCase,
   ExpenseEntry,
@@ -93,6 +99,9 @@ export interface CoreData {
   observances: ObservanceRecord[];
   campaigns: CampaignRecord[];
   promotions: PromotionRecord[];
+  seasons: ProductionSeason[];
+  diaryEntries: DiaryEntry[];
+  credentials: CredentialRecord[];
   lessons: LearningLesson[];
   submissions: StudentSubmission[];
   schoolClasses: SchoolClass[];
@@ -147,6 +156,9 @@ export async function fetchCoreData(): Promise<CoreData> {
     observanceRows,
     campaignRows,
     promotionRows,
+    seasonRows,
+    diaryRows,
+    credentialRows,
     lessonRows,
     submissionRows,
     classRows,
@@ -188,6 +200,9 @@ export async function fetchCoreData(): Promise<CoreData> {
     selectAll("official_observances"),
     selectAll("campaigns"),
     selectAll("promotions"),
+    selectAll("seasons"),
+    selectAll("diary_entries"),
+    selectAll("credentials"),
     selectAll("lessons"),
     selectAll("student_submissions"),
     selectAll("school_classes"),
@@ -275,6 +290,9 @@ export async function fetchCoreData(): Promise<CoreData> {
     observances: observanceRows.map(mapObservance),
     campaigns: campaignRows.map(mapCampaign),
     promotions: promotionRows.map(mapPromotion),
+    seasons: seasonRows.map(mapSeason),
+    diaryEntries: diaryRows.map(mapDiaryEntry),
+    credentials: credentialRows.map(mapCredential),
     lessons: lessonRows.map(mapLesson),
     submissions: submissionRows.map(mapSubmission),
     schoolClasses: classRows.map(mapSchoolClass),

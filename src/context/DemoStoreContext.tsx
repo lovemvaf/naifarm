@@ -885,6 +885,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           campaigns: core.campaigns.length ? core.campaigns : prev.campaigns,
           promotions: core.promotions.length ? core.promotions : prev.promotions,
           officialObservances: core.observances.length ? core.observances : prev.officialObservances,
+          seasons: core.seasons.length ? core.seasons : prev.seasons,
+          diaryEntries: core.diaryEntries.length ? core.diaryEntries : prev.diaryEntries,
+          credentials: core.credentials.length ? core.credentials : prev.credentialRecords,
           lessons: core.lessons.length ? core.lessons : prev.lessons,
           studentSubmissions: core.submissions.length ? core.submissions : prev.studentSubmissions,
           schoolClasses: core.schoolClasses.length ? core.schoolClasses : prev.schoolClasses,
@@ -2215,6 +2218,21 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addHarvestDiaryEvent = (batchCode: string, event: Omit<BatchEvent, "id">) => {
+    if (supabase) {
+      void supabase
+        .from("batch_events")
+        .insert({
+          id: `ev-${Date.now()}`,
+          batch_code: batchCode,
+          date_label: event.dateLabel,
+          title: event.title,
+          detail: event.detail,
+          actor_category: event.actorCategory,
+          source_declaration: event.sourceDeclaration,
+          photo: event.photo ?? null,
+        })
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       batches: prev.batches.map((b) =>
@@ -2249,6 +2267,29 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       version: 1,
       isDemo: true,
     };
+
+    if (supabase) {
+      void supabase
+        .from("diary_entries")
+        .insert({
+          id: created.id,
+          season_id: created.seasonId,
+          batch_code: created.batchCode || null,
+          farm_id: created.farmId || null,
+          farm_name: created.farmName,
+          date_label: created.dateLabel,
+          stage: created.stage,
+          title: created.title,
+          detail: created.detail,
+          actor_name: created.actorName,
+          source_declaration: created.sourceDeclaration,
+          photo: created.photo || null,
+          visibility: visibility,
+          version: created.version,
+          user_id: state.session?.user.id ?? null,
+        })
+        .then(() => {});
+    }
 
     setState((prev) => ({
       ...prev,
@@ -2306,6 +2347,28 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       batchCodes: [farm.id === "farm-ba-tu-demo" ? "NF-DEMO-001" : "NF-TT-2026-01"],
       isDemo: true,
     };
+    if (supabase) {
+      void supabase
+        .from("seasons")
+        .insert({
+          id: created.id,
+          farm_id: created.farmId,
+          farm_name: created.farmName,
+          administrative_unit_code: created.administrativeUnitCode,
+          administrative_unit_name: created.administrativeUnitName,
+          crop_name: created.cropName,
+          variety: created.variety,
+          season_name: created.seasonName,
+          start_date: created.startDate,
+          expected_harvest_date: created.expectedHarvestDate,
+          area_ha: created.areaHa,
+          growing_zone_code: created.growingZoneCode,
+          status: created.status,
+          summary: created.summary,
+          batch_codes: created.batchCodes,
+        })
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       seasons: [created, ...prev.seasons],
@@ -2369,6 +2432,16 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     note: string,
     actorName = "Điều phối / Chuyên môn",
   ) => {
+    if (supabase) {
+      const patch: Record<string, unknown> = {
+        lifecycle_status: nextStatus,
+        checked_at: "2026-11-25",
+        notes_internal: note,
+      };
+      if (nextStatus === "source_verified") patch.verification_level = "verifier_checked";
+      if (nextStatus === "document_matched") patch.verification_level = "doc_matched";
+      void supabase.from("credentials").update(patch).eq("id", recordId).then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       credentialRecords: prev.credentialRecords.map((r) =>
@@ -2415,6 +2488,40 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       renewedFromId: oldRec.id,
       checkedAt: "2026-11-25",
     };
+    if (supabase) {
+      void supabase
+        .from("credentials")
+        .insert({
+          id: renewed.id,
+          type_id: renewed.typeId,
+          holder_id: renewed.holderId,
+          holder_legal_name: renewed.holderLegalName,
+          product_ids: renewed.productIds,
+          site_ids: renewed.siteIds,
+          facility_ids: renewed.facilityIds,
+          lot_ids: renewed.lotIds ?? null,
+          issuer: renewed.issuer,
+          certificate_number: renewed.certificateNumber ?? null,
+          decision_number: renewed.decisionNumber ?? null,
+          standard_version: renewed.standardVersion ?? null,
+          issue_date: renewed.issueDate ?? null,
+          valid_from: renewed.validFrom ?? null,
+          valid_to: renewed.validTo ?? null,
+          evidence_ids: renewed.evidenceIds,
+          source_url: renewed.sourceUrl ?? null,
+          source_published_at: renewed.sourcePublishedAt ?? null,
+          checked_at: renewed.checkedAt ?? null,
+          verification_level: renewed.verificationLevel,
+          lifecycle_status: renewed.lifecycleStatus,
+          scope_description: renewed.scopeDescription,
+          origin: renewed.origin,
+          permission_to_publish: renewed.permissionToPublish,
+          notes_internal: renewed.notesInternal ?? null,
+          renewed_from_id: renewed.renewedFromId ?? null,
+          eligible_category_hint: renewed.eligibleCategoryHint,
+        })
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       credentialRecords: [renewed, ...prev.credentialRecords],
