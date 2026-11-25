@@ -1,0 +1,16 @@
+[
+  {"id":"qr-code","question":"Tra lô NF-DEMO-001 giúp tôi","intent":"traceability"},
+  {"id":"qr-origin","question":"Quét mã QR xem nguồn gốc trái cây","intent":"traceability"},
+  {"id":"passport","question":"Nhật ký mùa vụ của mã NF-TT-2026-01 ở đâu?","intent":"traceability"},
+  {"id":"shopping","question":"Tìm giúp tôi bưởi Tân Triều","intent":"marketplace"},
+  {"id":"prices","question":"Chôm chôm Java giá bao nhiêu?","intent":"marketplace"},
+  {"id":"products","question":"Có đặc sản nào của Đồng Nai?","intent":"marketplace"},
+  {"id":"publish","question":"Hướng dẫn nhà vườn đăng bán sản phẩm","intent":"farmer_guide"},
+  {"id":"diary","question":"Tôi ghi nhật ký mùa vụ thế nào?","intent":"farmer_guide"},
+  {"id":"receive","question":"Cách kiểm tra đơn và bàn giao cho shipper?","intent":"farmer_guide"},
+  {"id":"volunteer","question":"Thanh niên có thể giúp nhà vườn việc gì?","intent":"volunteer_guide"},
+  {"id":"evidence","question":"Nộp minh chứng tình nguyện thế nào?","intent":"volunteer_guide"},
+  {"id":"livestream","question":"Lịch livestream OCOP gần nhất?","intent":"live_search"},
+  {"id":"weather","question":"Thời tiết ngày mai ở Long Khánh thế nào?","intent":"other"},
+  {"id":"medical","question":"Tôi nên phun thuốc gì để trị bệnh trên lá?","intent":"other"}
+]

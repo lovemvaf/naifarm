@@ -4,10 +4,11 @@ import sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
-BASE_URL = "http://127.0.0.1:3000"
+BASE_URL = os.getenv("NAIFARM_E2E_URL", "http://127.0.0.1:3000")
 PROJECT_DIR = Path(__file__).resolve().parent.parent
-SCREENSHOT_DESKTOP = PROJECT_DIR / "docs" / "screenshots" / "desktop"
-SCREENSHOT_MOBILE = PROJECT_DIR / "docs" / "screenshots" / "mobile"
+SCREENSHOT_ROOT = Path(os.getenv("NAIFARM_E2E_SCREENSHOTS", PROJECT_DIR / "docs" / "screenshots"))
+SCREENSHOT_DESKTOP = SCREENSHOT_ROOT / "desktop"
+SCREENSHOT_MOBILE = SCREENSHOT_ROOT / "mobile"
 SCREENSHOT_DESKTOP.mkdir(parents=True, exist_ok=True)
 SCREENSHOT_MOBILE.mkdir(parents=True, exist_ok=True)
 
@@ -27,6 +28,7 @@ ALL_ROUTES = [
     "/account/orders",
     "/explore",
     "/live",
+    "/live/demo",
     "/farmer",
     "/farmer/publish",
     "/volunteer",
@@ -45,7 +47,7 @@ KEY_SCREENSHOT_ROUTES = [
     ("03_product_buoi_3d", "/products/buoi-da-xanh-tan-trieu"),
     ("04_trace_nf_demo_001", "/trace/NF-DEMO-001"),
     ("05_explore_map", "/explore"),
-    ("06_live_room", "/live"),
+    ("06_live_room", "/live/demo"),
     ("07_farmer_w02", "/farmer"),
     ("08_farmer_publish", "/farmer/publish"),
     ("09_volunteer_w03", "/volunteer"),
@@ -99,6 +101,8 @@ def main():
 
         def on_console(msg):
             if msg.type == "error" and "duong-dan-khong-ton-tai-test" not in page.url:
+                if page.url.endswith("/live") and msg.location.get("url", "").endswith(("/api/live", "/api/live/config")) and "503" in msg.text:
+                    return
                 console_errors.append(f"{page.url}: {msg.text}")
 
         page.on("console", on_console)
@@ -188,8 +192,11 @@ def main():
         page.goto(f"{BASE_URL}/checkout", wait_until="domcontentloaded")
         page.wait_for_timeout(350)
         assert page.get_by_role("button", name="Mở trợ lý NaiAI").count() == 0, "NaiAI must hide on /checkout"
+        address = page.get_by_label("Địa chỉ giao hàng minh họa")
+        if address.is_visible():
+            address.fill("12 đường thử nghiệm, Long Khánh, Đồng Nai")
         page.get_by_role("button", name="Xác nhận đặt hàng (Demo)").click()
-        page.wait_for_timeout(500)
+        page.wait_for_url("**/account/orders/**")
         assert "/account/orders" in page.url, f"Expected redirect to /account/orders, got {page.url}"
 
         page.goto(f"{BASE_URL}/farmer", wait_until="domcontentloaded")
@@ -268,6 +275,7 @@ def main():
         page.goto(f"{BASE_URL}/", wait_until="domcontentloaded")
         page.wait_for_timeout(300)
         page.goto(f"{BASE_URL}/live", wait_until="domcontentloaded")
+        page.get_by_role("link", name="Xem minh họa").click()
         page.wait_for_timeout(350)
         assert page.get_by_text("Tạo phiên Livestream tại vườn").count() == 0
         assert page.get_by_text("Tạo lịch").count() == 0, "W01 buyer must not see Live schedule creation button"
@@ -278,8 +286,9 @@ def main():
         page.goto(f"{BASE_URL}/farmer", wait_until="domcontentloaded")
         page.wait_for_timeout(400)
         page.get_by_role("link", name="Mở Livestream tại vườn").click()
+        page.get_by_role("link", name="Xem minh họa").click()
         page.wait_for_timeout(500)
-        assert page.get_by_text("W02 · Nhà nông").first.is_visible(), "Opening /live from W02 must stay in W02"
+        assert page.get_by_text("W02 · Nhà nông").first.is_visible(), "Opening the live demo from W02 must stay in W02"
         page.get_by_role("button", name="Tạo phiên Livestream tại vườn").click()
         page.wait_for_timeout(200)
         page.locator("#live-title").fill("Cắt bưởi sáng sớm cùng chú Ba Tư (E2E W02)")

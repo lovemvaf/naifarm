@@ -344,3 +344,26 @@ for (let i = 1; i <= INITIAL_PRODUCTS.length; i += 1) {
 }
 
 export const INITIAL_BATCHES: TraceBatch[] = [...GOLDEN_BATCHES, ...EXTRA_BATCHES];
+
+const batchCodes = new Set(INITIAL_BATCHES.map((batch) => batch.batchCode));
+for (const product of INITIAL_PRODUCTS) {
+  if (batchCodes.has(product.batchCode)) continue;
+  batchCodes.add(product.batchCode);
+  INITIAL_BATCHES.push({
+    batchCode: product.batchCode,
+    productId: product.id,
+    productName: product.name,
+    farmId: product.farmId,
+    farmName: product.farmName,
+    administrativeUnitCode: product.administrativeUnitCode,
+    administrativeUnitName: product.administrativeUnitName,
+    region: product.region,
+    harvestDate: "Chưa có dữ liệu",
+    packDate: "Chưa có dữ liệu",
+    declarationLevel: "Chưa có nhật ký lô riêng cho sản phẩm minh họa",
+    docStatus: "Chưa có hồ sơ lô riêng (Demo)",
+    summary: "Sản phẩm mẫu chưa có nhật ký mùa vụ riêng. Mã QR mở hồ sơ demo và không xác nhận nguồn gốc thực tế.",
+    events: [],
+    isDemo: true,
+  });
+}
