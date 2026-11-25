@@ -1,8 +1,11 @@
 import type {
   AdminGrant,
   AdminUnit,
+  AppRole,
   AuditLogEntry,
   BatchEvent,
+  CalendarEvent,
+  CampaignRecord,
   DemoGeoPoint,
   DemoOrder,
   DemoOrderItem,
@@ -11,13 +14,14 @@ import type {
   ExperienceBooking,
   ExperiencePackage,
   Farm,
+  ObservanceRecord,
   Product,
   Profile,
+  PromotionRecord,
   RfqRequest,
   SupportRequest,
   TraceBatch,
   VolunteerMission,
-  AppRole,
 } from "@/types/naifarm";
 import { getAdministrativeUnitByCode } from "@/lib/geography/administrative-lookup";
 
@@ -318,6 +322,153 @@ export function mapAuditLog(row: Row): AuditLogEntry {
     action: str(row.action),
     target: str(row.target),
     note: str(row.note),
+  };
+}
+
+export function mapCalendarEvent(row: Row): CalendarEvent {
+  return {
+    id: str(row.id),
+    title: str(row.title),
+    titleEn: str(row.title_en),
+    description: str(row.description),
+    descriptionEn: str(row.description_en),
+    eventKind: str(row.event_kind, "meeting") as CalendarEvent["eventKind"],
+    classification: str(row.classification, "platform_initiative") as CalendarEvent["classification"],
+    organizer: str(row.organizer),
+    status: str(row.status, "scheduled") as CalendarEvent["status"],
+    startIso: str(row.start_iso),
+    endIso: str(row.end_iso),
+    allDay: bool(row.all_day),
+    timezone: str(row.timezone, "Asia/Ho_Chi_Minh") as CalendarEvent["timezone"],
+    recurrenceRule: row.recurrence_rule ? String(row.recurrence_rule) : undefined,
+    priority: str(row.priority, "normal") as CalendarEvent["priority"],
+    visibility: str(row.visibility, "public") as CalendarEvent["visibility"],
+    administrativeUnitCode: row.administrative_unit_code ? String(row.administrative_unit_code) : undefined,
+    farmId: row.farm_id ? String(row.farm_id) : undefined,
+    organizationId: row.organization_id ? String(row.organization_id) : undefined,
+    assignedTo: row.assigned_to ? String(row.assigned_to) : undefined,
+    linkedRoute: row.linked_route ? String(row.linked_route) : undefined,
+    linkedEntityId: row.linked_entity_id ? String(row.linked_entity_id) : undefined,
+    locationLabel: row.location_label ? String(row.location_label) : undefined,
+    isOfficialReadOnly: bool(row.is_official_read_only),
+  };
+}
+
+export function mapObservance(row: Row): ObservanceRecord {
+  return {
+    id: str(row.id),
+    titleVi: str(row.title_vi),
+    titleEn: str(row.title_en),
+    dateLabelVi: str(row.date_label_vi),
+    monthDay: str(row.month_day),
+    isLunarVariable: bool(row.is_lunar_variable),
+    yearVerified: num(row.year_verified),
+    legalOrOfficialSource: str(row.legal_or_official_source),
+    sourceUrl: str(row.source_url),
+    category: str(row.category, "vietnam_official") as ObservanceRecord["category"],
+    noteVi: str(row.note_vi),
+    noteEn: str(row.note_en),
+    isReadOnlyOfficial: bool(row.is_read_only_official, true) as true,
+  };
+}
+
+export function mapCampaign(row: Row): CampaignRecord {
+  return {
+    id: str(row.id),
+    slug: str(row.slug),
+    titleVi: str(row.title_vi),
+    titleEn: str(row.title_en),
+    subtitleVi: str(row.subtitle_vi),
+    subtitleEn: str(row.subtitle_en),
+    objectiveVi: str(row.objective_vi),
+    objectiveEn: str(row.objective_en),
+    classification: str(row.classification, "platform_initiative") as CampaignRecord["classification"],
+    organizer: str(row.organizer),
+    targetAudience: strArray(row.target_audience).filter(
+      (a): a is CampaignRecord["targetAudience"][number] =>
+        a === "domestic_customer" || a === "international_guest" || a === "adult_member" || a === "organization",
+    ),
+    status: str(row.status, "draft") as CampaignRecord["status"],
+    startIso: str(row.start_iso),
+    endIso: str(row.end_iso),
+    timezone: str(row.timezone, "Asia/Ho_Chi_Minh") as CampaignRecord["timezone"],
+    priority: num(row.priority),
+    showNationalFlagAccent: bool(row.show_national_flag_accent),
+    bannerImage: str(row.banner_image),
+    bannerAltVi: str(row.banner_alt_vi),
+    bannerAltEn: str(row.banner_alt_en),
+    primaryCtaLabelVi: str(row.primary_cta_label_vi),
+    primaryCtaLabelEn: str(row.primary_cta_label_en),
+    primaryCtaHref: str(row.primary_cta_href),
+    makerName: str(row.maker_name),
+    approverName: row.approver_name ? String(row.approver_name) : undefined,
+    productIds: strArray(row.product_ids),
+    farmIds: strArray(row.farm_ids),
+    experienceSlugs: strArray(row.experience_slugs),
+    liveIds: strArray(row.live_ids),
+    lessonSlugs: strArray(row.lesson_slugs),
+    promotionIds: strArray(row.promotion_ids),
+    budgetPlannedVnd: num(row.budget_planned_vnd),
+    budgetSpentVnd: num(row.budget_spent_vnd),
+    fixtureSessionsCount: num(row.fixture_sessions_count),
+    fixtureOrdersCount: num(row.fixture_orders_count),
+    fixtureRevenueVnd: num(row.fixture_revenue_vnd),
+    agendaItems: Array.isArray(row.agenda_items) ? (row.agenda_items as CampaignRecord["agendaItems"]) : [],
+    recapStoryVi: row.recap_story_vi ? String(row.recap_story_vi) : undefined,
+    recapStoryEn: row.recap_story_en ? String(row.recap_story_en) : undefined,
+  };
+}
+
+export function mapPromotion(row: Row): PromotionRecord {
+  return {
+    id: str(row.id),
+    code: str(row.code),
+    campaignId: row.campaign_id ? String(row.campaign_id) : undefined,
+    titleVi: str(row.title_vi),
+    titleEn: str(row.title_en),
+    kind: str(row.kind, "percent") as PromotionRecord["kind"],
+    discountPercent: row.discount_percent != null ? Number(row.discount_percent) : undefined,
+    discountFixedVnd: row.discount_fixed_vnd != null ? num(row.discount_fixed_vnd) : undefined,
+    shippingDiscountVnd: row.shipping_discount_vnd != null ? num(row.shipping_discount_vnd) : undefined,
+    minSpendVnd: num(row.min_spend_vnd),
+    maxDiscountVnd: num(row.max_discount_vnd),
+    maxRedemptionsTotal: num(row.max_redemptions_total),
+    redeemedCount: num(row.redeemed_count),
+    stockAllocatedUnits: row.stock_allocated_units != null ? num(row.stock_allocated_units) : undefined,
+    stockUsedUnits: row.stock_used_units != null ? num(row.stock_used_units) : undefined,
+    stackable: bool(row.stackable),
+    eligibleLocales: strArray(row.eligible_locales).filter(
+      (l): l is PromotionRecord["eligibleLocales"][number] => l === "vi" || l === "en",
+    ),
+    eligibleCategories: row.eligible_categories
+      ? strArray(row.eligible_categories).filter(
+          (c): c is Product["category"] =>
+            [
+              "Trái cây tươi",
+              "Bưởi & Cây có múi",
+              "Chôm chôm & Sầu riêng",
+              "Hạt điều & Rang củi",
+              "Cà phê & Ca cao",
+              "Mật ong & Rượu trái cây",
+              "Nông sản chế biến & Mứt",
+              "Rau củ & Nấm sạch",
+              "Tiêu & Gia vị vùng đồi",
+              "Quà tặng OCOP & Combo",
+              "Thảo mộc & Gia vị hữu cơ mẫu",
+              "Đặc sản du lịch & Hộp quà",
+            ].includes(c as Product["category"]),
+        )
+      : undefined,
+    eligibleProductIds: row.eligible_product_ids ? strArray(row.eligible_product_ids) : undefined,
+    targetSellerId: row.target_seller_id ? String(row.target_seller_id) : undefined,
+    startIso: str(row.start_iso),
+    endIso: str(row.end_iso),
+    active: bool(row.active),
+    approvedBy: row.approved_by ? String(row.approved_by) : undefined,
+    makerName: str(row.maker_name),
+    budgetCapVnd: num(row.budget_cap_vnd),
+    budgetUsedVnd: num(row.budget_used_vnd),
+    excludeMinors: bool(row.exclude_minors),
   };
 }
 

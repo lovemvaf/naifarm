@@ -4,19 +4,27 @@ import {
   mapAuditLog,
   mapBatch,
   mapBatchEvent,
+  mapCalendarEvent,
+  mapCampaign,
   mapDocCase,
   mapExperience,
   mapExperienceBooking,
   mapFarm,
   mapGrant,
   mapMission,
+  mapObservance,
   mapOrder,
   mapOrderItem,
   mapProduct,
+  mapPromotion,
   mapRfqRequest,
   mapSupportRequest,
 } from "@/lib/supabase/mappers";
 import type {
+  CalendarEvent,
+  CampaignRecord,
+  ObservanceRecord,
+  PromotionRecord,
   AdminGrant,
   AdminUnit,
   AuditLogEntry,
@@ -45,6 +53,10 @@ export interface CoreData {
   adminGrants: AdminGrant[];
   auditLogs: AuditLogEntry[];
   adminUnits: AdminUnit[];
+  calendarEvents: CalendarEvent[];
+  observances: ObservanceRecord[];
+  campaigns: CampaignRecord[];
+  promotions: PromotionRecord[];
   cartItems: { productId: string; quantity: number; selectedOptionLabel?: string }[];
   favoriteIds: string[];
   followedIds: string[];
@@ -77,6 +89,10 @@ export async function fetchCoreData(): Promise<CoreData> {
     grantRows,
     auditRows,
     unitRows,
+    calendarRows,
+    observanceRows,
+    campaignRows,
+    promotionRows,
     cartRows,
     favoriteRows,
     followRows,
@@ -96,6 +112,10 @@ export async function fetchCoreData(): Promise<CoreData> {
     selectAll("admin_grants"),
     selectAll("audit_logs"),
     selectAll("admin_units"),
+    selectAll("calendar_events"),
+    selectAll("official_observances"),
+    selectAll("campaigns"),
+    selectAll("promotions"),
     userId
       ? supabase.from("cart_items").select("*").eq("user_id", userId).then((r) => (r.error ? [] : r.data ?? []))
       : Promise.resolve([]),
@@ -155,6 +175,10 @@ export async function fetchCoreData(): Promise<CoreData> {
     adminGrants: grantRows.map(mapGrant),
     auditLogs: auditRows.map(mapAuditLog),
     adminUnits: unitRows.map(mapAdminUnit),
+    calendarEvents: calendarRows.map(mapCalendarEvent),
+    observances: observanceRows.map(mapObservance),
+    campaigns: campaignRows.map(mapCampaign),
+    promotions: promotionRows.map(mapPromotion),
     cartItems: cartRows.map((row) => ({
       productId: String(row.product_id ?? ""),
       quantity: Number(row.quantity ?? 1),

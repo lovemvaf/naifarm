@@ -43,6 +43,7 @@ import {
   INITIAL_CALENDAR_EVENTS,
   INITIAL_CAMPAIGNS,
   INITIAL_PROMOTIONS,
+  OFFICIAL_OBSERVANCES,
 } from "@/data/fixtures/calendar-campaigns";
 import { DEFAULT_CLOCK_ISO, getActiveClockIso } from "@/lib/clock/vn-clock";
 import { applyPromotionsToCart } from "@/lib/commerce/promotion-engine";
@@ -103,6 +104,7 @@ import type {
   MemberDelivery,
   MentorCase,
   OrderStatus,
+  ObservanceRecord,
   OrganizationKind,
   PartnerOrganization,
   Product,
@@ -249,6 +251,7 @@ interface DemoState {
   calendarEvents: CalendarEvent[];
   campaigns: CampaignRecord[];
   promotions: PromotionRecord[];
+  officialObservances: ObservanceRecord[];
   internationalInquiries: InternationalInquiry[];
   dismissedReminderKeys: string[];
   schoolClasses: SchoolClass[];
@@ -363,6 +366,7 @@ function getInitialState(): DemoState {
     calendarEvents: INITIAL_CALENDAR_EVENTS,
     campaigns: INITIAL_CAMPAIGNS,
     promotions: INITIAL_PROMOTIONS,
+    officialObservances: OFFICIAL_OBSERVANCES,
     internationalInquiries: INITIAL_INQUIRIES,
     dismissedReminderKeys: [],
     schoolClasses: INITIAL_SCHOOL_CLASSES,
@@ -877,6 +881,10 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           docCases: core.docCases.length ? core.docCases : prev.docCases,
           adminGrants: core.adminGrants.length ? core.adminGrants : prev.adminGrants,
           auditLogs: core.auditLogs.length ? core.auditLogs : prev.auditLogs,
+          calendarEvents: core.calendarEvents.length ? core.calendarEvents : prev.calendarEvents,
+          campaigns: core.campaigns.length ? core.campaigns : prev.campaigns,
+          promotions: core.promotions.length ? core.promotions : prev.promotions,
+          officialObservances: core.observances.length ? core.observances : prev.officialObservances,
           cart: core.cartItems.length ? core.cartItems : prev.cart,
           favoriteProductIds: core.favoriteIds.length ? core.favoriteIds : prev.favoriteProductIds,
           followedProductIds: core.followedIds.length ? core.followedIds : prev.followedProductIds,
@@ -1360,6 +1368,34 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       };
     }
     const overlaps = detectCalendarOverlap(state.calendarEvents, ev);
+    if (supabase) {
+      void supabase.from("calendar_events").upsert({
+        id: ev.id,
+        title: ev.title,
+        title_en: ev.titleEn,
+        description: ev.description,
+        description_en: ev.descriptionEn,
+        event_kind: ev.eventKind,
+        classification: ev.classification,
+        organizer: ev.organizer,
+        status: ev.status,
+        start_iso: ev.startIso,
+        end_iso: ev.endIso,
+        all_day: ev.allDay,
+        timezone: ev.timezone,
+        recurrence_rule: ev.recurrenceRule ?? null,
+        priority: ev.priority,
+        visibility: ev.visibility,
+        administrative_unit_code: ev.administrativeUnitCode ?? null,
+        farm_id: ev.farmId ?? null,
+        organization_id: ev.organizationId ?? null,
+        assigned_to: ev.assignedTo ?? null,
+        linked_route: ev.linkedRoute ?? null,
+        linked_entity_id: ev.linkedEntityId ?? null,
+        location_label: ev.locationLabel ?? null,
+        is_official_read_only: ev.isOfficialReadOnly ?? false,
+      }).then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       calendarEvents: existing
@@ -1394,6 +1430,54 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       fixtureOrdersCount: 0,
       fixtureRevenueVnd: 0,
     };
+    if (supabase) {
+      void supabase.from("campaigns").insert({
+        id: created.id,
+        slug:
+          created.slug ||
+          created.titleVi
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/đ/g, "d")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, ""),
+        title_vi: created.titleVi,
+        title_en: created.titleEn,
+        subtitle_vi: created.subtitleVi,
+        subtitle_en: created.subtitleEn,
+        objective_vi: created.objectiveVi,
+        objective_en: created.objectiveEn,
+        classification: created.classification,
+        organizer: created.organizer,
+        target_audience: created.targetAudience,
+        status: created.status,
+        start_iso: created.startIso,
+        end_iso: created.endIso,
+        timezone: created.timezone,
+        priority: created.priority,
+        show_national_flag_accent: created.showNationalFlagAccent,
+        banner_image: created.bannerImage,
+        banner_alt_vi: created.bannerAltVi,
+        banner_alt_en: created.bannerAltEn,
+        primary_cta_label_vi: created.primaryCtaLabelVi,
+        primary_cta_label_en: created.primaryCtaLabelEn,
+        primary_cta_href: created.primaryCtaHref,
+        maker_name: created.makerName,
+        product_ids: created.productIds,
+        farm_ids: created.farmIds,
+        experience_slugs: created.experienceSlugs,
+        live_ids: created.liveIds,
+        lesson_slugs: created.lessonSlugs,
+        promotion_ids: created.promotionIds,
+        budget_planned_vnd: created.budgetPlannedVnd,
+        budget_spent_vnd: 0,
+        fixture_sessions_count: 0,
+        fixture_orders_count: 0,
+        fixture_revenue_vnd: 0,
+        agenda_items: created.agendaItems,
+      }).then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       campaigns: [created, ...prev.campaigns],
@@ -1417,6 +1501,19 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
             check.reason ?? "Người tạo chiến dịch không thể tự phê duyệt phát hành (Maker ≠ Checker).",
         };
       }
+    }
+    if (supabase) {
+      void supabase
+        .from("campaigns")
+        .update({
+          status: nextStatus,
+          approver_name:
+            nextStatus === "approved" || nextStatus === "scheduled" || nextStatus === "active"
+              ? actorName
+              : null,
+        })
+        .eq("id", campaignId)
+        .then(() => {});
     }
     setState((prev) => ({
       ...prev,
@@ -1746,6 +1843,10 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           );
         }
         persistCart([]);
+        const redeemedPromoIds = promoEval.applied.map((a) => a.promo.id);
+        if (supabase && redeemedPromoIds.length) {
+          void supabase.rpc("increment_promo_redemption", { promo_id: redeemedPromoIds[0], qty: redeemedPromoIds.length });
+        }
       })();
     }
 

@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { useLocale } from "@/context/LocaleContext";
-import { OFFICIAL_OBSERVANCES } from "@/data/fixtures/calendar-campaigns";
 import { formatCountdownRemaining, formatVnDate } from "@/lib/clock/vn-clock";
 import {
   getPromotionTimeRemainingLabel,
@@ -41,6 +40,7 @@ function EventsHubInner() {
     activeClockIso,
     campaigns,
     promotions,
+    officialObservances,
     appliedPromoCodes,
     toggleAppliedPromoCode,
   } = useDemoStore();
@@ -291,7 +291,7 @@ function EventsHubInner() {
             }
           />
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {OFFICIAL_OBSERVANCES.map((obs) => (
+            {officialObservances.map((obs) => (
               <Card key={obs.id} className="space-y-2 p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Badge tone="gold">{obs.dateLabelVi}</Badge>

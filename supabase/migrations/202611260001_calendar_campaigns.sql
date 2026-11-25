@@ -156,3 +156,18 @@ create policy promotions_write on public.promotions for all
 
 grant select on public.calendar_events, public.official_observances, public.campaigns, public.promotions to anon, authenticated;
 grant insert, update, delete on public.calendar_events, public.official_observances, public.campaigns, public.promotions to authenticated;
+
+create or replace function public.increment_promo_redemption(promo_id text, qty integer default 1)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.promotions
+  set redeemed_count = redeemed_count + qty
+  where id = promo_id;
+end;
+$$;
+
+grant execute on function public.increment_promo_redemption(text, integer) to anon, authenticated;
