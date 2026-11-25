@@ -4,8 +4,10 @@ import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
+  Banknote,
   CheckCircle2,
   MapPin,
+  QrCode,
   ShoppingBag,
   Sparkles,
   Tag,
@@ -19,6 +21,7 @@ import { ADMINISTRATIVE_UNITS } from "@/lib/geography/administrative-lookup";
 import { formatVnd } from "@/lib/format";
 import { notifyError, notifySuccess } from "@/lib/toast";
 import { Badge, Button, Card, EmptyState } from "@/components/ui/Primitives";
+import { SepayPaymentBox } from "@/components/payment/SepayPaymentBox";
 
 const DELIVERY_SLOTS = [
   "Sáng hôm nay (08:30 – 11:30)",
@@ -34,17 +37,20 @@ export default function CheckoutPage() {
   const {
     cart,
     products,
+    orders,
     addressBook,
     authUser,
     promotions,
     appliedPromoCodes,
     activeClockIso,
     placeDemoOrder,
+    markOrderPaid,
   } = useDemoStore();
 
   const [customerName, setCustomerName] = useState(authUser?.name ?? "Ngọc Linh");
   const [customerPhone, setCustomerPhone] = useState("090x xxx 128");
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "sepay_bank">("sepay_bank");
   const [addressScope, setAddressScope] = useState<"dongnai" | "outside">("dongnai");
   const [unitCode, setUnitCode] = useState(authUser?.unitCode ?? "26041");
   const [streetDetail, setStreetDetail] = useState("Số 18 Đường Nguyễn Ái Quốc");
@@ -95,6 +101,7 @@ export default function CheckoutPage() {
       : outsideAddress.trim() || "Ngoài tỉnh Đồng Nai";
 
   if (placedOrderIds.length > 0) {
+    const placedOrders = orders.filter((o) => placedOrderIds.includes(o.id));
     return (
       <div className="mx-auto max-w-[780px] space-y-6 px-4 py-10">
         <Card className="space-y-5 border-[#245B3D] p-6 md:p-8">
@@ -108,7 +115,9 @@ export default function CheckoutPage() {
                 Đặt hàng thành công ({placedOrderIds.length} đơn theo nhà vườn)
               </h1>
               <p className="mt-1 text-sm text-[#52645A]">
-                Đơn hàng trong không gian trải nghiệm, không phát sinh thanh toán hoặc giao hàng thực tế.
+                {paymentMethod === "sepay_bank"
+                  ? "Vui lòng quét mã VietQR bên dưới để chuyển khoản tới MBBank (tự động xác nhận qua SePay Webhook)."
+                  : "Đơn hàng trong không gian trải nghiệm, không phát sinh thanh toán hoặc giao hàng thực tế."}
               </p>
             </div>
           </div>
@@ -127,6 +136,20 @@ export default function CheckoutPage() {
               ))}
             </div>
           </div>
+
+          {paymentMethod === "sepay_bank" ? (
+            <div className="space-y-4">
+              {placedOrders.map((ord) => (
+                <SepayPaymentBox
+                  key={ord.id}
+                  orderId={ord.id}
+                  amountVnd={ord.totalVnd}
+                  initialPaid={ord.paymentStatus === "paid_bank"}
+                  onPaymentSuccess={() => markOrderPaid(ord.id)}
+                />
+              ))}
+            </div>
+          ) : null}
 
           <div className="flex flex-wrap gap-3">
             <Link
@@ -188,6 +211,7 @@ export default function CheckoutPage() {
               deliveryAddress: composedAddress,
               deliverySlotLabel,
               couponCode: couponCode.trim() || undefined,
+              paymentMethod,
             });
             if (!res.ok) {
               notifyError(res.message);
@@ -383,6 +407,46 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               ) : null}
+            </Card>
+
+            <Card className="space-y-4 p-5">
+              <h2 className="text-base font-bold text-[#25352B]">3. Phương thức thanh toán</h2>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("sepay_bank")}
+                  className={`flex min-h-[58px] cursor-pointer items-center gap-3 rounded-[12px] border p-3.5 text-left transition-all ${
+                    paymentMethod === "sepay_bank"
+                      ? "border-[#245B3D] bg-[#EAF0E5]"
+                      : "border-[#D6DED2] bg-white hover:border-[#788A7B]"
+                  }`}
+                >
+                  <QrCode className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold text-[#25352B]">Chuyển khoản VietQR</p>
+                      <Badge tone="success" className="text-[10px] px-2 py-0.5">SePay · MBBank</Badge>
+                    </div>
+                    <p className="text-xs text-[#52645A]">Quét mã QR qua MBBank, tự động xác nhận</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("cod")}
+                  className={`flex min-h-[58px] cursor-pointer items-center gap-3 rounded-[12px] border p-3.5 text-left transition-all ${
+                    paymentMethod === "cod"
+                      ? "border-[#245B3D] bg-[#EAF0E5]"
+                      : "border-[#D6DED2] bg-white hover:border-[#788A7B]"
+                  }`}
+                >
+                  <Banknote className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-bold text-[#25352B]">Thanh toán khi nhận (COD)</p>
+                    <p className="text-xs text-[#52645A]">Tiền mặt khi giao tận nơi hoặc tại vườn</p>
+                  </div>
+                </button>
+              </div>
             </Card>
           </div>
 

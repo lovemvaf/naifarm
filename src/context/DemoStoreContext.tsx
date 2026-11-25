@@ -399,6 +399,7 @@ interface PlaceOrderInput {
   deliveryAddress: string;
   deliverySlotLabel?: string;
   couponCode?: string;
+  paymentMethod?: "cod" | "sepay_bank";
 }
 
 interface SignUpGuestInput {
@@ -503,6 +504,10 @@ interface DemoStoreContextValue extends DemoState {
     orderIds?: string[];
     message: string;
   };
+  markOrderPaid: (
+    orderId: string,
+    transactionInfo?: { gateway?: string; referenceCode?: string; amountVnd?: number }
+  ) => void;
   updateOrderStatus: (orderId: string, status: OrderStatus, cancelReason?: string) => void;
   requestOrderRefund: (
     orderId: string,
@@ -1598,7 +1603,11 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         refundedShippingVnd: 0,
         platformFeeVnd: Math.round((subtotalVnd - discountVnd) * 0.05),
         couponCode: discountVnd > 0 ? couponNorm : undefined,
-        paymentLabel: "Thanh toán khi nhận hàng (không gian trải nghiệm)",
+        paymentMethod: input.paymentMethod ?? "cod",
+        paymentLabel:
+          input.paymentMethod === "sepay_bank"
+            ? "Chuyển khoản VietQR qua SePay (MBBank)"
+            : "Thanh toán khi nhận hàng (không gian trải nghiệm)",
         paymentStatus: "unpaid",
         settlementStatus: "pending",
         status: "pending_confirm",
@@ -1697,6 +1706,31 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
             time: idx === activeSteps.length - 1 ? "Cập nhật từ nhà vườn" : "Hoàn tất",
             done: true,
           })),
+        };
+      }),
+    }));
+  };
+
+  const markOrderPaid = (
+    orderId: string,
+    transactionInfo?: { gateway?: string; referenceCode?: string; amountVnd?: number }
+  ) => {
+    setState((prev) => ({
+      ...prev,
+      orders: prev.orders.map((ord) => {
+        if (ord.id !== orderId && ord.parentOrderId !== orderId) return ord;
+        return {
+          ...ord,
+          paymentStatus: "paid_bank",
+          paymentLabel: `Đã thanh toán MBBank (SePay)${transactionInfo?.referenceCode ? ` · ${transactionInfo.referenceCode}` : ""}`,
+          timeline: [
+            ...ord.timeline,
+            {
+              step: "Xác nhận chuyển khoản MBBank (SePay)",
+              time: "Vừa xong",
+              done: true,
+            },
+          ],
         };
       }),
     }));
@@ -2607,6 +2641,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         toggleCompareProduct,
         clearCompareProducts,
         placeDemoOrder,
+        markOrderPaid,
         updateOrderStatus,
         requestOrderRefund,
         decideRefundRequest,
