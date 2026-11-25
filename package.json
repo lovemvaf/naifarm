@@ -13,7 +13,10 @@
     "test:data": "tsx scripts/validate-mock-data.ts",
     "test:metrics": "tsx scripts/test-metrics.ts",
     "test:quality": "tsx scripts/test-quality.ts",
-    "test:qr": "tsx scripts/verify-qr-decode.ts"
+    "test:qr": "tsx scripts/verify-qr-decode.ts",
+    "test:deepseek": "node --env-file=.env test/test-deepseek.mjs",
+    "test:deepseek:py": "python test/test_deepseek.py",
+    "balance": "node --env-file=.env test/check-balance.mjs"
   },
   "dependencies": {
     "@turf/distance": "^7.4.0",

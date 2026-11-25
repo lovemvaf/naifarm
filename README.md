@@ -2,7 +2,7 @@
 
 **Thông điệp thương hiệu:** *Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị.*
 
-Ứng dụng web **Frontend-Only** thuộc bài thi **Nhóm 8 — Hackathon Thành phố Đồng Nai năm 2026**, nâng cấp lên phiên bản **NaiFarm V3.0** kết nối thương mại nông sản OCOP, chuẩn hóa địa giới hành chính **95 Phường/Xã Thành phố Đồng Nai**, trung tâm đối chiếu **26 chuẩn chất lượng (`Q01–Q26`)**, truy xuất phả hệ mã lô QR thực, quản trị nhà vườn U50+ kiêm bộ công cụ Hợp tác xã (tồn kho FEFO, gom lô, tài chính nội bộ) và phân quyền Maker ≠ Checker across 6 không gian (`W01–W06`).
+Ứng dụng web **Frontend-Only** thuộc bài thi **Nhóm 8 — Hackathon Thành phố Đồng Nai năm 2026**, nâng cấp lên phiên bản **NaiFarm V3.0** kết nối thương mại nông sản OCOP, chuẩn hóa địa giới hành chính **95 Phường/Xã Thành phố Đồng Nai**, trung tâm đối chiếu **26 chuẩn chất lượng (`Q01–Q26`)**, truy xuất phả hệ mã lô QR thực, quản trị nhà vườn U50+ kiêm bộ công cụ Hợp tác xã (tồn kho FEFO, gom lô, tài chính nội bộ) và phân quyền Maker ≠ Checker across 6 không gian (`W01–W06`)..
 
 ---
 
