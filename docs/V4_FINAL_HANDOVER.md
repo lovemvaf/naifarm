@@ -5,7 +5,7 @@
 - **Source Directory:** `E:\04_Projects\Group 8 - Hackathon Dong Nai\naifarm`
 - **GitHub Repository:** `https://github.com/lovemvaf/naifarm.git` (`branch: main`)
 - **Production Deployment:** `https://naifarm.vercel.app/` (`visionary19/naifarm`)
-- **Technical Architecture:** Frontend-Only Next.js `16.4.6` (App Router, Turbopack), React `19.3.0`, TypeScript, Tailwind CSS v4, Leaflet + Turf.js 2D GIS, Recharts BI, Fuse.js search, real QR (`qrcode` + `jsqr`), localized `VI | EN` (`useSyncExternalStore`), deterministic VN clock (`2026-11-25T12:00:00+07:00`), and browser `localStorage` experience state. Zero backend API routes, zero live payments, zero 3D/WebGL dependencies.
+- **Technical Architecture:** Next.js `16.4.6` (App Router, Turbopack), React `19.3.0`, TypeScript, Tailwind CSS v4, Leaflet + Turf.js 2D GIS, Recharts BI, Fuse.js search, real QR (`qrcode` + `jsqr`), localized `VI | EN` (`useSyncExternalStore`), deterministic VN clock (`2026-11-25T12:00:00+07:00`), and browser `localStorage` experience state for all V4 commerce/agritourism/academy/calendar/BI modules (zero live payments, zero 3D/WebGL dependencies), merged cleanly with teammate PR #1 (`ant_speech`) optional AI voice/publish route helpers (`src/app/api/ai/asr`, `src/app/api/ai/publish-draft`).
 
 ## 1. Key V4.0 Capabilities Delivered
 
@@ -24,6 +24,7 @@
 ## 2. Explicit Scope Boundaries & Operational Disclosures
 
 - **Experience Space Only:** Checkout orders, promo redemptions, tour reservations, international RFQ inquiries, credential lifecycles, and management financials run deterministically in the browser without external payment gateways, shipping carriers, or legal certification issuance.
+- **Upstream PR #1 (`ant_speech`, commit `9a7fa5e`) Integration:** Merging `origin/main` preserved teammate additions (`src/app/farmer/publish/page.tsx`, `src/lib/vietnameseNumberParser.ts`, `src/app/api/ai/asr/route.ts`, `src/app/api/ai/publish-draft/route.ts`, `.gitignore`, `test/*`). All V4.0 public, academy, agritourism, calendar, campaign, BI, and permission capabilities operate purely client-side with zero 3D/WebGL packages.
 - **Map & Sandbox Note:** OpenStreetMap requires network access for external raster tiles; offline/blocked environments automatically display Leaflet's built-in retry state without blocking orchard lists or distance calculations.
 
 ## 3. V4.0 Reference Documents

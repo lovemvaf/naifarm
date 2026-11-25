@@ -101,8 +101,26 @@ function main() {
     }
     assertAssetExists(root, ref.image, `public reference ${ref.id}`);
   }
-  // Security & architecture guardrails: zero 3D/WebGL, zero API routes, zero live secret keys
-  assert(!fs.existsSync(path.join(root, "src", "app", "api")), "Frontend-only constraint violated: src/app/api exists");
+  // Security & architecture guardrails: zero 3D/WebGL, strict PR #1 AI route allowlist only, zero live secret keys
+  const apiRoot = path.join(root, "src", "app", "api");
+  const allowedPr1ApiRoutes = new Set(["ai/asr/route.ts", "ai/publish-draft/route.ts"]);
+  const scanApiRoutes = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        scanApiRoutes(full);
+      } else {
+        const rel = path.relative(apiRoot, full).replace(/\\/g, "/");
+        assert(
+          allowedPr1ApiRoutes.has(rel),
+          `Unapproved API route outside PR #1 ant_speech allowlist: src/app/api/${rel}`,
+        );
+      }
+    }
+  };
+  if (fs.existsSync(apiRoot)) {
+    scanApiRoutes(apiRoot);
+  }
   const scanSrcForBanned = (dir: string) => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);

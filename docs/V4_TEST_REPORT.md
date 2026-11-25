@@ -1,21 +1,21 @@
 # NAIFARM V4.0 — VERIFICATION & TEST REPORT
 
-All checks below ran cleanly after the final source code edits in `E:\04_Projects\Group 8 - Hackathon Dong Nai\naifarm`. Temporary screenshot folder `qa-out/` was cleaned before the final script verification run.
+All checks below ran cleanly on the integrated `main` tree (V4.0 commit `47c39a1` merged with upstream `origin/main` PR #1 `9a7fa5e` `ant_speech`) inside `E:\04_Projects\Group 8 - Hackathon Dong Nai\naifarm`. Temporary screenshot folder `qa-out/` was cleaned before final git staging.
 
 ## 1. Automated CLI & Build Verification Gate
 
 | Command | Scope | Result | Key Observed Output |
 |---|---|---|---|
 | `npm run data:validate` | 95 Dong Nai official units CSV (`25/11/2026`) | `PASS` (exit 0) | `95 units (33 Phường, 62 Xã), 10 upgraded 2026, 0 fabricated GIS coords, Phước Sơn 386.56 vs 659.163 proposed verified.` |
-| `npm run test:data` | Seed datasets, schemas, FK links, zero API/3D/secrets | `PASS` (exit 0) | `farms: 40`, `products: 168`, `batches: 171`, `orders: 608`, `tours: 28`, `lessons: 20`, `questionBank: 120`, `campaigns: 24`, `calendarEvents: 72` |
+| `npm run test:data` | Seed datasets, schemas, FK links, strict PR #1 API allowlist, 0 3D/secrets | `PASS` (exit 0) | `farms: 40`, `products: 168`, `batches: 171`, `orders: 608`, `tours: 28`, `lessons: 20`, `questionBank: 120`, `campaigns: 24`, `calendarEvents: 72` |
 | `npm run test:metrics` | GMV vs Net Sales, HTX Tân Triều BI, stock ledger, AR/AP, CSV safety | `PASS` (exit 0) | `novGmvVnd: 196736000`, `novNetMerchandiseVnd: 172603000`, `ttNovNetVnd: 170000000`, `ttPomeloAvailableKg: 1250`, `ttMemberHouseholds: 19` |
 | `npm run test:quality` | 26 credential standards, lifecycle/scope filters, lot recall cascade | `PASS` (exit 0) | `credentialTypesCount: 26`, `credentialRecordsCount: 80`, `publicReferencesCount: 17`, `recallCascadeLots: ["NF-DN-099", "NF-DN-100"]`, `recallAffectedOrdersCount: 1` |
 | `npm run test:qr` | QR PNG encode/decode & URL allowlist | `PASS` (exit 0) | `VERIFY_QR_DECODE PASS: PNG QR encode/decode & URL security validation verified for all batches.` |
 | `npm run test:i18n` | VI/EN key parity & English/unaccented search index | `PASS` (exit 0) | `i18nKeyCount: 234`, `enPomeloHits: 10`, `enCashewHits: 10`, `tourHits: 10` |
 | `npm run test:calendar` | VN clock adapter, D-30..D-1 deduped reminders, promo rules, `.ics` | `PASS` (exit 0) | `defaultClockIso: "2026-11-25T12:00:00+07:00"`, `remindersComputed: 53`, `promoNovDiscountVnd: 15000`, `icsBytes: 1336` |
 | `npm run typecheck` | TypeScript strict mode (`tsc --noEmit`) | `PASS` (exit 0) | `0` errors |
-| `npm run lint` | Next.js / React 19 ESLint | `PASS` (exit 0) | `0` errors (`39` `@next/next/no-img-element` warnings) |
-| `npm run build` | Production Turbopack Next.js build | `PASS` (exit 0) | `32` static prerendered pages + dynamic routes |
+| `npm run lint` | Next.js / React 19 ESLint | `PASS` (exit 0) | `0` errors (`43` warnings across image hints & upstream `ant_speech` test scripts) |
+| `npm run build` | Production Turbopack Next.js build | `PASS` (exit 0) | `34` static prerendered pages + dynamic routes (including preserved PR #1 `/api/ai/asr`, `/api/ai/publish-draft`) |
 
 ## 2. Real-Browser Playwright & Axe WCAG 2.0 AA Verification (`tests/e2e-v4-verify.py`)
 

@@ -23,7 +23,7 @@
 - **Framework:** Next.js `16.4.6` (App Router, Turbopack), React `19.3.0`, TypeScript `^5`
 - **Styling & UI:** Tailwind CSS `4.3.3`, Google Fonts (`Be Vietnam Pro` + `Lora`), Lucide React `^1.78.0`, Motion `^14.14.0`, Recharts `^3.11.1`, Sonner `^2.0.8`
 - **GIS, Search & QR:** `leaflet@1.9.4`, `react-leaflet@5.0.0`, `@turf/distance@^7.4.0`, `papaparse@^5.7.1`, `zod@^4.6.7`, `fuse.js@^7.5.0`, `qrcode@^1.5.4`, `qr-scanner@^1.4.2`, `jsqr@^1.4.0`
-- **Ranh giới:** Ứng dụng Frontend thuần trên trình duyệt (không dùng `src/app/api/*`, không dùng CSDL/thanh toán thật, đã loại bỏ hoàn toàn mọi thư viện 3D/WebGL).
+- **Ranh giới:** Các phân hệ lõi V4 (`W01–W06`, chợ, du lịch, học tập, NaiCalendar, BI) hoạt động hoàn toàn trên trình duyệt (không CSDL/thanh toán thật, đã loại bỏ hoàn toàn mọi thư viện 3D/WebGL); nhánh `main` đồng thời giữ lại nguyên vẹn module trợ lý giọng nói & soạn nháp từ PR #1 (`ant_speech`: `src/app/farmer/publish`, `src/lib/vietnameseNumberParser.ts`, `src/app/api/ai/asr`, `src/app/api/ai/publish-draft`).
 
 ---
 
