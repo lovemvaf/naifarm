@@ -32,7 +32,7 @@ import { useLocale } from "@/context/LocaleContext";
 import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
 import { runGlobalSearch } from "@/lib/search/search-engine";
 import { notifyAccountSwitch, notifySignOut, notifySuccess } from "@/lib/toast";
-import { cn } from "@/lib/format";
+import { cn, stripWorkspaceCodePrefix } from "@/lib/format";
 import type { WorkspaceId } from "@/types/naifarm";
 
 const WORKSPACE_HOME: Record<WorkspaceId, string> = {
@@ -199,31 +199,34 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#D6DED2] bg-[#F5F3E9]/95 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-1.5 px-3 sm:px-4 xl:gap-2.5 xl:px-5">
+      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-1.5 px-3 sm:px-4 lg:grid lg:grid-cols-[128px_minmax(0,1fr)_136px_auto] lg:gap-1.5 xl:grid-cols-[172px_minmax(0,1fr)_216px_auto] xl:gap-2.5 xl:px-5 2xl:grid-cols-[204px_minmax(0,1fr)_264px_auto]">
         {/* Brand */}
         <Link
           href={linkHref("/")}
-          className="flex shrink-0 items-center gap-2 rounded-[10px] py-1 pr-1 text-[#25352B]"
+          className="flex min-w-0 shrink-0 items-center gap-2 rounded-[10px] py-1 pr-1 text-[#25352B]"
         >
           <img
             src="/images/stitch/stitch-01.jpg"
             alt={t.brand.name}
             width={34}
             height={34}
-            className="h-8 w-8 rounded-[9px] border border-[#D6DED2] object-cover sm:h-9 sm:w-9"
+            className="h-8 w-8 shrink-0 rounded-[9px] border border-[#D6DED2] object-cover sm:h-9 sm:w-9"
           />
-          <div className="leading-tight whitespace-nowrap">
+          <div className="min-w-0 leading-tight whitespace-nowrap">
             <span className="block text-base font-bold tracking-tight text-[#245B3D]">
               {t.brand.name}
             </span>
-            <span className="hidden text-[10px] font-medium text-[#52645A] 2xl:block">
+            <span className="hidden truncate text-[10px] font-medium text-[#52645A] 2xl:block">
               {t.brand.subtitle}
             </span>
           </div>
         </Link>
 
-        {/* Primary 5 Desktop Links + Secondary More Dropdown */}
-        <nav aria-label={t.nav.mainNavAria} className="hidden shrink-0 items-center gap-0.5 lg:flex">
+        {/* Primary 5 Desktop Links + Secondary More Dropdown in Fixed Logical Grid Slots */}
+        <nav
+          aria-label={t.nav.mainNavAria}
+          className="hidden min-w-0 items-center justify-center lg:grid lg:grid-cols-[70px_70px_78px_62px_66px_54px] lg:gap-0.5 xl:grid-cols-[86px_84px_92px_76px_82px_68px] xl:gap-1 2xl:grid-cols-[96px_92px_98px_84px_90px_76px]"
+        >
           {primaryNavItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -232,7 +235,7 @@ export function AppHeader() {
                 key={item.href}
                 href={linkHref(item.href)}
                 className={cn(
-                  "flex min-h-[38px] shrink-0 items-center gap-1 rounded-[10px] px-1.5 text-[12px] font-semibold whitespace-nowrap transition-colors xl:px-2 xl:text-[12.5px]",
+                  "flex min-h-[38px] w-full items-center justify-center gap-1 rounded-[10px] px-1 text-[11.5px] font-semibold whitespace-nowrap transition-colors xl:text-[12.5px]",
                   active
                     ? "bg-[#EAF0E5] text-[#245B3D]"
                     : "text-[#25352B] hover:bg-[#EFECE0]",
@@ -251,7 +254,7 @@ export function AppHeader() {
               aria-expanded={moreOpen}
               aria-haspopup="menu"
               className={cn(
-                "flex min-h-[38px] shrink-0 items-center gap-1 rounded-[10px] px-1.5 text-[12px] font-semibold whitespace-nowrap transition-colors cursor-pointer xl:px-2 xl:text-[12.5px]",
+                "flex min-h-[38px] w-full items-center justify-center gap-0.5 rounded-[10px] px-1 text-[11.5px] font-semibold whitespace-nowrap transition-colors cursor-pointer xl:text-[12.5px]",
                 moreOpen
                   ? "bg-[#EAF0E5] text-[#245B3D]"
                   : "text-[#25352B] hover:bg-[#EFECE0]",
@@ -259,7 +262,7 @@ export function AppHeader() {
             >
               <span>{t.nav.more}</span>
               <ChevronDown
-                className={cn("h-3.5 w-3.5 transition-transform", moreOpen ? "rotate-180" : "")}
+                className={cn("h-3.5 w-3.5 shrink-0 transition-transform", moreOpen ? "rotate-180" : "")}
                 aria-hidden="true"
               />
             </button>
@@ -293,7 +296,7 @@ export function AppHeader() {
         {/* Desktop Global Search Combobox */}
         <div
           ref={searchBoxRef}
-          className="relative hidden min-w-[96px] max-w-[200px] flex-1 md:block lg:max-w-[170px] xl:max-w-[230px] 2xl:max-w-[290px]"
+          className="relative hidden min-w-0 w-full lg:block"
         >
           <form onSubmit={handleSearchSubmit}>
             <Search
@@ -360,20 +363,20 @@ export function AppHeader() {
           ) : null}
         </div>
 
-        {/* Right Actions: Text VI|EN Toggle + Cart + Auth + Mobile Menu */}
-        <div className="flex shrink-0 items-center gap-1.5">
-          {/* Clean VI | EN Text Switcher (No flag-only language buttons) */}
+        {/* Right Actions: Always-visible VI|EN Toggle + Fixed-Width Cart + Auth + Mobile Menu */}
+        <div className="flex shrink-0 items-center justify-end gap-1 xl:gap-1.5">
+          {/* Clean VI | EN Text Switcher (No flag-only language buttons; visible on all viewports) */}
           <div
             role="group"
             aria-label={t.nav.languageSwitchAria}
-            className="hidden items-center rounded-[10px] border border-[#D6DED2] bg-white p-0.5 sm:inline-flex"
+            className="inline-flex w-[66px] shrink-0 items-center justify-between rounded-[10px] border border-[#D6DED2] bg-white p-0.5"
           >
             <button
               type="button"
               onClick={() => setLocale("vi")}
               aria-pressed={locale === "vi"}
               className={cn(
-                "min-h-[32px] rounded-[8px] px-1.5 text-[11px] font-bold transition-colors cursor-pointer xl:px-2",
+                "min-h-[32px] w-[30px] rounded-[8px] text-center text-[11px] font-bold transition-colors cursor-pointer",
                 locale === "vi"
                   ? "bg-[#245B3D] text-white"
                   : "text-[#52645A] hover:text-[#25352B]",
@@ -386,7 +389,7 @@ export function AppHeader() {
               onClick={() => setLocale("en")}
               aria-pressed={locale === "en"}
               className={cn(
-                "min-h-[32px] rounded-[8px] px-1.5 text-[11px] font-bold transition-colors cursor-pointer xl:px-2",
+                "min-h-[32px] w-[30px] rounded-[8px] text-center text-[11px] font-bold transition-colors cursor-pointer",
                 locale === "en"
                   ? "bg-[#245B3D] text-white"
                   : "text-[#52645A] hover:text-[#25352B]",
@@ -398,10 +401,10 @@ export function AppHeader() {
 
           <Link
             href={linkHref("/cart")}
-            className="flex min-h-[38px] items-center gap-1 rounded-[10px] border border-[#D6DED2] bg-white px-2 text-xs font-semibold text-[#25352B] whitespace-nowrap hover:bg-[#EAF0E5] xl:px-2.5"
+            className="flex min-h-[38px] w-[54px] shrink-0 items-center justify-center gap-1 rounded-[10px] border border-[#D6DED2] bg-white px-1.5 text-xs font-semibold text-[#25352B] whitespace-nowrap hover:bg-[#EAF0E5] 2xl:w-[88px] 2xl:px-2.5"
             aria-label={`${t.nav.cartAria}: ${cartCount}`}
           >
-            <ShoppingBasket className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
+            <ShoppingBasket className="h-4 w-4 shrink-0 text-[#245B3D]" aria-hidden="true" />
             <span className="hidden 2xl:inline">{t.nav.cartShort}</span>
             <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#245B3D] px-1.5 text-[11px] font-bold text-white tabular-nums">
               {cartCount}
@@ -455,7 +458,9 @@ export function AppHeader() {
                       </span>
                     </div>
                     <p className="mt-0.5 text-[11px] font-semibold text-[#245B3D]">
-                      {locale === "en" && authUser.roleLabelEn ? authUser.roleLabelEn : authUser.roleLabel}
+                      {stripWorkspaceCodePrefix(
+                        locale === "en" && authUser.roleLabelEn ? authUser.roleLabelEn : authUser.roleLabel,
+                      )}
                     </p>
                     <p className="text-[11px] text-[#52645A]">{authUser.unitName}</p>
                   </div>
@@ -467,9 +472,7 @@ export function AppHeader() {
                       className="flex items-center gap-2 rounded-[10px] px-3 py-2 text-xs font-semibold text-[#25352B] hover:bg-[#EAF0E5]"
                     >
                       <Layers className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
-                      <span>
-                        {t.nav.workspaceLabel} ({authUser.workspaceId})
-                      </span>
+                      <span>{t.nav.workspaceLabel}</span>
                     </Link>
                     <Link
                       href={linkHref("/account")}
@@ -510,7 +513,9 @@ export function AppHeader() {
                             signInDemoAccount(acc.id);
                             setAvatarOpen(false);
                             notifyAccountSwitch(
-                              locale === "en" && acc.roleLabelEn ? acc.roleLabelEn : acc.roleLabel,
+                              stripWorkspaceCodePrefix(
+                                locale === "en" && acc.roleLabelEn ? acc.roleLabelEn : acc.roleLabel,
+                              ),
                               locale,
                             );
                             if (pathname !== "/live" && pathname !== "/live/demo") {
@@ -524,7 +529,7 @@ export function AppHeader() {
                               : "bg-[#F5F3E9] text-[#25352B] hover:bg-[#EAF0E5]",
                           )}
                         >
-                          {acc.workspaceId} · {acc.name.split(" ").slice(-1)[0]}
+                          <span className="block truncate font-semibold">{acc.name}</span>
                         </button>
                       ))}
                     </div>
@@ -560,19 +565,19 @@ export function AppHeader() {
               ) : null}
             </div>
           ) : (
-            <div className="hidden items-center gap-1 sm:flex xl:gap-1.5">
+            <div className="hidden shrink-0 items-center sm:grid sm:grid-cols-[78px_72px] sm:gap-1 xl:grid-cols-[90px_82px] xl:gap-1.5">
               <Link
                 href={linkHref("/sign-in")}
-                className="inline-flex min-h-[38px] items-center gap-1 rounded-[10px] border border-[#245B3D] bg-white px-2 text-[11.5px] font-semibold text-[#245B3D] whitespace-nowrap hover:bg-[#EAF0E5] xl:px-2.5 xl:text-xs"
+                className="inline-flex min-h-[38px] w-full items-center justify-center gap-1 rounded-[10px] border border-[#245B3D] bg-white px-1 text-[11.5px] font-semibold text-[#245B3D] whitespace-nowrap hover:bg-[#EAF0E5] xl:text-xs"
               >
-                <LogIn className="hidden h-3.5 w-3.5 xl:inline-block" aria-hidden="true" />
+                <LogIn className="hidden h-3.5 w-3.5 shrink-0 xl:inline-block" aria-hidden="true" />
                 <span>{t.nav.signIn}</span>
               </Link>
               <Link
                 href={linkHref("/sign-up")}
-                className="inline-flex min-h-[38px] items-center gap-1 rounded-[10px] bg-[#245B3D] px-2 text-[11.5px] font-semibold text-white whitespace-nowrap hover:bg-[#19472E] xl:px-2.5 xl:text-xs"
+                className="inline-flex min-h-[38px] w-full items-center justify-center gap-1 rounded-[10px] bg-[#245B3D] px-1 text-[11.5px] font-semibold text-white whitespace-nowrap hover:bg-[#19472E] xl:text-xs"
               >
-                <UserPlus className="hidden h-3.5 w-3.5 xl:inline-block" aria-hidden="true" />
+                <UserPlus className="hidden h-3.5 w-3.5 shrink-0 xl:inline-block" aria-hidden="true" />
                 <span>{t.nav.signUp}</span>
               </Link>
             </div>

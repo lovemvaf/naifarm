@@ -1,0 +1,18 @@
+{
+  "sourceRepo": "https://github.com/thanglequoc/vietnamese-provinces-database",
+  "sourcePath": "json/geojson/75_dong_nai",
+  "license": "MIT (Community Open Data)",
+  "retrievedAt": "2026-11-25",
+  "boundaryStatus": "community_reference_not_legal_boundary",
+  "wardPolygonCount": 95,
+  "expectedAdminUnitCount": 95,
+  "coverageRatio": 1.0,
+  "bbox": {
+    "south": 10.5797,
+    "west": 106.4118,
+    "north": 12.30001,
+    "east": 107.57579
+  },
+  "outlineBytes": 21336,
+  "wardsBytes": 394076
+}

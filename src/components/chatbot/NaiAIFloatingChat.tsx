@@ -3,10 +3,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, MessageSquare, Send, Sparkles, X } from "lucide-react";
+import { ArrowRight, MessageSquare, RotateCcw, Send, Sparkles, X } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { useLocale } from "@/context/LocaleContext";
+import { localizeProductName, localizeUnit } from "@/lib/i18n/domain-en";
+import { formatVnd } from "@/lib/format";
 import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
+import { runGlobalSearch } from "@/lib/search/search-engine";
 import { AI_WORKSPACE_CONFIG } from "@/data/demo/ai-scripts";
 import type { WorkspaceId } from "@/types/naifarm";
 
@@ -43,24 +46,37 @@ export function NaiAIFloatingChat() {
   const pathname = usePathname();
   const { locale, t } = useLocale();
   const isEn = locale === "en";
-  const { authUser, activeWorkspace, hideAiChatOnSubflow, products } = useDemoStore();
+  const {
+    authUser,
+    activeWorkspace,
+    hideAiChatOnSubflow,
+    products,
+    farms,
+    batches,
+    lessons,
+    missions,
+    tourPackages,
+    livestreams,
+    campaigns,
+  } = useDemoStore();
+
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [messagesByWs, setMessagesByWs] = useState<Partial<Record<WorkspaceId, ChatMessage[]>>>({});
+  const [messagesByKey, setMessagesByKey] = useState<Record<string, ChatMessage[]>>({});
   const msgSeqRef = useRef(0);
   const launcherRef = useRef<HTMLButtonElement>(null);
 
   const effectiveWs = inferWorkspaceFromPath(pathname, activeWorkspace);
+  const stateKey = `${effectiveWs}:${locale}`;
   const wsConfig = AI_WORKSPACE_CONFIG[effectiveWs];
-  const messages: ChatMessage[] = messagesByWs[effectiveWs] ?? [
-    {
-      id: `greet-${effectiveWs}`,
-      sender: "ai",
-      text: wsConfig.greeting,
-    },
-  ];
+  const defaultGreeting: ChatMessage = {
+    id: `greet-${stateKey}`,
+    sender: "ai",
+    text: isEn ? wsConfig.greetingEn : wsConfig.greeting,
+  };
+  const messages: ChatMessage[] = messagesByKey[stateKey] ?? [defaultGreeting];
 
-  // Auto-hide on checkout or during farmer voice recording / active subflows per DESIGN.md
+  // Auto-hide on homepage (rendered via NaiFarmHomeChat), checkout, or active recording subflows
   const suppressedByRoute = pathname === "/" || pathname.startsWith("/checkout") || hideAiChatOnSubflow;
 
   useEffect(() => {
@@ -77,6 +93,15 @@ export function NaiAIFloatingChat() {
 
   if (suppressedByRoute) return null;
 
+  const isMinorAccount = Boolean(authUser?.isMinor);
+
+  const handleClearChat = () => {
+    setMessagesByKey((prev) => ({
+      ...prev,
+      [stateKey]: [defaultGreeting],
+    }));
+  };
+
   const handleAsk = (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -84,64 +109,128 @@ export function NaiAIFloatingChat() {
     msgSeqRef.current += 1;
     const seq = msgSeqRef.current;
 
-    const matchedChip = wsConfig.chips.find(
-      (c) =>
-        c.prompt.toLowerCase() === q ||
-        (q.includes("chôm chôm") && c.prompt.toLowerCase().includes("chôm chôm")) ||
-        (q.includes("qr") && c.prompt.toLowerCase().includes("qr")) ||
-        (q.includes("giao") && c.prompt.toLowerCase().includes("nhận hàng")) ||
-        (q.includes("đăng") && c.prompt.toLowerCase().includes("đăng"))
-    );
+    // Safeguarding rule for minor accounts or unsafe medical/official certification prompts
+    const asksRestrictedAlcohol =
+      q.includes("rượu") || q.includes("wine") || q.includes("bia") || q.includes("alcohol");
+    const asksSensitiveSafety =
+      q.includes("thuốc") ||
+      q.includes("pesticide") ||
+      q.includes("liều lượng") ||
+      q.includes("dosage") ||
+      q.includes("bệnh") ||
+      q.includes("cấp chứng nhận");
 
-    const matchedProduct = products.find((p) =>
-      q.includes(p.name.toLowerCase().split(" ")[0]) && q.includes(p.name.toLowerCase().split(" ")[1] || "")
-    );
+    let aiReply: ChatMessage | null = null;
 
-    let aiReply: ChatMessage;
-    if (matchedChip) {
+    if (isMinorAccount && asksRestrictedAlcohol) {
       aiReply = {
-        id: `ai-${effectiveWs}-${seq}`,
+        id: `ai-${seq}`,
         sender: "ai",
-        text: matchedChip.reply,
-        linkLabel: matchedChip.linkLabel,
-        linkHref: matchedChip.linkHref,
-        productSlug: matchedChip.productSlug,
+        text: isEn
+          ? "Minor learner mode restricts adult-only fermented beverages. Let's explore open 2D lessons or fresh orchard produce instead."
+          : "Chế độ tài khoản dưới 18 tuổi ẩn nội dung đồ uống có cồn. Bạn có thể khám phá bài học 2D hoặc nông sản tươi sạch.",
+        linkLabel: isEn ? "Open 2D Academy" : "Mở Học tập 2D",
+        linkHref: "/learn",
       };
-    } else if (matchedProduct) {
+    } else if (asksSensitiveSafety) {
       aiReply = {
-        id: `ai-${effectiveWs}-${seq}`,
+        id: `ai-${seq}`,
         sender: "ai",
-        text: `${matchedProduct.name} (${matchedProduct.farmName}) hiện có giá tham khảo ${new Intl.NumberFormat("vi-VN").format(matchedProduct.priceVnd)} đ/${matchedProduct.unitLabel}, lô ${matchedProduct.batchCode}.`,
-        linkLabel: `Mở ${matchedProduct.name}`,
-        linkHref: `/products/${matchedProduct.slug}`,
-        productSlug: matchedProduct.slug,
-      };
-    } else if (q.includes("thuốc") || q.includes("bệnh") || q.includes("chứng nhận thật")) {
-      aiReply = {
-        id: `ai-${effectiveWs}-${seq}`,
-        sender: "ai",
-        text: "NaiAI ở chế độ trợ giúp kịch bản chỉ tra cứu danh mục sản phẩm hiện có, không tự tư vấn thuốc bảo vệ thực vật hay cấp xác nhận OCOP. Vui lòng trao đổi với cán bộ chuyên môn hoặc điều phối viên.",
+        text: isEn
+          ? "NaiAI only retrieves verified app catalog data and does not provide pesticide dosages, plant diagnosis, or official certifications. Please consult agricultural specialists or Quality Standards."
+          : "NaiAI chỉ tra cứu dữ liệu công khai trong ứng dụng — không tư vấn liều lượng thuốc BVTV hay cấp chứng nhận thật. Vui lòng trao đổi với chuyên môn hoặc xem Trung tâm chất lượng.",
+        linkLabel: t.nav.quality,
+        linkHref: "/quality",
       };
     } else {
+      // 1. Check workspace prompt chips (exact VI/EN match or close topic match)
+      const matchedChip = wsConfig.chips.find((c) => {
+        const pVi = c.prompt.toLowerCase();
+        const pEn = c.promptEn.toLowerCase();
+        return pVi === q || pEn === q;
+      });
+
+      if (matchedChip) {
+        aiReply = {
+          id: `ai-${seq}`,
+          sender: "ai",
+          text: isEn ? matchedChip.replyEn : matchedChip.reply,
+          linkLabel: isEn ? matchedChip.linkLabelEn ?? matchedChip.linkLabel : matchedChip.linkLabel,
+          linkHref: matchedChip.linkHref,
+          productSlug: matchedChip.productSlug,
+        };
+      } else {
+        // 2. Run real Fuse.js local search across products, farms, batches, lessons, tours, missions, campaigns
+        const safeProducts = isMinorAccount ? products.filter((p) => !p.adultOnly) : products;
+        const searchHits = runGlobalSearch(
+          trimmed,
+          {
+            products: safeProducts,
+            farms,
+            batches,
+            lessons,
+            missions,
+            tours: tourPackages,
+            livestreams,
+            campaigns,
+          },
+          4,
+        ).results;
+
+        const topProductHit = searchHits.find((h) => h.kind === "product");
+        const topMatchedProd = topProductHit
+          ? safeProducts.find((p) => `/products/${p.slug}` === topProductHit.href)
+          : undefined;
+
+        if (topMatchedProd) {
+          const pName = localizeProductName(topMatchedProd, locale);
+          const pUnit = localizeUnit(topMatchedProd.unitLabel, locale);
+          aiReply = {
+            id: `ai-${seq}`,
+            sender: "ai",
+            text: isEn
+              ? `Matched catalog item: ${pName} from ${topMatchedProd.farmName} — ${formatVnd(topMatchedProd.priceVnd, locale)}/${pUnit} (lot ${topMatchedProd.batchCode}).`
+              : `Tìm thấy trong dữ liệu thực: ${pName} (${topMatchedProd.farmName}) · ${formatVnd(topMatchedProd.priceVnd, locale)}/${pUnit}, mã lô ${topMatchedProd.batchCode}.`,
+            linkLabel: pName,
+            linkHref: `/products/${topMatchedProd.slug}`,
+            productSlug: topMatchedProd.slug,
+          };
+        } else if (searchHits.length > 0) {
+          const best = searchHits[0];
+          const second = searchHits[1];
+          aiReply = {
+            id: `ai-${seq}`,
+            sender: "ai",
+            text: isEn
+              ? `Found "${best.title}" (${best.kindLabel} · ${best.subtitle})${second ? `, and "${second.title}".` : "."}`
+              : `Kết quả khớp trên NaiFarm: "${best.title}" (${best.kindLabel} · ${best.subtitle})${second ? `, ngoài ra còn "${second.title}".` : "."}`,
+            linkLabel: isEn ? `Open ${best.title}` : `Xem ${best.title}`,
+            linkHref: best.href,
+          };
+        }
+      }
+    }
+
+    if (!aiReply) {
       aiReply = {
-        id: `ai-${effectiveWs}-${seq}`,
+        id: `ai-${seq}`,
         sender: "ai",
-        text: "Đang ở chế độ Trợ giúp theo kịch bản. Bạn có thể chọn nhanh một câu gợi ý phía trên hoặc mở trực tiếp Chợ OCOP / Hộ chiếu QR để xem thông tin chi tiết.",
-        linkLabel: "Về Chợ OCOP",
-        linkHref: "/marketplace",
+        text: isEn
+          ? "No exact local match found. Try a quick topic chip below or search across all 168 produce items, 40 farms, 28 tours, and QR records."
+          : "Chưa tìm thấy mục khớp trực tiếp. Bạn có thể bấm câu gợi ý bên dưới hoặc mở tìm kiếm toàn trang.",
+        linkLabel: isEn ? "Open Global Search" : "Mở Tìm kiếm toàn trang",
+        linkHref: `/search?q=${encodeURIComponent(trimmed)}`,
       };
     }
 
-    setMessagesByWs((prev) => {
-      const base = prev[effectiveWs] ?? [
-        { id: `greet-${effectiveWs}`, sender: "ai", text: wsConfig.greeting },
-      ];
+    setMessagesByKey((prev) => {
+      const base = prev[stateKey] ?? [defaultGreeting];
       return {
         ...prev,
-        [effectiveWs]: [
+        [stateKey]: [
           ...base,
-          { id: `user-${effectiveWs}-${seq}`, sender: "user", text: trimmed },
-          aiReply,
+          { id: `user-${seq}`, sender: "user", text: trimmed },
+          aiReply!,
         ],
       };
     });
@@ -149,13 +238,13 @@ export function NaiAIFloatingChat() {
   };
 
   return (
-    <div className="fixed bottom-20 right-4 z-40 lg:bottom-6 lg:right-6">
+    <div className="fixed right-4 bottom-20 z-40 lg:right-6 lg:bottom-6">
       {!open ? (
         <button
           ref={launcherRef}
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="Mở trợ lý NaiAI"
+          aria-label={t.ai.launcherLabel}
           className="group flex h-14 w-14 items-center justify-center rounded-full bg-[#245B3D] text-white shadow-[0_8px_24px_rgba(37,53,43,0.22)] transition-transform duration-150 hover:scale-105 hover:bg-[#19472E] cursor-pointer"
         >
           <Sparkles className="h-6 w-6" aria-hidden="true" strokeWidth={1.75} />
@@ -163,45 +252,55 @@ export function NaiAIFloatingChat() {
       ) : (
         <section
           role="dialog"
-          aria-label="NaiAI · Trợ lý NaiFarm"
+          aria-label={t.ai.panelTitle}
           className="flex max-h-[85dvh] w-[calc(100vw-2rem)] max-w-[390px] flex-col overflow-hidden rounded-[18px] border border-[#D6DED2] bg-white shadow-[0_16px_48px_rgba(37,53,43,0.22)] lg:max-h-[540px]"
         >
-          <header className="flex items-center justify-between bg-[#245B3D] px-4 py-3 text-white">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
+          <header className="flex items-center justify-between gap-2 bg-[#245B3D] px-4 py-3 text-white">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15">
                 <MessageSquare className="h-5 w-5" aria-hidden="true" />
               </div>
-              <div>
-                <h2 className="text-sm font-bold leading-tight">
-                  {t.ai.panelTitle} ({effectiveWs})
-                </h2>
-                <p className="text-[11px] text-[#EAF0E5]">
-                  {isEn ? "Scripted local guidance · No external API" : "Trợ giúp theo kịch bản · Không gọi API ngoài"}
+              <div className="min-w-0">
+                <h2 className="truncate text-sm font-bold leading-tight">{t.ai.panelTitle}</h2>
+                <p className="truncate text-[11px] text-[#EAF0E5]">
+                  {isEn ? "Local data search · No external API" : "Tra cứu dữ liệu thật · Không gọi API ngoài"}
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                launcherRef.current?.focus();
-              }}
-              aria-label={t.nav.closeButton}
-              className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white/15 cursor-pointer"
-            >
-              <X className="h-5 w-5" aria-hidden="true" />
-            </button>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                onClick={handleClearChat}
+                aria-label={isEn ? "Clear conversation" : "Xóa cuộc trò chuyện"}
+                title={isEn ? "Clear chat" : "Xóa hội thoại"}
+                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/15 cursor-pointer"
+              >
+                <RotateCcw className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  launcherRef.current?.focus();
+                }}
+                aria-label={t.nav.closeButton}
+                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/15 cursor-pointer"
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
           </header>
 
           <div className="border-b border-[#D6DED2] bg-[#EAF0E5]/60 px-3 py-2 text-[11px] text-[#52645A]">
-            {authUser?.isMinor ? t.ai.minorRestrictedNotice : t.ai.localNotice}
+            {isMinorAccount ? t.ai.minorRestrictedNotice : t.ai.localNotice}
           </div>
 
           <div className="flex-1 space-y-3 overflow-y-auto p-3.5">
             {messages.map((m) => {
-              const linkedProd = m.productSlug
-                ? products.find((p) => p.slug === m.productSlug)
-                : undefined;
+              const linkedProd =
+                m.productSlug && (!isMinorAccount || !products.find((p) => p.slug === m.productSlug)?.adultOnly)
+                  ? products.find((p) => p.slug === m.productSlug)
+                  : undefined;
               return (
                 <div
                   key={m.id}
@@ -223,13 +322,15 @@ export function NaiAIFloatingChat() {
                       >
                         <img
                           src={linkedProd.image}
-                          alt={linkedProd.name}
+                          alt={localizeProductName(linkedProd, locale)}
                           className="h-11 w-11 rounded-lg object-cover"
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-bold text-[#25352B]">{linkedProd.name}</p>
+                          <p className="truncate text-xs font-bold text-[#25352B]">
+                            {localizeProductName(linkedProd, locale)}
+                          </p>
                           <p className="text-xs font-semibold text-[#245B3D]">
-                            {new Intl.NumberFormat("vi-VN").format(linkedProd.priceVnd)} đ/{linkedProd.unitLabel}
+                            {formatVnd(linkedProd.priceVnd, locale)}/{localizeUnit(linkedProd.unitLabel, locale)}
                           </p>
                         </div>
                         <ArrowRight className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
@@ -252,16 +353,19 @@ export function NaiAIFloatingChat() {
 
           <div className="border-t border-[#D6DED2] bg-[#F5F3E9]/70 px-3 py-2">
             <div className="mb-2 flex flex-wrap gap-1.5">
-              {wsConfig.chips.map((chip) => (
-                <button
-                  key={chip.prompt}
-                  type="button"
-                  onClick={() => handleAsk(chip.prompt)}
-                  className="rounded-full border border-[#D6DED2] bg-white px-2.5 py-1 text-xs font-medium text-[#245B3D] hover:bg-[#EAF0E5] cursor-pointer"
-                >
-                  {chip.prompt}
-                </button>
-              ))}
+              {wsConfig.chips.map((chip) => {
+                const chipPrompt = isEn ? chip.promptEn : chip.prompt;
+                return (
+                  <button
+                    key={chip.prompt}
+                    type="button"
+                    onClick={() => handleAsk(chipPrompt)}
+                    className="rounded-full border border-[#D6DED2] bg-white px-2.5 py-1 text-xs font-medium text-[#245B3D] hover:bg-[#EAF0E5] cursor-pointer"
+                  >
+                    {chipPrompt}
+                  </button>
+                );
+              })}
             </div>
             <form
               onSubmit={(e) => {

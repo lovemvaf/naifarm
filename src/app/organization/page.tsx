@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -10,6 +11,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Download,
+  Film,
   Globe2,
   GraduationCap,
   HeartHandshake,
@@ -31,7 +33,17 @@ import { notifyError, notifySuccess } from "@/lib/toast";
 import { Badge, Button, Card } from "@/components/ui/Primitives";
 import type { OrganizationKind } from "@/types/naifarm";
 
-type OrgTab = "overview" | "work" | "members" | "approvals" | "calendar" | "reports";
+const LazyCmsManagerPanel = dynamic(
+  () => import("@/components/cms/CmsManagerPanel").then((m) => m.CmsManagerPanel),
+  { ssr: false, loading: () => <div className="p-6 text-xs text-[#52645A]">Loading CMS...</div> },
+);
+
+const LazyCreativeStudioPanel = dynamic(
+  () => import("@/components/studio/CreativeStudioPanel").then((m) => m.CreativeStudioPanel),
+  { ssr: false, loading: () => <div className="p-6 text-xs text-[#52645A]">Loading Video Studio...</div> },
+);
+
+type OrgTab = "overview" | "work" | "members" | "approvals" | "calendar" | "cms" | "studio" | "reports";
 
 const ORG_KINDS: { id: OrganizationKind; label: string; badge: string }[] = [
   { id: "coop", label: "Hợp tác xã / Hội Nông dân", badge: "Gom lô & Xã viên" },
@@ -50,6 +62,7 @@ function OrganizationWorkspaceContent() {
   const isEn = locale === "en";
   const {
     hydrated,
+    authUser,
     setActiveWorkspace,
     activeOrgKind,
     setActiveOrgKind,
@@ -100,7 +113,7 @@ function OrganizationWorkspaceContent() {
       {
         reportTitle: `Báo cáo đối tác tổ chức — ${activeOrgMeta.label}`,
         periodLabel: "Tháng 11/2026",
-        scopeLabel: activeScopeUnitCode === "ALL" ? "Toàn tỉnh Đồng Nai" : activeScopeUnitCode,
+        scopeLabel: activeScopeUnitCode === "ALL" ? "Toàn Thành phố Đồng Nai (95 xã/phường)" : activeScopeUnitCode,
       },
     );
     triggerCsvDownload(`naifarm-to-chuc-${currentOrg}.csv`, csv);
@@ -154,6 +167,20 @@ function OrganizationWorkspaceContent() {
           active: tab === "calendar",
           onClick: () => setTab("calendar"),
           icon: <CalendarDays className="h-4 w-4" aria-hidden="true" />,
+        },
+        {
+          label: isEn ? "Co-op Content & Media" : "Nội dung & Media HTX",
+          href: "#cms",
+          active: tab === "cms",
+          onClick: () => setTab("cms"),
+          icon: <Globe2 className="h-4 w-4" aria-hidden="true" />,
+        },
+        {
+          label: isEn ? "OCOP Video Studio" : "Video Studio HTX",
+          href: "#studio",
+          active: tab === "studio",
+          onClick: () => setTab("studio"),
+          icon: <Film className="h-4 w-4" aria-hidden="true" />,
         },
         {
           label: "Báo cáo & Xuất CSV",
@@ -516,6 +543,20 @@ function OrganizationWorkspaceContent() {
         ) : null}
 
         {tab === "calendar" ? <NaiCalendarBoard scope="W05" allowCreate /> : null}
+
+        {tab === "cms" ? (
+          <LazyCmsManagerPanel
+            scopeMode="organization"
+            actorName={authUser?.name ?? "Ban Chủ nhiệm HTX"}
+          />
+        ) : null}
+
+        {tab === "studio" ? (
+          <LazyCreativeStudioPanel
+            mode="creator"
+            actorName={authUser?.name ?? "Ban Chủ nhiệm HTX"}
+          />
+        ) : null}
 
         {/* Tab 5: Scoped Reports */}
         {tab === "reports" ? (

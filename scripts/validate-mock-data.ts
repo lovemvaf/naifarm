@@ -88,7 +88,7 @@ function main() {
     INITIAL_ORDERS.some((o) => o.orderDateIso?.startsWith("2026-11")),
     "Expected orders spanning Nov 2026 for current-period metrics",
   );
-  assert.equal(ASSET_MANIFEST.length, 65, `Expected 65 asset manifest entries, got ${ASSET_MANIFEST.length}`);
+  assert(ASSET_MANIFEST.length >= 88, `Expected >=88 asset manifest entries (65 Stitch + 23 V5 products), got ${ASSET_MANIFEST.length}`);
   for (const asset of ASSET_MANIFEST) {
     assertAssetExists(root, asset.localPath, `asset manifest ${asset.assetId}`);
   }
@@ -101,7 +101,7 @@ function main() {
     }
     assertAssetExists(root, ref.image, `public reference ${ref.id}`);
   }
-  // Security & architecture guardrails: zero 3D imports or live secret keys
+  // Security & architecture guardrails: zero 3D/WebGL or live secret keys
   const scanSrcForBanned = (dir: string) => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);

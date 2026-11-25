@@ -88,7 +88,7 @@ export default function CoordinatorWorkspacePage() {
       {
         reportTitle: "Báo cáo Điều phối & Tác động Thanh niên",
         periodLabel: "Tháng 11/2026",
-        scopeLabel: activeScopeUnitCode === "ALL" ? "Toàn tỉnh Đồng Nai (95 xã/phường)" : `Mã ĐVHC ${activeScopeUnitCode}`,
+        scopeLabel: activeScopeUnitCode === "ALL" ? "Toàn Thành phố Đồng Nai (95 xã/phường)" : `Mã ĐVHC ${activeScopeUnitCode}`,
       },
     );
     triggerCsvDownload(`naifarm-dieu-phoi-${activeScopeUnitCode}.csv`, csv);

@@ -1,0 +1,11 @@
+{
+  "name": "naifarm-video-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local Windows FFmpeg + SQLite OCOP AI Video Studio worker for NaiFarm V5",
+  "scripts": {
+    "dev": "npx tsx src/index.ts",
+    "start": "npx tsx src/index.ts"
+  }
+}

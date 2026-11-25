@@ -42,3 +42,42 @@ export function formatDateVi(isoOrDisplay: string, locale: Locale = "vi"): strin
   }
   return `${d}/${m}/${y}`;
 }
+
+/**
+ * Extract the base package/unit noun for compact stock counts
+ * (e.g. "hộp 500g" -> "hộp" / "boxes", "túi 3 kg" -> "túi" / "bags", avoiding duplicate weight "Còn 34 túi 500g").
+ */
+export function formatStockCountUnit(unitLabel: string, locale: Locale = "vi"): string {
+  const lower = unitLabel.trim().toLowerCase();
+  if (locale === "en") {
+    if (lower.startsWith("hộp quà")) return "gift boxes";
+    if (lower.startsWith("bộ quà") || lower.startsWith("bộ")) return "sets";
+    if (lower.startsWith("giỏ")) return "baskets";
+    if (lower.startsWith("thùng")) return "crates";
+    if (lower.startsWith("hộp")) return "boxes";
+    if (lower.startsWith("hũ") || lower.startsWith("lọ")) return "jars";
+    if (lower.startsWith("chum")) return "jars";
+    if (lower.startsWith("chai")) return "bottles";
+    if (lower.startsWith("túi")) return "bags";
+    if (lower.startsWith("gói")) return "packs";
+    if (lower.startsWith("khay")) return "trays";
+    if (lower.startsWith("bó")) return "bunches";
+    if (lower.startsWith("thanh")) return "bars";
+    if (lower.startsWith("trái")) return "fruits";
+    if (lower.startsWith("nải")) return "hands";
+    if (lower === "kg") return "kg";
+    return lower;
+  }
+  if (lower.startsWith("hộp quà")) return "hộp quà";
+  if (lower.startsWith("bộ quà")) return "bộ quà";
+  if (lower.startsWith("túi quà")) return "túi quà";
+  const firstWord = lower.split(/[\s~]/)[0];
+  return firstWord || unitLabel;
+}
+
+/**
+ * Strip internal workspace engineering prefixes (e.g. "W01 · ", "W03 - ") for customer-facing display.
+ */
+export function stripWorkspaceCodePrefix(label: string): string {
+  return label.replace(/^W0[1-6]\s*[·:-]\s*/i, "").trim();
+}

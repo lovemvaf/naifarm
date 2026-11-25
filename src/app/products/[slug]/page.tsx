@@ -1,7 +1,8 @@
 "use client";
 
-import React, { use, useEffect, useMemo, useState } from "react";
+import React, { Suspense, use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -21,9 +22,11 @@ import {
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { useLocale } from "@/context/LocaleContext";
-import { localizeProductName, localizeUnit } from "@/lib/i18n/domain-en";
-import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
+import { localizeCategory, localizeProductName, localizeUnit } from "@/lib/i18n/domain-en";
+import { buildLocalizedHref, sanitizeReturnTo } from "@/lib/navigation/safe-nav";
 import { evaluateMinorSafeguarding } from "@/lib/permissions/access-control";
+import { resolveCategoryMedia } from "@/data/reference/media-library";
+import { MediaPlayer } from "@/components/media/MediaPlayer";
 import { ProductGallery2D } from "@/components/products/ProductGallery2D";
 import { ProduceAnatomy2D } from "@/components/products/ProduceAnatomy2D";
 import { QrPassportCard } from "@/components/traceability/QrPassportCard";
@@ -39,12 +42,10 @@ import { notifyError, notifyInfo, notifySuccess } from "@/lib/toast";
 import { Badge, Button, Card, EmptyState } from "@/components/ui/Primitives";
 import type { CredentialRecord } from "@/types/naifarm";
 
-export default function ProductDetailPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = use(params);
+function ProductDetailInner({ slug }: { slug: string }) {
+  const searchParams = useSearchParams();
+  const rawReturnTo = searchParams.get("returnTo");
+  const safeReturnTo = sanitizeReturnTo(rawReturnTo, "/marketplace");
   const { locale, t, currencyMode } = useLocale();
   const isEn = locale === "en";
   const showUsd = currencyMode === "vnd_usd_est";
@@ -174,16 +175,22 @@ export default function ProductDetailPage({
     <div className="mx-auto max-w-[1280px] space-y-8 px-4 py-8 lg:px-6">
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
         <Link
-          href="/marketplace"
+          href={buildLocalizedHref(safeReturnTo, locale)}
           className="inline-flex items-center gap-1.5 font-semibold text-[#245B3D] hover:underline"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          <span>Quay lại Chợ nông sản</span>
+          <span>
+            {rawReturnTo
+              ? t.nav.backButton
+              : isEn
+              ? "Back to OCOP Market"
+              : "Quay lại Chợ nông sản"}
+          </span>
         </Link>
         <div className="flex flex-wrap items-center gap-2 text-xs text-[#52645A]">
-          <span>{product.category}</span>
+          <span>{localizeCategory(product.category, locale)}</span>
           <span>/</span>
-          <span className="font-semibold text-[#25352B]">{product.name}</span>
+          <span className="font-semibold text-[#25352B]">{localizeProductName(product, locale)}</span>
         </div>
       </div>
 
@@ -580,15 +587,19 @@ export default function ProductDetailPage({
         </div>
       </div>
 
-      {/* Story + QR Passport + 2D Anatomy */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      {/* Story + Media + QR Passport + 2D Anatomy */}
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
         <div className="space-y-6 lg:col-span-7">
           <Card className="p-5">
-            <h2 className="font-editorial text-xl font-bold text-[#25352B]">Câu chuyện mùa vụ tại vườn</h2>
+            <h2 className="font-editorial text-xl font-bold text-[#25352B]">
+              {isEn ? "Orchard Harvest & Heritage Story" : "Câu chuyện mùa vụ tại vườn"}
+            </h2>
             <p className="mt-2 text-sm leading-relaxed text-[#52645A]">{product.storyNote}</p>
           </Card>
 
           {product.anatomyType ? <ProduceAnatomy2D initialProduce={product.anatomyType} /> : null}
+
+          <MediaPlayer asset={resolveCategoryMedia(product.category, product.anatomyType)} compact />
         </div>
 
         <div className="space-y-5 lg:col-span-5">
@@ -718,5 +729,24 @@ export default function ProductDetailPage({
         onClose={() => setSelectedCred(null)}
       />
     </div>
+  );
+}
+
+export default function ProductDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = use(params);
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-[1280px] px-4 py-12 text-sm text-[#52645A]">
+          Loading produce detail...
+        </div>
+      }
+    >
+      <ProductDetailInner slug={slug} />
+    </Suspense>
   );
 }

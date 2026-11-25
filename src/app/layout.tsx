@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro, Lora } from "next/font/google";
 import { Toaster } from "sonner";
 import { DemoStoreProvider } from "@/context/DemoStoreContext";
 import { LocaleProvider } from "@/context/LocaleContext";
+import { CmsProvider } from "@/context/CmsContext";
 import { MotionProvider } from "@/components/motion/MotionSystem";
 import { AppHeader } from "@/components/navigation/AppHeader";
 import { AppFooter } from "@/components/navigation/AppFooter";
@@ -41,6 +42,7 @@ export default function RootLayout({
         <MotionProvider>
           <LocaleProvider>
             <DemoStoreProvider>
+              <CmsProvider>
               <a
                 href="#main-content"
                 className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-[#245B3D] focus:px-4 focus:py-2 focus:text-white"
@@ -55,6 +57,7 @@ export default function RootLayout({
               <MobileBottomNav />
               <NaiAIFloatingChat />
               <Toaster position="top-right" richColors closeButton duration={2400} visibleToasts={3} />
+              </CmsProvider>
             </DemoStoreProvider>
           </LocaleProvider>
         </MotionProvider>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   BarChart3,
@@ -12,6 +13,7 @@ import {
   Eye,
   EyeOff,
   FileSearch,
+  Film,
   Lock,
   Megaphone,
   ShieldAlert,
@@ -48,6 +50,16 @@ import { notifyError, notifyInfo, notifySuccess } from "@/lib/toast";
 import { Badge, Button, Card } from "@/components/ui/Primitives";
 import type { PeriodKey } from "@/types/naifarm";
 
+const LazyCmsManagerPanel = dynamic(
+  () => import("@/components/cms/CmsManagerPanel").then((m) => m.CmsManagerPanel),
+  { ssr: false, loading: () => <div className="p-6 text-xs text-[#52645A]">Loading CMS...</div> },
+);
+
+const LazyCreativeStudioPanel = dynamic(
+  () => import("@/components/studio/CreativeStudioPanel").then((m) => m.CreativeStudioPanel),
+  { ssr: false, loading: () => <div className="p-6 text-xs text-[#52645A]">Loading Video Studio...</div> },
+);
+
 type AdminTab =
   | "overview"
   | "merchants"
@@ -57,6 +69,8 @@ type AdminTab =
   | "finance"
   | "campaigns"
   | "calendar"
+  | "cms"
+  | "studio"
   | "permissions"
   | "support_gis";
 
@@ -163,7 +177,7 @@ export default function AdminWorkspacePage() {
       {
         reportTitle: "Báo cáo Điều hành Toàn nền tảng NaiFarm",
         periodLabel: report.period.label,
-        scopeLabel: activeScopeUnitCode === "ALL" ? "Toàn tỉnh Đồng Nai (95 xã/phường)" : activeScopeUnitCode,
+        scopeLabel: activeScopeUnitCode === "ALL" ? "Toàn Thành phố Đồng Nai (95 xã/phường)" : activeScopeUnitCode,
       },
     );
     triggerCsvDownload(`naifarm-admin-finance-${periodKey}.csv`, csv);
@@ -238,6 +252,20 @@ export default function AdminWorkspacePage() {
           active: tab === "calendar",
           onClick: () => setTab("calendar"),
           icon: <CalendarDays className="h-4 w-4" aria-hidden="true" />,
+        },
+        {
+          label: isEn ? "Website Content (CMS)" : "Nội dung Website (CMS)",
+          href: "#cms",
+          active: tab === "cms",
+          onClick: () => setTab("cms"),
+          icon: <FileSearch className="h-4 w-4" aria-hidden="true" />,
+        },
+        {
+          label: isEn ? "Video Studio Monitor" : "Giám sát Video Studio",
+          href: "#studio",
+          active: tab === "studio",
+          onClick: () => setTab("studio"),
+          icon: <Film className="h-4 w-4" aria-hidden="true" />,
         },
         {
           label: `Phân quyền & Kiểm toán (${auditLogs.length})`,
@@ -908,6 +936,20 @@ export default function AdminWorkspacePage() {
         ) : null}
 
         {tab === "calendar" ? <NaiCalendarBoard scope="W06" allowCreate /> : null}
+
+        {tab === "cms" ? (
+          <LazyCmsManagerPanel
+            scopeMode="full"
+            actorName={authUser?.name ?? "Quản trị Hệ thống"}
+          />
+        ) : null}
+
+        {tab === "studio" ? (
+          <LazyCreativeStudioPanel
+            mode="monitor"
+            actorName={authUser?.name ?? "Quản trị Hệ thống"}
+          />
+        ) : null}
 
         {tab === "permissions" && authUser && authUser.workspaceId !== "W06" ? (
           <AccessDeniedCard
