@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Heart, Maximize2, Minimize2, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { ConnectionQuality, Room, RoomEvent, Track, VideoPresets, type RemoteTrackPublication, type RemoteTrack } from "livekit-client";
+import { ConnectionQuality, Room, RoomEvent, Track, VideoPresets, type Participant, type RemoteTrackPublication, type RemoteTrack } from "livekit-client";
 import { Button } from "@/components/ui/Primitives";
 import { formatVnd } from "@/lib/format";
 import { liveFetch, type LiveConnection } from "@/lib/live/client";
@@ -56,11 +56,7 @@ export function LiveKitStage({ sessionId, role, token, cameraDevice, micDevice, 
   const salePrice = featuredProduct ? Math.round(featuredProduct.priceVnd * (1 - discountPercent / 100) / 1000) * 1000 : 0;
 
   useEffect(() => {
-    if (!mockEngagement) {
-      setMockFeed([]);
-      setHearts([]);
-      return;
-    }
+    if (!mockEngagement) return;
     let tick = 0;
     const timer = window.setInterval(() => {
       const id = ++mockSequence.current;
