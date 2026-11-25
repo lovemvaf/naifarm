@@ -98,21 +98,21 @@ export default function CheckoutPage() {
     deliveryMethod === "pickup"
       ? "Nhận trực tiếp tại nhà vườn theo mã đơn"
       : addressScope === "dongnai"
-      ? `${streetDetail.trim() || "Trung tâm"}, ${selectedUnit?.diaChiChuan ?? "Tỉnh Đồng Nai"}`
-      : outsideAddress.trim() || "Ngoài tỉnh Đồng Nai";
+        ? `${streetDetail.trim() || "Trung tâm"}, ${selectedUnit?.diaChiChuan ?? "Tỉnh Đồng Nai"}`
+        : outsideAddress.trim() || "Ngoài tỉnh Đồng Nai";
 
   if (placedOrderIds.length > 0) {
     const ordersToShow =
       placedOrders.length > 0
         ? placedOrders
         : orders
-            .filter((o) => placedOrderIds.includes(o.id))
-            .map((o) => ({ id: o.id, totalVnd: o.totalVnd }))
-            .concat(
-              placedOrderIds
-                .filter((id) => !orders.some((o) => o.id === id))
-                .map((id) => ({ id, totalVnd }))
-            );
+          .filter((o) => placedOrderIds.includes(o.id))
+          .map((o) => ({ id: o.id, totalVnd: o.totalVnd }))
+          .concat(
+            placedOrderIds
+              .filter((id) => !orders.some((o) => o.id === id))
+              .map((id) => ({ id, totalVnd }))
+          );
 
     return (
       <div className="mx-auto max-w-[780px] space-y-6 px-4 py-10">
@@ -302,11 +302,10 @@ export default function CheckoutPage() {
                 <button
                   type="button"
                   onClick={() => setDeliveryMethod("delivery")}
-                  className={`flex min-h-[58px] cursor-pointer items-center gap-3 rounded-[12px] border p-3.5 text-left ${
-                    deliveryMethod === "delivery"
-                      ? "border-[#245B3D] bg-[#EAF0E5]"
-                      : "border-[#D6DED2] bg-white"
-                  }`}
+                  className={`flex min-h-[58px] cursor-pointer items-center gap-3 rounded-[12px] border p-3.5 text-left ${deliveryMethod === "delivery"
+                    ? "border-[#245B3D] bg-[#EAF0E5]"
+                    : "border-[#D6DED2] bg-white"
+                    }`}
                 >
                   <Truck className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
                   <div>
@@ -317,11 +316,10 @@ export default function CheckoutPage() {
                 <button
                   type="button"
                   onClick={() => setDeliveryMethod("pickup")}
-                  className={`flex min-h-[58px] cursor-pointer items-center gap-3 rounded-[12px] border p-3.5 text-left ${
-                    deliveryMethod === "pickup"
-                      ? "border-[#245B3D] bg-[#EAF0E5]"
-                      : "border-[#D6DED2] bg-white"
-                  }`}
+                  className={`flex min-h-[58px] cursor-pointer items-center gap-3 rounded-[12px] border p-3.5 text-left ${deliveryMethod === "pickup"
+                    ? "border-[#245B3D] bg-[#EAF0E5]"
+                    : "border-[#D6DED2] bg-white"
+                    }`}
                 >
                   <MapPin className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
                   <div>
@@ -337,22 +335,20 @@ export default function CheckoutPage() {
                     <button
                       type="button"
                       onClick={() => setAddressScope("dongnai")}
-                      className={`min-h-[38px] cursor-pointer rounded-full px-4 text-xs font-semibold ${
-                        addressScope === "dongnai"
-                          ? "bg-[#245B3D] text-white"
-                          : "border border-[#D6DED2] bg-white text-[#25352B]"
-                      }`}
+                      className={`min-h-[38px] cursor-pointer rounded-full px-4 text-xs font-semibold ${addressScope === "dongnai"
+                        ? "bg-[#245B3D] text-white"
+                        : "border border-[#D6DED2] bg-white text-[#25352B]"
+                        }`}
                     >
                       Trong tỉnh Đồng Nai (95 xã/phường)
                     </button>
                     <button
                       type="button"
                       onClick={() => setAddressScope("outside")}
-                      className={`min-h-[38px] cursor-pointer rounded-full px-4 text-xs font-semibold ${
-                        addressScope === "outside"
-                          ? "bg-[#245B3D] text-white"
-                          : "border border-[#D6DED2] bg-white text-[#25352B]"
-                      }`}
+                      className={`min-h-[38px] cursor-pointer rounded-full px-4 text-xs font-semibold ${addressScope === "outside"
+                        ? "bg-[#245B3D] text-white"
+                        : "border border-[#D6DED2] bg-white text-[#25352B]"
+                        }`}
                     >
                       Ngoài tỉnh (TP.HCM, Bình Dương, Hà Nội...)
                     </button>
@@ -433,11 +429,10 @@ export default function CheckoutPage() {
                 <button
                   type="button"
                   onClick={() => setPaymentMethod("sepay_bank")}
-                  className={`flex min-h-[58px] cursor-pointer items-center gap-3 rounded-[12px] border p-3.5 text-left transition-all ${
-                    paymentMethod === "sepay_bank"
-                      ? "border-[#245B3D] bg-[#EAF0E5]"
-                      : "border-[#D6DED2] bg-white hover:border-[#788A7B]"
-                  }`}
+                  className={`flex min-h-[58px] cursor-pointer items-center gap-3 rounded-[12px] border p-3.5 text-left transition-all ${paymentMethod === "sepay_bank"
+                    ? "border-[#245B3D] bg-[#EAF0E5]"
+                    : "border-[#D6DED2] bg-white hover:border-[#788A7B]"
+                    }`}
                 >
                   <QrCode className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
                   <div>
@@ -452,11 +447,10 @@ export default function CheckoutPage() {
                 <button
                   type="button"
                   onClick={() => setPaymentMethod("cod")}
-                  className={`flex min-h-[58px] cursor-pointer items-center gap-3 rounded-[12px] border p-3.5 text-left transition-all ${
-                    paymentMethod === "cod"
-                      ? "border-[#245B3D] bg-[#EAF0E5]"
-                      : "border-[#D6DED2] bg-white hover:border-[#788A7B]"
-                  }`}
+                  className={`flex min-h-[58px] cursor-pointer items-center gap-3 rounded-[12px] border p-3.5 text-left transition-all ${paymentMethod === "cod"
+                    ? "border-[#245B3D] bg-[#EAF0E5]"
+                    : "border-[#D6DED2] bg-white hover:border-[#788A7B]"
+                    }`}
                 >
                   <Banknote className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
                   <div>
@@ -465,23 +459,6 @@ export default function CheckoutPage() {
                   </div>
                 </button>
               </div>
-
-              {paymentMethod === "sepay_bank" ? (
-                <div className="rounded-[12px] border border-[#245B3D]/30 bg-[#FAF8F1] p-3.5 text-xs space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-[#245B3D]">
-                    <QrCode className="h-4 w-4" />
-                    <span>Thông tin chuyển khoản SePay (MBBank):</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[#52645A]">
-                    <p><strong className="text-[#25352B]">Ngân hàng:</strong> MBBank</p>
-                    <p><strong className="text-[#25352B]">Số tài khoản:</strong> 0369966231</p>
-                    <p><strong className="text-[#25352B]">Chủ TK:</strong> NGUYEN HOANG HAI</p>
-                  </div>
-                  <p className="text-[11px] text-[#24603B] font-medium">
-                    ✨ Sau khi bấm &quot;Xác nhận đặt hàng&quot;, hệ thống sẽ hiển thị mã VietQR chính xác kèm mã đơn hàng để bạn quét thanh toán tức thì.
-                  </p>
-                </div>
-              ) : null}
             </Card>
           </div>
 
