@@ -35,8 +35,8 @@ export function WorkspaceShell({
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
         <aside aria-label={`Menu ${workspaceId}`} className="hidden lg:block">
-          <div className="sticky top-24 rounded-[16px] border border-border bg-white p-3 shadow-[0_2px_8px_rgba(37,53,43,0.05)]">
-            <p className="px-3 pb-2 text-xs font-semibold text-muted">Điều hướng {workspaceId}</p>
+          <div className="sticky top-24 rounded-[16px] border border-[#D6DED2] bg-white p-3 shadow-[0_2px_8px_rgba(37,53,43,0.05)]">
+            <p className="px-3 pb-2 text-xs font-semibold text-[#52645A]">Không gian làm việc</p>
             <nav className="space-y-1">
               {navItems.map((item) => {
                 const isActive = item.active ?? pathname === item.href;
@@ -49,8 +49,8 @@ export function WorkspaceShell({
                       className={cn(
                         "flex min-h-[44px] w-full items-center gap-2.5 rounded-[10px] px-3 text-left text-sm cursor-pointer",
                         isActive
-                          ? "bg-primary font-semibold text-white"
-                          : "text-foreground hover:bg-surface-soft"
+                          ? "bg-[#245B3D] font-semibold text-white"
+                          : "text-[#25352B] hover:bg-[#EAF0E5]"
                       )}
                     >
                       {item.icon}
@@ -65,8 +65,8 @@ export function WorkspaceShell({
                     className={cn(
                       "flex min-h-[44px] items-center gap-2.5 rounded-[10px] px-3 text-sm",
                       isActive
-                        ? "bg-primary font-semibold text-white"
-                        : "text-foreground hover:bg-surface-soft"
+                        ? "bg-[#245B3D] font-semibold text-white"
+                        : "text-[#25352B] hover:bg-[#EAF0E5]"
                     )}
                   >
                     {item.icon}
@@ -92,8 +92,8 @@ export function WorkspaceShell({
                     className={cn(
                       "inline-flex min-h-[42px] shrink-0 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold cursor-pointer",
                       isActive
-                        ? "bg-primary text-white"
-                        : "border border-border bg-white text-foreground"
+                        ? "bg-[#245B3D] text-white"
+                        : "border border-[#D6DED2] bg-white text-[#25352B]"
                     )}
                   >
                     {item.icon}
@@ -108,8 +108,8 @@ export function WorkspaceShell({
                   className={cn(
                     "inline-flex min-h-[42px] shrink-0 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold",
                     isActive
-                      ? "bg-primary text-white"
-                      : "border border-border bg-white text-foreground"
+                      ? "bg-[#245B3D] text-white"
+                      : "border border-[#D6DED2] bg-white text-[#25352B]"
                   )}
                 >
                   {item.icon}

@@ -2,16 +2,16 @@
 
 import React, { useState } from "react";
 import { Calendar, CheckCircle2, Users } from "lucide-react";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/toast";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { formatVnd } from "@/lib/format";
 import type { Farm } from "@/types/naifarm";
 import { Badge, Button, Card } from "@/components/ui/Primitives";
 
 export function ExperienceBookingForm({ farm }: { farm: Farm }) {
-  const { submitExperienceBooking, experienceBookings, profile } = useDemoStore();
+  const { submitExperienceBooking, experienceBookings } = useDemoStore();
   const pkg = farm.experiences[0];
-  const [guestName, setGuestName] = useState("");
+  const [guestName, setGuestName] = useState("Ngọc Linh");
   const [guestCount, setGuestCount] = useState(2);
   const [dateLabel, setDateLabel] = useState("2026-12-06");
   const [note, setNote] = useState("");
@@ -25,64 +25,59 @@ export function ExperienceBookingForm({ farm }: { farm: Farm }) {
     <Card className="p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Badge tone="gold">Trải nghiệm sinh thái</Badge>
-          <h3 className="mt-2 text-lg font-bold text-foreground">{pkg.title}</h3>
-          <p className="mt-1 text-sm text-muted">
+          <Badge tone="gold">Trải nghiệm sinh thái vườn</Badge>
+          <h3 className="mt-2 text-lg font-bold text-[#25352B]">{pkg.title}</h3>
+          <p className="mt-1 text-sm text-[#52645A]">
             {pkg.duration} · Tối đa {pkg.maxGuests} khách ·{" "}
-            <span className="tabular-nums font-bold text-primary">
+            <span className="tabular-nums font-bold text-[#245B3D]">
               {formatVnd(pkg.pricePerGuest)}/khách
             </span>
           </p>
         </div>
       </div>
 
-      <p className="mt-3 rounded-[10px] bg-background px-3 py-2 text-xs text-muted">
+      <p className="mt-3 rounded-[10px] bg-[#F5F3E9] px-3 py-2 text-xs text-[#52645A]">
         Lưu ý an toàn: {pkg.safetyNote} Mọi yêu cầu đặt lịch ở trạng thái chờ chủ vườn xác nhận,
         không tự xác nhận tức thì.
       </p>
 
       <form
         className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3"
-        onSubmit={async (e) => {
+        onSubmit={(e) => {
           e.preventDefault();
-          try {
-            const created = await submitExperienceBooking({
-              farmId: farm.id,
-              farmName: farm.name,
-              packageTitle: pkg.title,
-              guestName: guestName.trim() || profile?.fullName || "Khách tham quan",
-              guestCount,
-              dateLabel,
-              note: note.trim() || "Đăng ký tham quan vườn",
-            });
-            setSubmittedId(created.id);
-            setNote("");
-            toast.success(`Đã gửi yêu cầu ${created.id} — đang chờ ${farm.ownerName} xác nhận.`);
-          } catch {
-            toast.error("Không gửi được yêu cầu. Vui lòng thử lại.");
-          }
+          const created = submitExperienceBooking({
+            farmId: farm.id,
+            farmName: farm.name,
+            packageTitle: pkg.title,
+            guestName: guestName.trim() || "Khách tham quan",
+            guestCount,
+            dateLabel,
+            note: note.trim() || "Đăng ký tham quan vườn",
+          });
+          setSubmittedId(created.id);
+          setNote("");
+          notifySuccess(`Đã gửi yêu cầu ${created.id} — đang chờ ${farm.ownerName} xác nhận.`);
         }}
       >
         <div>
-          <label htmlFor={`guest-${farm.id}`} className="block text-xs font-semibold text-foreground">
+          <label htmlFor={`guest-${farm.id}`} className="block text-xs font-semibold text-[#25352B]">
             Tên người đại diện
           </label>
           <input
             id={`guest-${farm.id}`}
             type="text"
             value={guestName}
-            placeholder={profile?.fullName ?? "Họ tên người đại diện"}
             onChange={(e) => setGuestName(e.target.value)}
-            className="mt-1 min-h-[44px] w-full rounded-[10px] border border-input bg-white px-3 text-sm"
+            className="mt-1 min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
           />
         </div>
 
         <div>
-          <label htmlFor={`count-${farm.id}`} className="block text-xs font-semibold text-foreground">
+          <label htmlFor={`count-${farm.id}`} className="block text-xs font-semibold text-[#25352B]">
             Số khách (1–{pkg.maxGuests})
           </label>
           <div className="relative mt-1 flex items-center">
-            <Users className="pointer-events-none absolute left-3 h-4 w-4 text-muted" aria-hidden="true" />
+            <Users className="pointer-events-none absolute left-3 h-4 w-4 text-[#52645A]" aria-hidden="true" />
             <input
               id={`count-${farm.id}`}
               type="number"
@@ -92,29 +87,29 @@ export function ExperienceBookingForm({ farm }: { farm: Farm }) {
               onChange={(e) =>
                 setGuestCount(Math.min(pkg.maxGuests, Math.max(1, Number(e.target.value) || 1)))
               }
-              className="min-h-[44px] w-full rounded-[10px] border border-input bg-white pl-9 pr-3 text-sm tabular-nums"
+              className="min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white pl-9 pr-3 text-sm tabular-nums"
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor={`date-${farm.id}`} className="block text-xs font-semibold text-foreground">
+          <label htmlFor={`date-${farm.id}`} className="block text-xs font-semibold text-[#25352B]">
             Ngày dự kiến
           </label>
           <div className="relative mt-1 flex items-center">
-            <Calendar className="pointer-events-none absolute left-3 h-4 w-4 text-muted" aria-hidden="true" />
+            <Calendar className="pointer-events-none absolute left-3 h-4 w-4 text-[#52645A]" aria-hidden="true" />
             <input
               id={`date-${farm.id}`}
               type="date"
               value={dateLabel}
               onChange={(e) => setDateLabel(e.target.value)}
-              className="min-h-[44px] w-full rounded-[10px] border border-input bg-white pl-9 pr-3 text-sm"
+              className="min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white pl-9 pr-3 text-sm"
             />
           </div>
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor={`note-${farm.id}`} className="block text-xs font-semibold text-foreground">
+          <label htmlFor={`note-${farm.id}`} className="block text-xs font-semibold text-[#25352B]">
             Ghi chú nhóm tham quan
           </label>
           <input
@@ -123,7 +118,7 @@ export function ExperienceBookingForm({ farm }: { farm: Farm }) {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Ví dụ: Đi gia đình 4 người, muốn trải nghiệm cắt bưởi..."
-            className="mt-1 min-h-[44px] w-full rounded-[10px] border border-input bg-white px-3 text-sm"
+            className="mt-1 min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm"
           />
         </div>
 
@@ -135,22 +130,22 @@ export function ExperienceBookingForm({ farm }: { farm: Farm }) {
       </form>
 
       {submittedId ? (
-        <div className="mt-4 flex items-center gap-2 rounded-[10px] bg-success-bg px-3 py-2.5 text-sm font-medium text-success">
+        <div className="mt-4 flex items-center gap-2 rounded-[10px] bg-[#E6F3E9] px-3 py-2.5 text-sm font-medium text-[#24603B]">
           <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span>Đã ghi nhận yêu cầu {submittedId} — Chờ nhà vườn xác nhận.</span>
         </div>
       ) : null}
 
       {farmBookings.length > 0 ? (
-        <div className="mt-4 border-t border-border pt-3">
-          <p className="text-xs font-semibold text-muted">
+        <div className="mt-4 border-t border-[#D6DED2] pt-3">
+          <p className="text-xs font-semibold text-[#52645A]">
             Lịch hẹn gần đây tại {farm.name} ({farmBookings.length})
           </p>
-          <ul className="mt-2 space-y-1.5 text-xs text-foreground">
+          <ul className="mt-2 space-y-1.5 text-xs text-[#25352B]">
             {farmBookings.slice(0, 3).map((b) => (
               <li
                 key={b.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-background px-3 py-2"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[#F5F3E9] px-3 py-2"
               >
                 <span>
                   <strong className="tabular-nums">{b.id}</strong> · {b.guestName} ({b.guestCount} người ·{" "}

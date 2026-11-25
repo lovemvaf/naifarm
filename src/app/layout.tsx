@@ -24,9 +24,9 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "NaiFarm · Chợ OCOP Thanh niên Đồng Nai 2026",
+  title: "NaiFarm · Chợ OCOP Thanh niên Đồng Nai",
   description:
-    "Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị. Nền tảng chợ OCOP thanh niên, truy xuất QR, chuyển đổi số nhà nông và tình nguyện số tại Thành phố Đồng Nai.",
+    "Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị. Hệ sinh thái chợ OCOP thanh niên, truy xuất nguồn gốc QR, chuyển đổi số nhà nông và tình nguyện số tại Thành phố Đồng Nai.",
 };
 
 export default function RootLayout({
@@ -36,12 +36,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" className={`${beVietnamPro.variable} ${lora.variable}`}>
-      <body className="min-h-screen flex flex-col bg-background text-foreground">
+      <body className="min-h-screen flex flex-col bg-[#F5F3E9] text-[#25352B]">
         <MotionProvider>
           <DemoStoreProvider>
             <a
               href="#main-content"
-              className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-white"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-[#245B3D] focus:px-4 focus:py-2 focus:text-white"
             >
               Chuyển đến nội dung chính
             </a>
@@ -52,7 +52,7 @@ export default function RootLayout({
             <AppFooter />
             <MobileBottomNav />
             <NaiAIFloatingChat />
-            <Toaster position="top-right" richColors />
+            <Toaster position="top-right" richColors closeButton duration={2400} visibleToasts={3} />
           </DemoStoreProvider>
         </MotionProvider>
       </body>

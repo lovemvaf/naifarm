@@ -17,12 +17,12 @@ export const AI_WORKSPACE_CONFIG: Record<
 > = {
   W01: {
     greeting:
-      "Chào Ngọc Linh! Mình là NaiAI (chế độ minh họa theo dữ liệu demo). Bạn muốn tìm nông sản Đồng Nai nào hôm nay?",
+      "Chào Ngọc Linh! Mình là NaiAI (trợ lý tra cứu nội bộ). Bạn muốn tìm nông sản Đồng Nai nào hôm nay?",
     chips: [
       {
         prompt: "Chôm chôm giá bao nhiêu?",
         reply:
-          "Theo dữ liệu hiện tại: Chôm chôm Java Long Khánh tại Nhà vườn Ba Tư đang có giá 35.000 đ/kg (lô NF-DEMO-001, tồn 30 kg). Bạn có thể xem chi tiết và quét QR nguồn gốc ngay bên dưới.",
+          "Theo thông tin hiện có: Chôm chôm Java Long Khánh tại Nhà vườn Ba Tư đang có giá 35.000 đ/kg (lô NF-DEMO-001, tồn 30 kg). Bạn có thể xem chi tiết và quét QR nguồn gốc ngay bên dưới.",
         linkLabel: "Xem Chôm chôm Java Ba Tư",
         linkHref: "/products/chom-chom-java-long-khanh",
         productSlug: "chom-chom-java-long-khanh",
@@ -37,7 +37,7 @@ export const AI_WORKSPACE_CONFIG: Record<
       {
         prompt: "Cách nhận hàng & phí giao thế nào?",
         reply:
-          "Bạn có thể chọn 'Giao tận nơi' (+20.000 đ phí giao tại Đồng Nai/TP.HCM) hoặc 'Nhận tại vườn' (0 đ). Thanh toán COD khi nhận hàng, chưa tích hợp cổng thanh toán trực tuyến.",
+          "Bạn có thể chọn 'Giao tận nơi' (+20.000 đ phí vận chuyển dự kiến tại Đồng Nai/TP.HCM) hoặc 'Nhận tại vườn' (0 đ). Thanh toán ở nền tảng là COD khi nhận hàng, không thu tiền thật.",
         linkLabel: "Kiểm tra Giỏ hàng",
         linkHref: "/cart",
       },
@@ -119,7 +119,7 @@ export const AI_WORKSPACE_CONFIG: Record<
   },
   W05: {
     greeting:
-      "Chào đơn vị đối tác / HTX (W05). Đây là chế độ xem theo phạm vi tổ chức được cấp quyền.",
+      "Chào đơn vị đối tác / HTX (W05). Đây là chế độ xem theo phạm vi tổ chức được cấp quyền trong nền tảng.",
     chips: [
       {
         prompt: "Xem phạm vi Hợp tác xã & Doanh nghiệp",

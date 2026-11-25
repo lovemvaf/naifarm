@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -9,7 +7,6 @@ import { ArrowRight, MessageSquare, Send, Sparkles, X } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { AI_WORKSPACE_CONFIG } from "@/data/demo/ai-scripts";
 import type { WorkspaceId } from "@/types/naifarm";
-import { assetUrl } from "@/lib/storage/assets";
 
 interface ChatMessage {
   id: string;
@@ -49,7 +46,7 @@ export function NaiAIFloatingChat() {
     },
   ];
 
-  // Auto-hide on checkout or during farmer voice recording / fullscreen 3D viewer per DESIGN.md
+  // Auto-hide on checkout or during farmer voice recording / active subflows per DESIGN.md
   const suppressedByRoute = pathname.startsWith("/checkout") || hideAiChatOnSubflow;
 
   useEffect(() => {
@@ -109,13 +106,13 @@ export function NaiAIFloatingChat() {
       aiReply = {
         id: `ai-${effectiveWs}-${seq}`,
         sender: "ai",
-        text: "NaiAI ở chế độ trợ giúp kịch bản chỉ đọc dữ liệu catalog demo, không tự tư vấn thuốc bảo vệ thực vật hay cấp xác nhận OCOP. Vui lòng trao đổi với cán bộ chuyên môn hoặc điều phối viên.",
+        text: "NaiAI ở chế độ trợ giúp kịch bản chỉ tra cứu danh mục sản phẩm hiện có, không tự tư vấn thuốc bảo vệ thực vật hay cấp xác nhận OCOP. Vui lòng trao đổi với cán bộ chuyên môn hoặc điều phối viên.",
       };
     } else {
       aiReply = {
         id: `ai-${effectiveWs}-${seq}`,
         sender: "ai",
-        text: "Đang ở chế độ Trợ giúp theo kịch bản (Demo Offline). Bạn có thể chọn nhanh một câu gợi ý phía trên hoặc mở trực tiếp Chợ OCOP / Hộ chiếu QR để xem dữ liệu chi tiết.",
+        text: "Đang ở chế độ Trợ giúp theo kịch bản. Bạn có thể chọn nhanh một câu gợi ý phía trên hoặc mở trực tiếp Chợ OCOP / Hộ chiếu QR để xem thông tin chi tiết.",
         linkLabel: "Về Chợ OCOP",
         linkHref: "/marketplace",
       };
@@ -145,7 +142,7 @@ export function NaiAIFloatingChat() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="Mở trợ lý NaiAI"
-          className="group flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-[0_8px_24px_rgba(37,53,43,0.22)] transition-transform duration-150 hover:scale-105 hover:bg-primary-hover cursor-pointer"
+          className="group flex h-14 w-14 items-center justify-center rounded-full bg-[#245B3D] text-white shadow-[0_8px_24px_rgba(37,53,43,0.22)] transition-transform duration-150 hover:scale-105 hover:bg-[#19472E] cursor-pointer"
         >
           <Sparkles className="h-6 w-6" aria-hidden="true" strokeWidth={1.75} />
         </button>
@@ -153,16 +150,16 @@ export function NaiAIFloatingChat() {
         <section
           role="dialog"
           aria-label="NaiAI · Trợ lý NaiFarm"
-          className="flex max-h-[85dvh] w-[calc(100vw-2rem)] max-w-[390px] flex-col overflow-hidden rounded-[18px] border border-border bg-white shadow-[0_16px_48px_rgba(37,53,43,0.22)] lg:max-h-[540px]"
+          className="flex max-h-[85dvh] w-[calc(100vw-2rem)] max-w-[390px] flex-col overflow-hidden rounded-[18px] border border-[#D6DED2] bg-white shadow-[0_16px_48px_rgba(37,53,43,0.22)] lg:max-h-[540px]"
         >
-          <header className="flex items-center justify-between bg-primary px-4 py-3 text-white">
+          <header className="flex items-center justify-between bg-[#245B3D] px-4 py-3 text-white">
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
                 <MessageSquare className="h-5 w-5" aria-hidden="true" />
               </div>
               <div>
                 <h2 className="text-sm font-bold leading-tight">NaiAI · Trợ lý NaiFarm ({effectiveWs})</h2>
-                <p className="text-[11px] text-surface-soft">
+                <p className="text-[11px] text-[#EAF0E5]">
                   Trợ giúp theo kịch bản · Không lưu dữ liệu riêng
                 </p>
               </div>
@@ -180,8 +177,8 @@ export function NaiAIFloatingChat() {
             </button>
           </header>
 
-          <div className="border-b border-border bg-surface-soft/60 px-3 py-2 text-[11px] text-muted">
-            AI gợi ý minh họa theo dữ liệu demo — vui lòng kiểm tra lại thông tin trước khi quyết định.
+          <div className="border-b border-[#D6DED2] bg-[#EAF0E5]/60 px-3 py-2 text-[11px] text-[#52645A]">
+            AI gợi ý theo kịch bản không gian trải nghiệm — vui lòng kiểm tra lại thông tin trước khi quyết định.
           </div>
 
           <div className="flex-1 space-y-3 overflow-y-auto p-3.5">
@@ -197,8 +194,8 @@ export function NaiAIFloatingChat() {
                   <div
                     className={
                       m.sender === "user"
-                        ? "max-w-[85%] rounded-[14px] rounded-br-xs bg-primary px-3.5 py-2.5 text-sm text-white"
-                        : "max-w-[90%] space-y-2 rounded-[14px] rounded-bl-xs border border-border bg-background px-3.5 py-2.5 text-sm text-foreground"
+                        ? "max-w-[85%] rounded-[14px] rounded-br-xs bg-[#245B3D] px-3.5 py-2.5 text-sm text-white"
+                        : "max-w-[90%] space-y-2 rounded-[14px] rounded-bl-xs border border-[#D6DED2] bg-[#F5F3E9] px-3.5 py-2.5 text-sm text-[#25352B]"
                     }
                   >
                     <p>{m.text}</p>
@@ -206,28 +203,26 @@ export function NaiAIFloatingChat() {
                       <Link
                         href={`/products/${linkedProd.slug}`}
                         onClick={() => setOpen(false)}
-                        className="flex items-center gap-2.5 rounded-[10px] border border-border bg-white p-2 hover:bg-surface-soft"
+                        className="flex items-center gap-2.5 rounded-[10px] border border-[#D6DED2] bg-white p-2 hover:bg-[#EAF0E5]"
                       >
-                        <Image
-                          src={assetUrl(linkedProd.image)}
+                        <img
+                          src={linkedProd.image}
                           alt={linkedProd.name}
                           className="h-11 w-11 rounded-lg object-cover"
-                          width={512}
-                          height={279}
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-bold text-foreground">{linkedProd.name}</p>
-                          <p className="text-xs font-semibold text-primary">
+                          <p className="truncate text-xs font-bold text-[#25352B]">{linkedProd.name}</p>
+                          <p className="text-xs font-semibold text-[#245B3D]">
                             {new Intl.NumberFormat("vi-VN").format(linkedProd.priceVnd)} đ/{linkedProd.unitLabel}
                           </p>
                         </div>
-                        <ArrowRight className="h-4 w-4 text-primary" aria-hidden="true" />
+                        <ArrowRight className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
                       </Link>
                     ) : m.linkHref && m.linkLabel ? (
                       <Link
                         href={m.linkHref}
                         onClick={() => setOpen(false)}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-primary underline"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#245B3D] underline"
                       >
                         <span>{m.linkLabel}</span>
                         <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -239,14 +234,14 @@ export function NaiAIFloatingChat() {
             })}
           </div>
 
-          <div className="border-t border-border bg-background/70 px-3 py-2">
+          <div className="border-t border-[#D6DED2] bg-[#F5F3E9]/70 px-3 py-2">
             <div className="mb-2 flex flex-wrap gap-1.5">
               {wsConfig.chips.map((chip) => (
                 <button
                   key={chip.prompt}
                   type="button"
                   onClick={() => handleAsk(chip.prompt)}
-                  className="rounded-full border border-border bg-white px-2.5 py-1 text-xs font-medium text-primary hover:bg-surface-soft cursor-pointer"
+                  className="rounded-full border border-[#D6DED2] bg-white px-2.5 py-1 text-xs font-medium text-[#245B3D] hover:bg-[#EAF0E5] cursor-pointer"
                 >
                   {chip.prompt}
                 </button>
@@ -268,12 +263,12 @@ export function NaiAIFloatingChat() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Hỏi giá nông sản, mã QR, cách đăng..."
-                className="min-h-[42px] flex-1 rounded-[10px] border border-input bg-white px-3 text-sm text-foreground"
+                className="min-h-[42px] flex-1 rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm text-[#25352B]"
               />
               <button
                 type="submit"
                 aria-label="Gửi câu hỏi"
-                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[10px] bg-primary text-white hover:bg-primary-hover cursor-pointer"
+                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[10px] bg-[#245B3D] text-white hover:bg-[#19472E] cursor-pointer"
               >
                 <Send className="h-4 w-4" aria-hidden="true" />
               </button>

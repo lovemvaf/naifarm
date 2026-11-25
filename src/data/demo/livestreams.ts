@@ -1,6 +1,8 @@
+import { INITIAL_FARMS } from "./farms";
+import { INITIAL_PRODUCTS } from "./products";
 import type { LivestreamSession } from "@/types/naifarm";
 
-export const INITIAL_LIVESTREAMS: LivestreamSession[] = [
+const CORE_LIVESTREAMS: LivestreamSession[] = [
   {
     id: "NF-LIVE-REPLAY-TT",
     title: "Thu hoạch Bưởi đường lá cam đầu mùa & Thử độ ngọt Brix tại liếp cùng Chú Ba Minh",
@@ -15,19 +17,19 @@ export const INITIAL_LIVESTREAMS: LivestreamSession[] = [
       {
         id: "angle-1",
         label: "Góc 1: Cắt trái tại liếp",
-        image: "stitch/stitch-44.webp",
+        image: "/images/stitch/stitch-44.jpg",
         caption: "Chú Ba Minh chọn cắt bưởi đường lá cam đúng độ chín da láng bóng.",
       },
       {
         id: "angle-2",
         label: "Góc 2: Bàn thẩm định Brix",
-        image: "stitch/stitch-46.webp",
+        image: "/images/stitch/stitch-46.jpg",
         caption: "Tép bưởi Tân Triều mọng nước, đo độ ngọt tham khảo 11.8–12.2° Brix.",
       },
       {
         id: "angle-3",
         label: "Góc 3: Toàn cảnh cù lao",
-        image: "stitch/stitch-19.webp",
+        image: "/images/stitch/stitch-19.jpg",
         caption: "Khung cảnh liếp vườn phù sa sông Đồng Nai và đội TNV hỗ trợ đóng thùng.",
       },
     ],
@@ -49,8 +51,8 @@ export const INITIAL_LIVESTREAMS: LivestreamSession[] = [
       {
         id: "angle-ba-tu-1",
         label: "Điểm quay vườn chôm chôm",
-        image: "stitch/stitch-40.webp",
-        caption: "Dự kiến quay trực tiếp khu 2,5 ha tại Long Khánh.",
+        image: "/images/stitch/stitch-40.jpg",
+        caption: "Dự kiến quay trực tiếp khu 2,5 ha tại Phường Long Khánh.",
       },
     ],
     summary:
@@ -71,7 +73,7 @@ export const INITIAL_LIVESTREAMS: LivestreamSession[] = [
       {
         id: "angle-xl-1",
         label: "Chảo rang củi truyền thống",
-        image: "stitch/stitch-50.webp",
+        image: "/images/stitch/stitch-50.jpg",
         caption: "Giới thiệu công đoạn rang giữ vỏ lụa giòn thơm.",
       },
     ],
@@ -79,3 +81,36 @@ export const INITIAL_LIVESTREAMS: LivestreamSession[] = [
     isDemo: true,
   },
 ];
+
+const EXTRA_LIVESTREAMS: LivestreamSession[] = Array.from({ length: 9 }, (_, idx) => {
+  const num = idx + 3;
+  const farm = INITIAL_FARMS[(idx + 4) % INITIAL_FARMS.length];
+  const farmProducts = INITIAL_PRODUCTS.filter((p) => p.farmId === farm.id && p.seasonStatus === "in_season");
+  const pinnedIds = farmProducts.length > 0 ? farmProducts.slice(0, 2).map((p) => p.id) : ["P01"];
+  const statuses: LivestreamSession["status"][] = ["scheduled", "replay_demo", "ended"];
+  const status = statuses[idx % statuses.length];
+
+  return {
+    id: `NF-LIVE-${String(num).padStart(2, "0")}`,
+    title: `Kết nối ${farm.name}: ${farm.mainCrops[0]} (${farm.administrativeUnitName})`,
+    farmId: farm.id,
+    farmName: farm.name,
+    hostYouth: farm.youthSupporters[0] ?? "Đoàn viên Thanh niên Đồng Nai",
+    farmerName: farm.ownerName,
+    scheduleLabel: `${String(1 + (idx % 6)).padStart(2, "0")}/12/2026 · ${idx % 2 === 0 ? "09:30" : "15:00"}`,
+    status,
+    pinnedProductIds: pinnedIds,
+    angles: [
+      {
+        id: `angle-extra-${num}`,
+        label: `Toàn cảnh ${farm.administrativeUnitName}`,
+        image: farm.bannerImage,
+        caption: `Ghi hình giới thiệu quy trình chăm sóc & thu hoạch tại ${farm.name}.`,
+      },
+    ],
+    summary: `Phiên giới thiệu đặc sản ${farm.mainCrops.join(", ")} gắn với nhật ký mùa vụ minh họa.`,
+    isDemo: true,
+  };
+});
+
+export const INITIAL_LIVESTREAMS: LivestreamSession[] = [...CORE_LIVESTREAMS, ...EXTRA_LIVESTREAMS];

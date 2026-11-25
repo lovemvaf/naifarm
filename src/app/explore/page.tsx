@@ -1,180 +1,247 @@
 "use client";
 
-import Image from "next/image";
-import dynamic from "next/dynamic";
-
-import React, { useMemo, useState } from "react";
-import Link from "next/link";
-import { ArrowRight, Calendar, Compass } from "lucide-react";
+import React, { Suspense, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Calendar, MapPin } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { ExperienceBookingForm } from "@/components/farms/ExperienceBookingForm";
+import { NaiFarmMapHost, useBrowserGeolocation } from "@/components/map/NaiFarmMapHost";
+import { MapControls } from "@/components/map/MapControls";
+import { MapFilter } from "@/components/map/MapFilter";
+import { MapLegend } from "@/components/map/MapLegend";
+import { MapLocationCard } from "@/components/map/MapLocationCard";
+import { MapEmptyState } from "@/components/map/MapEmptyState";
 import { Badge, Card, DemoBanner } from "@/components/ui/Primitives";
-import type { RegionName } from "@/types/naifarm";
+import {
+  calculateStraightLineDistanceKm,
+  formatStraightLineDistanceVi,
+} from "@/lib/geography/distance";
+import { searchAdministrativeUnits } from "@/lib/geography/administrative-lookup";
+import { normalizeSearchText } from "@/lib/geography/normalize-address";
 import { cn } from "@/lib/format";
-import { assetUrl } from "@/lib/storage/assets";
+import type { DongNaiZone } from "@/types/naifarm";
 
-const DongNaiMap = dynamic(
-  () => import("@/components/map/DongNaiMap").then((mod) => mod.DongNaiMap),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full w-full items-center justify-center bg-surface-soft text-sm font-medium text-primary">
-        Đang tải bản đồ GeoJSON Thành phố Đồng Nai...
-      </div>
-    ),
-  }
-);
+function ExploreMapInner() {
+  const searchParams = useSearchParams();
+  const unitParam = searchParams.get("unit") ?? "";
+  const { farms } = useDemoStore();
 
-const ZONES: ("Tất cả" | RegionName)[] = [
-  "Tất cả",
-  "Phường Tân Triều",
-  "Phường Long Khánh",
-  "Phường Xuân Lộc",
-  "Cẩm Mỹ & Định Quán",
-];
+  const [zone, setZone] = useState<"Tất cả" | DongNaiZone>("Tất cả");
+  const [ocopOnly, setOcopOnly] = useState(false);
+  const [unitQuery, setUnitQuery] = useState(unitParam);
+  const [selectedFarmId, setSelectedFarmId] = useState<string>(farms[0]?.id ?? "");
+  const [sortByDistance, setSortByDistance] = useState(true);
 
-export default function ExploreMapPage() {
-  const { farms, adminUnits } = useDemoStore();
-  const [zone, setZone] = useState<(typeof ZONES)[number]>("Tất cả");
-  const [selectedFarmId, setSelectedFarmId] = useState<string>("");
+  const {
+    gpsStatus,
+    userCoords,
+    accuracyMeters,
+    outsideDongNai,
+    requestLocation,
+    clearLocation,
+  } = useBrowserGeolocation();
 
-  const visibleFarms = useMemo(() => {
-    if (zone === "Tất cả") return farms;
-    if (zone === "Cẩm Mỹ & Định Quán") {
-      return farms.filter((farm) => farm.region === "Cẩm Mỹ & Định Quán");
+  const { filteredFarms, aliasNote } = useMemo(() => {
+    const cleanQ = normalizeSearchText(unitQuery);
+    const unitSearch = cleanQ ? searchAdministrativeUnits(unitQuery) : { matches: [], matchedAlias: null };
+    const matchedCodes = new Set(unitSearch.matches.map((u) => u.maDvhc));
+
+    let list = farms.filter((f) => {
+      if (zone !== "Tất cả" && f.zoneLabel !== zone) return false;
+      if (ocopOnly && f.ocopStatus !== "coop_checked_demo") return false;
+      if (!cleanQ) return true;
+      const textMatch = normalizeSearchText(
+        `${f.name} ${f.administrativeUnitName} ${f.administrativeUnitCode} ${f.mainCrops.join(" ")}`,
+      ).includes(cleanQ);
+      return textMatch || matchedCodes.has(f.administrativeUnitCode);
+    });
+
+    if (userCoords && sortByDistance) {
+      list = [...list].sort(
+        (a, b) =>
+          calculateStraightLineDistanceKm(userCoords, {
+            lat: a.coordinates.lat,
+            lng: a.coordinates.lng,
+          }) -
+          calculateStraightLineDistanceKm(userCoords, {
+            lat: b.coordinates.lat,
+            lng: b.coordinates.lng,
+          }),
+      );
     }
-    return farms.filter((farm) => farm.region === zone);
-  }, [farms, zone]);
+
+    return {
+      filteredFarms: list,
+      aliasNote: unitSearch.matchedAlias
+        ? `${unitSearch.matchedAlias.alias}: ${unitSearch.matchedAlias.note}`
+        : null,
+    };
+  }, [farms, zone, ocopOnly, unitQuery, userCoords, sortByDistance]);
 
   const selectedFarm =
-    visibleFarms.find((farm) => farm.id === selectedFarmId) ??
-    visibleFarms[0] ??
-    farms[0];
+    filteredFarms.find((f) => f.id === selectedFarmId) ?? filteredFarms[0] ?? null;
+
+  const selectedDistanceKm =
+    selectedFarm && userCoords
+      ? calculateStraightLineDistanceKm(userCoords, {
+          lat: selectedFarm.coordinates.lat,
+          lng: selectedFarm.coordinates.lng,
+        })
+      : null;
 
   return (
     <div className="mx-auto max-w-[1280px] space-y-6 px-4 py-8 lg:px-8">
       <div>
-        <Badge tone="success">B2 · S17 &amp; S23 · Bản đồ số Nông sản &amp; Du lịch sinh thái</Badge>
-        <h1 className="mt-2 font-editorial text-3xl font-semibold text-foreground">
+        <Badge tone="success">95 Phường/Xã Thành phố Đồng Nai</Badge>
+        <h1 className="mt-2 font-editorial text-3xl font-semibold text-[#25352B]">
           Bản đồ Nông sản &amp; Trải nghiệm Miệt vườn Đồng Nai
         </h1>
-        <p className="mt-1 text-sm text-muted">
-          Khám phá các vùng trồng trọng điểm (Tân Triều, Long Khánh, Xuân Lộc, Cẩm Mỹ &amp; Định
-          Quán), xem mùa vụ và gửi yêu cầu trải nghiệm tại vườn.
+        <p className="mt-1 text-sm text-[#52645A]">
+          Khám phá 30 nhà vườn từ Tân Triều, Long Khánh, Xuân Lộc, Cẩm Mỹ đến Bình Phước, Đak Nhau,
+          Phước Sơn — kết nối định vị đo khoảng cách đường chim bay và đặt lịch tham quan.
         </p>
       </div>
 
       <DemoBanner
-        title="Ranh giới hành chính Thành phố Đồng Nai"
-        detail="Bản đồ dùng dữ liệu GeoJSON nguồn mở theo Nghị quyết 1662/NQ-UBTVQH15 (2025) và Nghị quyết 237/NQ-UBTVQH16 (2026): cấp thành phố trực thuộc trung ương, không còn cấp huyện. Ranh giới hiển thị mang tính tham chiếu."
+        title="Vị trí gần đúng theo vùng sinh thái"
+        detail="Các điểm ghim trên bản đồ thể hiện vị trí gần đúng theo cụm xã/phường Đồng Nai vì dữ liệu ranh giới hành chính hiện tại chưa gắn polygon hoặc tọa độ pháp lý chính thức."
       />
 
-      <div className="flex flex-wrap gap-2">
-        {ZONES.map((z) => (
-          <button
-            key={z}
-            type="button"
-            onClick={() => setZone(z)}
-            className={cn(
-              "min-h-[40px] rounded-full px-4 text-xs font-semibold cursor-pointer",
-              zone === z
-                ? "bg-primary text-white"
-                : "border border-border bg-white text-foreground hover:bg-surface-soft"
-            )}
-          >
-            {z}
-          </button>
-        ))}
-      </div>
+      <MapFilter
+        zone={zone}
+        onZoneChange={setZone}
+        ocopOnly={ocopOnly}
+        onToggleOcopOnly={() => setOcopOnly((v) => !v)}
+        unitQuery={unitQuery}
+        onUnitQueryChange={setUnitQuery}
+        aliasNote={aliasNote}
+      />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div className="space-y-3 lg:col-span-5">
-          {visibleFarms.map((farm) => {
-            const active = farm.id === selectedFarm?.id;
-            return (
-              <button
-                key={farm.id}
-                type="button"
-                onClick={() => setSelectedFarmId(farm.id)}
-                className={cn(
-                  "flex w-full gap-3.5 rounded-[16px] border p-3.5 text-left transition-colors cursor-pointer",
-                  active
-                    ? "border-primary bg-surface-soft/80 shadow-[0_4px_14px_rgba(37,53,43,0.08)]"
-                    : "border-border bg-white hover:bg-background"
-                )}
-              >
-                <Image
-                  src={assetUrl(farm.bannerImage)}
-                  alt={farm.name}
-                  className="h-24 w-24 shrink-0 rounded-[12px] object-cover"
-                  width={512}
-                  height={279}
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center justify-between gap-1">
-                    <span className="text-xs font-bold text-primary">{farm.region}</span>
-                    <span className="tabular-nums text-xs text-muted">{farm.areaHa} ha</span>
+      <MapControls
+        gpsStatus={gpsStatus}
+        userCoords={userCoords}
+        accuracyMeters={accuracyMeters}
+        outsideDongNai={outsideDongNai}
+        onRequestLocation={requestLocation}
+        onClearLocation={clearLocation}
+        sortByDistance={sortByDistance}
+        onToggleSortByDistance={() => setSortByDistance((v) => !v)}
+      />
+
+      {filteredFarms.length === 0 ? (
+        <MapEmptyState
+          onResetFilters={() => {
+            setZone("Tất cả");
+            setOcopOnly(false);
+            setUnitQuery("");
+          }}
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          {/* Left 40%: Scrollable Farm List */}
+          <div className="max-h-[540px] space-y-2.5 overflow-y-auto pr-1 lg:col-span-5">
+            {filteredFarms.map((farm) => {
+              const active = farm.id === selectedFarm?.id;
+              const distKm = userCoords
+                ? calculateStraightLineDistanceKm(userCoords, {
+                    lat: farm.coordinates.lat,
+                    lng: farm.coordinates.lng,
+                  })
+                : null;
+              return (
+                <button
+                  key={farm.id}
+                  type="button"
+                  onClick={() => setSelectedFarmId(farm.id)}
+                  className={cn(
+                    "flex w-full gap-3 rounded-[16px] border p-3 text-left transition cursor-pointer",
+                    active
+                      ? "border-[#245B3D] bg-[#EAF0E5]/85 shadow-[0_4px_12px_rgba(37,53,43,0.08)]"
+                      : "border-[#D6DED2] bg-white hover:bg-[#FAF8F1]",
+                  )}
+                >
+                  <img
+                    src={farm.bannerImage}
+                    alt={farm.name}
+                    className="h-20 w-20 shrink-0 rounded-[12px] object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-between gap-1">
+                      <span className="text-[11px] font-bold text-[#245B3D]">
+                        {farm.administrativeUnitName} ({farm.administrativeUnitCode})
+                      </span>
+                      <span className="tabular-nums text-[11px] text-[#52645A]">
+                        {distKm !== null ? formatStraightLineDistanceVi(distKm) : `${farm.areaHa} ha`}
+                      </span>
+                    </div>
+                    <h2 className="mt-0.5 truncate text-sm font-bold text-[#25352B]">{farm.name}</h2>
+                    <p className="mt-0.5 line-clamp-1 text-xs text-[#52645A]">
+                      {farm.mainCrops.join(" · ")}
+                    </p>
+                    <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[#80520C]">
+                      <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+                      <span className="truncate">{farm.ocopLabel}</span>
+                    </p>
                   </div>
-                  <h2 className="mt-0.5 text-base font-bold text-foreground">{farm.name}</h2>
-                  <p className="mt-1 line-clamp-2 text-xs text-muted">
-                    {farm.mainCrops.join(" · ")}
-                  </p>
-                  <p className="mt-1.5 text-[11px] font-semibold text-warning">{farm.ocopLabel}</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        <Card className="flex flex-col overflow-hidden lg:col-span-7">
-          <div className="relative h-[340px] w-full overflow-hidden sm:h-[400px]">
-            <DongNaiMap
-              farms={visibleFarms}
-              units={adminUnits}
-              selectedFarmId={selectedFarm?.id ?? ""}
-              onSelectFarm={setSelectedFarmId}
-            />
-            <div className="pointer-events-none absolute top-3 left-3 z-[500] rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-primary shadow-sm">
-              <Compass className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
-              Bản đồ GeoJSON · Không dùng tile OpenStreetMap
-            </div>
+                </button>
+              );
+            })}
           </div>
 
-          {selectedFarm ? (
-            <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border bg-white p-5">
-              <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge tone="success">{selectedFarm.region}</Badge>
-                  <span className="tabular-nums text-xs text-muted">
-                    {selectedFarm.lat.toFixed(6)} · {selectedFarm.lng.toFixed(6)}
-                  </span>
-                </div>
-                <h3 className="text-lg font-bold text-foreground">{selectedFarm.name}</h3>
-                <p className="text-xs text-muted">{selectedFarm.addressLabel}</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  href={`/farms/${selectedFarm.slug}`}
-                  className="inline-flex min-h-[42px] items-center gap-1.5 rounded-[10px] bg-primary px-4 text-xs font-semibold text-white hover:bg-primary-hover"
-                >
-                  <span>Xem hồ sơ nhà vườn</span>
-                  <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                </Link>
-              </div>
-            </div>
-          ) : null}
-        </Card>
-      </div>
+          {/* Right 60%: Real Leaflet Map + Selected Farm Card */}
+          <div className="space-y-4 lg:col-span-7">
+            <NaiFarmMapHost
+              farms={filteredFarms}
+              selectedFarmId={selectedFarm?.id}
+              onSelectFarm={setSelectedFarmId}
+              userCoords={userCoords}
+              accuracyMeters={accuracyMeters}
+              heightClassName="h-[440px]"
+              zoom={filteredFarms.length === 1 ? 12 : 10}
+            />
 
+            <MapLegend />
+
+            {selectedFarm ? (
+              <MapLocationCard farm={selectedFarm} distanceKm={selectedDistanceKm} />
+            ) : null}
+          </div>
+        </div>
+      )}
+
+      {/* Ecological Booking Experience Section */}
       {selectedFarm ? (
-        <section className="space-y-3">
-          <h2 className="flex items-center gap-2 text-xl font-bold text-foreground">
-            <Calendar className="h-5 w-5 text-primary" aria-hidden="true" />
-            <span>Đặt lịch trải nghiệm sinh thái tại {selectedFarm.name}</span>
+        <Card className="p-5 md:p-6">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-[#25352B]">
+            <Calendar className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
+            <span>Đặt lịch trải nghiệm sinh thái · {selectedFarm.name}</span>
           </h2>
-          <ExperienceBookingForm farm={selectedFarm} />
-        </section>
+          {selectedFarm.experiences.length > 0 ? (
+            <div className="mt-4">
+              <ExperienceBookingForm farm={selectedFarm} />
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-[#52645A]">
+              Vườn này hiện ưu tiên bán nông sản qua Chợ OCOP và hỗ trợ truy xuất mã QR; bạn có thể
+              chọn các vườn sinh thái có biểu tượng trải nghiệm ở danh sách bên trên.
+            </p>
+          )}
+        </Card>
       ) : null}
     </div>
+  );
+}
+
+export default function ExploreMapPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-[1280px] px-4 py-12 text-sm text-[#52645A]">
+          Đang khởi tạo bản đồ nông sản Đồng Nai...
+        </div>
+      }
+    >
+      <ExploreMapInner />
+    </Suspense>
   );
 }
