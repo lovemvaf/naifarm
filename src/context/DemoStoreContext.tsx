@@ -131,6 +131,7 @@ import type {
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { mapProfile } from "@/lib/supabase/mappers";
+import { fetchCoreData } from "@/lib/supabase/hydrate";
 
 const STORAGE_KEY = "naifarm_demo_state_v4";
 
@@ -687,6 +688,43 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const persistCart = useCallback((cart: CartItem[]) => {
+    if (!supabase || !state.session) return;
+    const userId = state.session.user.id;
+    void (async () => {
+      await supabase.from("cart_items").delete().eq("user_id", userId);
+      if (cart.length) {
+        await supabase.from("cart_items").insert(
+          cart.map((item) => ({
+            user_id: userId,
+            product_id: item.productId,
+            quantity: item.quantity,
+            selected_option_label: item.selectedOptionLabel ?? null,
+          })),
+        );
+      }
+    })();
+  }, [state.session]);
+
+  const persistIds = useCallback(
+    (table: "favorites" | "season_follows", ids: string[]) => {
+      if (!supabase || !state.session) return;
+      const userId = state.session.user.id;
+      void (async () => {
+        await supabase.from(table).delete().eq("user_id", userId);
+        if (ids.length) {
+          await supabase.from(table).insert(ids.map((id) => ({ user_id: userId, product_id: id })));
+        }
+      })();
+    },
+    [state.session],
+  );
+
+  const persistMission = useCallback((id: string, patch: Record<string, unknown>) => {
+    if (!supabase) return;
+    void supabase.from("missions").update(patch).eq("id", id).then(() => {});
+  }, []);
+
   const activeClockIso = getActiveClockIso(state.clockOverrideIso);
 
   const setClockOverrideIso = useCallback((iso: string | null) => {
@@ -819,6 +857,37 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     },
     [],
   );
+
+  useEffect(() => {
+    if (!supabase || !storageReady) return;
+    let mounted = true;
+
+    void fetchCoreData()
+      .then((core) => {
+        if (!mounted) return;
+        setState((prev) => ({
+          ...prev,
+          farms: core.farms.length ? core.farms : prev.farms,
+          products: core.products.length ? core.products : prev.products,
+          batches: core.batches.length ? core.batches : prev.batches,
+          orders: core.orders.length ? core.orders : prev.orders,
+          missions: core.missions.length ? core.missions : prev.missions,
+          supportRequests: core.supportRequests.length ? core.supportRequests : prev.supportRequests,
+          experienceBookings: core.experienceBookings.length ? core.experienceBookings : prev.experienceBookings,
+          docCases: core.docCases.length ? core.docCases : prev.docCases,
+          adminGrants: core.adminGrants.length ? core.adminGrants : prev.adminGrants,
+          auditLogs: core.auditLogs.length ? core.auditLogs : prev.auditLogs,
+          cart: core.cartItems.length ? core.cartItems : prev.cart,
+          favoriteProductIds: core.favoriteIds.length ? core.favoriteIds : prev.favoriteProductIds,
+          followedProductIds: core.followedIds.length ? core.followedIds : prev.followedProductIds,
+        }));
+      })
+      .catch(() => {});
+
+    return () => {
+      mounted = false;
+    };
+  }, [storageReady, state.session?.user.id]);
 
   useEffect(() => {
     if (!supabase) return;
@@ -1066,6 +1135,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       } else {
         nextCart.push({ productId, quantity, selectedOptionLabel: optionLabel });
       }
+      persistCart(nextCart);
       return { ...prev, cart: nextCart };
     });
     return { ok: true, message: `Đã thêm ${product.name} vào giỏ hàng.` };
@@ -1076,44 +1146,44 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     if (!product) return;
     setState((prev) => {
       if (nextQty <= 0) {
-        return { ...prev, cart: prev.cart.filter((c) => c.productId !== productId) };
+        const nextCart = prev.cart.filter((c) => c.productId !== productId);
+        persistCart(nextCart);
+        return { ...prev, cart: nextCart };
       }
       const clamped = Math.min(product.stockKg, nextQty);
-      return {
-        ...prev,
-        cart: prev.cart.map((c) => (c.productId === productId ? { ...c, quantity: clamped } : c)),
-      };
+      const nextCart = prev.cart.map((c) => (c.productId === productId ? { ...c, quantity: clamped } : c));
+      persistCart(nextCart);
+      return { ...prev, cart: nextCart };
     });
   };
 
   const removeFromCart = (productId: string) => {
-    setState((prev) => ({
-      ...prev,
-      cart: prev.cart.filter((c) => c.productId !== productId),
-    }));
+    setState((prev) => {
+      const nextCart = prev.cart.filter((c) => c.productId !== productId);
+      persistCart(nextCart);
+      return { ...prev, cart: nextCart };
+    });
   };
 
   const toggleFollowSeason = (productId: string) => {
     setState((prev) => {
       const exists = prev.followedProductIds.includes(productId);
-      return {
-        ...prev,
-        followedProductIds: exists
-          ? prev.followedProductIds.filter((id) => id !== productId)
-          : [...prev.followedProductIds, productId],
-      };
+      const next = exists
+        ? prev.followedProductIds.filter((id) => id !== productId)
+        : [...prev.followedProductIds, productId];
+      persistIds("season_follows", next);
+      return { ...prev, followedProductIds: next };
     });
   };
 
   const toggleFavorite = (productId: string) => {
     setState((prev) => {
       const exists = prev.favoriteProductIds.includes(productId);
-      return {
-        ...prev,
-        favoriteProductIds: exists
-          ? prev.favoriteProductIds.filter((id) => id !== productId)
-          : [...prev.favoriteProductIds, productId],
-      };
+      const next = exists
+        ? prev.favoriteProductIds.filter((id) => id !== productId)
+        : [...prev.favoriteProductIds, productId];
+      persistIds("favorites", next);
+      return { ...prev, favoriteProductIds: next };
     });
   };
 
@@ -1259,6 +1329,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     status,
     review,
   ) => {
+    if (supabase) {
+      void supabase
+        .from("experience_bookings")
+        .update({ status })
+        .eq("id", bookingId)
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       experienceBookings: prev.experienceBookings.map((b) =>
@@ -1634,6 +1711,44 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
 
     const appliedIds = new Set(promoEval.applied.map((a) => a.promo.id));
 
+    if (supabase && state.session) {
+      const userId = state.session.user.id;
+      void (async () => {
+        for (const order of createdOrders) {
+          const { error } = await supabase.from("orders").insert({
+            id: order.id,
+            customer_id: userId,
+            customer_name: order.customerName,
+            customer_phone_demo: order.customerPhoneDemo,
+            farm_id: order.farmId,
+            farm_name: order.farmName,
+            delivery_method: order.deliveryMethod,
+            delivery_address: order.deliveryAddress,
+            subtotal_vnd: order.subtotalVnd,
+            shipping_fee_vnd: order.shippingFeeVnd,
+            total_vnd: order.totalVnd,
+            payment_label: order.paymentLabel,
+            status: order.status,
+            timeline: order.timeline,
+            created_at_label: order.createdAtLabel,
+          });
+          if (error) continue;
+          await supabase.from("order_items").insert(
+            order.items.map((item) => ({
+              order_id: order.id,
+              product_id: item.productId,
+              product_name: item.productName,
+              unit_label: item.unitLabel,
+              quantity: item.quantity,
+              unit_price_vnd: item.unitPriceVnd,
+              image: item.image,
+            })),
+          );
+        }
+        persistCart([]);
+      })();
+    }
+
     setState((prev) => ({
       ...prev,
       orders: [...createdOrders, ...prev.orders],
@@ -1668,6 +1783,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateOrderStatus = (orderId: string, status: OrderStatus, cancelReason?: string) => {
+    if (supabase) {
+      void supabase
+        .from("orders")
+        .update({ status, cancel_reason: cancelReason ?? null })
+        .eq("id", orderId)
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       orders: prev.orders.map((ord) => {
@@ -1905,6 +2027,28 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       isDemo: true,
     };
 
+    if (supabase) {
+      void supabase
+        .from("products")
+        .insert({
+          id: newProduct.id,
+          slug: newProduct.slug,
+          name: newProduct.name,
+          category: newProduct.category,
+          farm_id: newProduct.farmId,
+          farm_name: newProduct.farmName,
+          region: newProduct.region,
+          unit_label: newProduct.unitLabel,
+          price_vnd: newProduct.priceVnd,
+          stock_kg: newProduct.stockKg,
+          season_status: newProduct.seasonStatus,
+          batch_code: newProduct.batchCode,
+          short_description: newProduct.shortDescription,
+          image: newProduct.image,
+          gallery: newProduct.gallery,
+        })
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       products: [newProduct, ...prev.products],
@@ -2350,6 +2494,23 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       status: "Chờ điều phối phân công",
       createdAtLabel: "25/11/2026 · Vừa gửi",
     };
+    if (supabase) {
+      void supabase
+        .from("support_requests")
+        .insert({
+          id: created.id,
+          farm_id: created.farmId,
+          farm_name: created.farmName,
+          title: created.title,
+          need_type: created.needType,
+          preferred_time: created.preferredTime,
+          location_mode: created.locationMode,
+          note: created.note,
+          status: created.status,
+          created_at_label: created.createdAtLabel,
+        })
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       supportRequests: [created, ...prev.supportRequests],
@@ -2358,6 +2519,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const acceptMission = (missionId: string, volunteerName = "Minh Anh") => {
+    if (state.session) {
+      persistMission(missionId, { status: "assigned", assignee_id: state.session.user.id });
+    }
     setState((prev) => ({
       ...prev,
       missions: prev.missions.map((m) =>
@@ -2372,6 +2536,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     hours: number,
     evidenceImage = "/images/stitch/stitch-32.jpg",
   ) => {
+    persistMission(missionId, {
+      status: "submitted",
+      evidence_note: evidenceNote,
+      submitted_hours: hours,
+      evidence_image: evidenceImage,
+      revision_reason: null,
+    });
     setState((prev) => ({
       ...prev,
       missions: prev.missions.map((m) =>
@@ -2390,6 +2561,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const confirmMissionByFarmer = (missionId: string) => {
+    persistMission(missionId, { status: "farm_accepted" });
     setState((prev) => ({
       ...prev,
       missions: prev.missions.map((m) =>
@@ -2424,6 +2596,10 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         message: "Chưa đủ điều kiện: Nhà vườn (W02) phải xác nhận đã nhận bàn giao trước khi Điều phối duyệt giờ.",
       };
     }
+    persistMission(missionId, {
+      status: "coordinator_approved",
+      approved_hours: m.submittedHours,
+    });
     setState((prev) => ({
       ...prev,
       missions: prev.missions.map((x) =>
@@ -2447,6 +2623,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const requestMissionRevision = (missionId: string, reason: string) => {
+    persistMission(missionId, { status: "revision_requested", revision_reason: reason });
     setState((prev) => ({
       ...prev,
       missions: prev.missions.map((x) =>
@@ -2496,6 +2673,23 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       id: `EXP-BOOK-${String(state.experienceBookings.length + 1).padStart(2, "0")}`,
       status: "Chờ nhà vườn xác nhận",
     };
+    if (supabase) {
+      void supabase
+        .from("experience_bookings")
+        .insert({
+          id: created.id,
+          farm_id: created.farmId,
+          farm_name: created.farmName,
+          package_title: created.packageTitle,
+          guest_name: created.guestName,
+          guest_count: created.guestCount,
+          date_label: created.dateLabel,
+          note: created.note,
+          status: created.status,
+          guest_id: state.session?.user.id ?? null,
+        })
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       experienceBookings: [created, ...prev.experienceBookings],
@@ -2509,6 +2703,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     note: string,
   ) => {
     const targetCase = state.docCases.find((d) => d.id === caseId);
+    if (supabase) {
+      void supabase
+        .from("document_review_cases")
+        .update({ status, reviewer_note: note })
+        .eq("id", caseId)
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       docCases: prev.docCases.map((c) =>
@@ -2530,6 +2731,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     if (!grant) return;
     const beforeSummary = grant.active ? "Đang hiệu lực" : "Đã tạm thu hồi";
     const afterSummary = grant.active ? "Đã tạm thu hồi" : "Đang hiệu lực";
+    if (supabase) {
+      void supabase
+        .from("admin_grants")
+        .update({ active: !grant.active, last_reason: reason })
+        .eq("id", grantId)
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       adminGrants: prev.adminGrants.map((g) =>
