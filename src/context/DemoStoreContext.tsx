@@ -229,7 +229,7 @@ interface DemoState {
   notifications: UserNotification[];
   tickets: SupportTicket[];
   addressBook: AddressBookEntry[];
-  session: import("@supabase/supabase-js").Session | null;
+  session: Session | null;
   profile: Profile | null;
   hideAiChatOnSubflow: boolean;
 }
@@ -341,7 +341,7 @@ interface DemoStoreContextValue extends DemoState {
   setActiveOrgKind: (kind: OrganizationKind) => void;
   setActiveScopeUnitCode: (unitCode: string) => void;
   setHideAiChatOnSubflow: (hidden: boolean) => void;
-  session: import("@supabase/supabase-js").Session | null;
+  session: Session | null;
   profile: Profile | null;
   signInDemoAccount: (accountId: string) => DemoAuthAccount | null;
   signUpDemoGuest: (input: SignUpGuestInput) => { ok: boolean; account?: DemoAuthAccount; message: string };
@@ -574,7 +574,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       workspaceTouchedRef.current = true;
       setState((prev) => ({
         ...prev,
-        session: data.session as import("@supabase/supabase-js").Session | null,
+        session: data.session as Session | null,
         profile: mapped,
         authUser: account,
         activeWorkspace: account ? account.workspaceId : prev.activeWorkspace,
@@ -590,13 +590,22 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     ): Promise<{ ok: boolean; account?: DemoAuthAccount | null; message: string }> => {
       const found = state.demoAccounts.find((a) => a.id === accountId) ?? null;
       if (!found) return { ok: false, message: "Không tìm thấy tài khoản." };
+      const applyDemoAccount = () => {
+        workspaceTouchedRef.current = true;
+        setState((prev) => ({
+          ...prev,
+          authUser: found,
+          activeWorkspace: found.workspaceId,
+          activeScopeUnitCode: "ALL",
+        }));
+      };
       if (!supabase) {
-        signInDemoAccount(accountId);
+        applyDemoAccount();
         return { ok: true, account: found, message: "Đăng nhập demo." };
       }
       const realEmail = DEMO_REAL_EMAIL_MAP[found.emailDemo];
       if (!realEmail) {
-        signInDemoAccount(accountId);
+        applyDemoAccount();
         return { ok: true, account: found, message: "Đăng nhập demo." };
       }
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -616,7 +625,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       workspaceTouchedRef.current = true;
       setState((prev) => ({
         ...prev,
-        session: data.session as import("@supabase/supabase-js").Session | null,
+        session: data.session as Session | null,
         profile: mapped,
         authUser: account,
         activeWorkspace: account.workspaceId,
@@ -685,7 +694,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       workspaceTouchedRef.current = true;
       setState((prev) => ({
         ...prev,
-        session: data.session as import("@supabase/supabase-js").Session | null,
+        session: data.session as Session | null,
         profile: mapped,
         authUser: account,
         activeWorkspace: mapped ? ROLE_WORKSPACE[mapped.role] : prev.activeWorkspace,
@@ -720,7 +729,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       workspaceTouchedRef.current = true;
       setState((prev) => ({
         ...prev,
-        session: nextSession as import("@supabase/supabase-js").Session | null,
+        session: nextSession as Session | null,
         profile: mapped,
         authUser: account,
         activeWorkspace: mapped ? ROLE_WORKSPACE[mapped.role] : prev.activeWorkspace,

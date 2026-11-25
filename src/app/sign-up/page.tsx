@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, MailCheck, ShieldAlert, UserPlus } from "lucide-react";
-import { toast } from "sonner";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { ADMINISTRATIVE_UNITS } from "@/lib/geography/administrative-lookup";
 import { notifyError, notifySuccess } from "@/lib/toast";
