@@ -13,18 +13,42 @@ export async function POST(request: Request) {
     // 1. Verify API Key if configured
     const configuredKey = process.env.SEPAY_WEBHOOK_API_KEY?.trim();
     if (configuredKey) {
-      const authHeader = request.headers.get("authorization") || request.headers.get("x-api-key") || "";
-      const incomingKey = authHeader.replace(/^(Apikey|Bearer)\s+/i, "").trim();
+      // Strip outer quotes (" or ') and any accidental 'Apikey' or 'Bearer' prefix
+      const cleanConfigured = configuredKey
+        .replace(/^["'`]|["'`]$/g, "")
+        .replace(/^(Apikey|Bearer)\s+/i, "")
+        .trim();
 
-      if (incomingKey !== configuredKey) {
-        console.warn("[SePay Webhook] Unauthorized attempt - key mismatch");
+      const authHeader = request.headers.get("authorization") || request.headers.get("x-api-key") || "";
+      const url = new URL(request.url);
+      const queryKey = url.searchParams.get("api_key") || url.searchParams.get("apiKey") || "";
+
+      const cleanIncoming = (authHeader || queryKey)
+        .replace(/^["'`]|["'`]$/g, "")
+        .replace(/^(Apikey|Bearer)\s+/i, "")
+        .trim();
+
+      const isMatch =
+        (cleanConfigured && cleanIncoming === cleanConfigured) ||
+        authHeader.trim() === configuredKey ||
+        authHeader.trim() === `Apikey ${cleanConfigured}` ||
+        cleanIncoming === configuredKey;
+
+      if (!isMatch) {
+        console.warn(
+          `[SePay Webhook] Unauthorized attempt - incoming auth length: ${cleanIncoming.length}, configured length: ${cleanConfigured.length}`
+        );
         return NextResponse.json(
-          { success: false, message: "Unauthorized: Invalid API Key" },
+          {
+            success: false,
+            message: "Unauthorized: Invalid API Key",
+            hint: "Make sure SEPAY_WEBHOOK_API_KEY on Vercel matches the API Key on SePay dashboard (without quotes or 'Apikey' prefix)",
+          },
           { status: 401 }
         );
       }
     } else {
-      // Key is left blank as requested for future config: allow preliminary testing
+      // Key is left blank: allow preliminary testing in open mode
       console.log("[SePay Webhook] SEPAY_WEBHOOK_API_KEY is empty - accepting request in open mode");
     }
 
