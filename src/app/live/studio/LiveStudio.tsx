@@ -65,12 +65,15 @@ export function LiveStudio({ sessionId }: { sessionId?: string }) {
   const { token, authError } = useLiveAuth();
   const { data, error, realtimeError, refresh } = useLiveData<{ sessions: LiveSession[]; farms: string[] }>(token ? "?studio=1" : null, undefined, token);
   const session = data?.sessions.find((item) => item.id === sessionId);
+  const selectedLiveProducts = INITIAL_PRODUCTS.filter((item) => session?.product_ids.includes(item.id));
+  const mockLiveProducts = selectedLiveProducts.length >= 3 ? selectedLiveProducts : INITIAL_PRODUCTS.slice(0, 8);
   const [actionError, setActionError] = useState("");
   const [busy, setBusy] = useState(false);
   const [pairing, setPairing] = useState<{ id: string; url: string; expiresAt: string }>();
   const [publishing, setPublishing] = useState("");
   const [preview, setPreview] = useState(false);
   const [checkingMic, setCheckingMic] = useState(false);
+  const [mockEngagement, setMockEngagement] = useState(true);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [inputs, setInputs] = useState<Partial<Record<InputKind, string>>>({});
   const cameraPreview = useRef<MediaStream | null>(null);
@@ -185,7 +188,7 @@ export function LiveStudio({ sessionId }: { sessionId?: string }) {
     } catch (error) { track.stop(); throw error; }
   }
 
-  return <section className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+  return <section className="mx-auto max-w-screen-2xl space-y-6 px-4 py-8">
     <header className="flex flex-wrap items-center justify-between gap-4">
       <div><h1 className="font-editorial text-3xl font-bold">Studio phát sóng NaiFarm Live</h1><p className="mt-1 text-sm text-[#52645A]">Dành cho nhà vườn tạo lịch, bật camera và điều khiển buổi phát.</p></div>
       <Link className="underline" href="/live">Trang xem</Link>
@@ -198,7 +201,7 @@ export function LiveStudio({ sessionId }: { sessionId?: string }) {
         Đăng nhập bằng Email &amp; mật khẩu
       </Link>
     </div>}
-    {token && data && <div className="grid gap-6 lg:grid-cols-[1fr_1.6fr]">
+    {token && data && <div className="grid gap-6 lg:grid-cols-[minmax(280px,0.8fr)_minmax(0,1.8fr)]">
       <Card className="space-y-4 p-4">
         <h2 className="font-bold">Phiên của tôi</h2>
         {data.sessions.map((item) => <Link className="block rounded-lg border p-2" key={item.id} href={`/live/studio/${item.id}`} aria-current={item.id === sessionId ? "page" : undefined}>
@@ -222,8 +225,14 @@ export function LiveStudio({ sessionId }: { sessionId?: string }) {
             await liveFetch(`/${session.id}`, { method: "PATCH", body: JSON.stringify(values) }, token);
             refresh();
           })} />}
-          {publish ? <LiveKitStage key={session.id} sessionId={session.id} role="host" token={token}
-            cameraDevice={inputs.videoinput} micDevice={inputs.audioinput} /> : canPreview ? <div className="space-y-2">
+          {publish ? <div className="space-y-3">
+            <Button size="sm" variant="secondary" aria-pressed={mockEngagement} onClick={() => setMockEngagement((enabled) => !enabled)}>
+              {mockEngagement ? "Tắt tương tác minh họa" : "Bật tương tác minh họa"}
+            </Button>
+            <LiveKitStage key={session.id} sessionId={session.id} role="host" token={token} mockEngagement={mockEngagement}
+              mockProducts={mockLiveProducts}
+              cameraDevice={inputs.videoinput} micDevice={inputs.audioinput} />
+          </div> : canPreview ? <div className="space-y-2">
             <video ref={video} muted autoPlay playsInline className="aspect-video w-full rounded-lg bg-[#25352B] object-contain" />
             {devices.length > 0 && <div className="grid gap-2 sm:grid-cols-2">
               {inputKinds.map((kind) => {
