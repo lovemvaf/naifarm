@@ -1,5 +1,5 @@
 import "server-only";
-import { ParticipantInfo_State, TrackSource, TwirpError } from "livekit-server-sdk";
+import { ParticipantInfo_State, TrackSource, TwirpError, type ParticipantInfo, type Room, type TrackInfo } from "livekit-server-sdk";
 import { activeStatuses, assertDb, livekit, requireDatabase } from "./server";
 
 const missingRoom = (error: unknown) => error instanceof TwirpError && (error.status === 404 || error.code === "not_found");
@@ -33,14 +33,14 @@ export async function reconcileLive(roomName?: string) {
   try {
     if (session.cleanup_pending) {
       const rooms = await provider.listRooms([session.room_name]);
-      if (rooms.some((room) => room.name === session.room_name)) {
+      if (rooms.some((room: Room) => room.name === session.room_name)) {
         const cameras = assertDb(await db.from("live_cameras").select("identity").eq("session_id", session.id));
         const cutoff = BigInt(Math.floor(Date.now() / 1000) + 5);
         await Promise.all([`host-${session.id}`, ...(cameras ?? []).map((camera) => camera.identity)].map((identity) =>
-          provider.removeParticipant(session.room_name, identity, { revokeTokenTs: cutoff }).catch((error) => {
+          provider.removeParticipant(session.room_name, identity, { revokeTokenTs: cutoff }).catch((error: unknown) => {
             if (!missingRoom(error)) throw error;
           })));
-        await provider.deleteRoom(session.room_name).catch((error) => { if (!missingRoom(error)) throw error; });
+        await provider.deleteRoom(session.room_name).catch((error: unknown) => { if (!missingRoom(error)) throw error; });
       }
       await save({ cleanup_pending: false, room_ready: false, work_after: iso(0) });
       return;
@@ -53,22 +53,22 @@ export async function reconcileLive(roomName?: string) {
     }
 
     if (!session.room_ready) {
-      await provider.createRoom({ name: session.room_name, maxParticipants: 30, emptyTimeout: 120, departureTimeout: 75 }).catch(async (error) => {
-        if (!(await provider.listRooms([session.room_name])).some((room) => room.name === session.room_name)) throw error;
+      await provider.createRoom({ name: session.room_name, maxParticipants: 30, emptyTimeout: 120, departureTimeout: 75 }).catch(async (error: unknown) => {
+        if (!(await provider.listRooms([session.room_name])).some((room: Room) => room.name === session.room_name)) throw error;
       });
       await save({ room_ready: true, work_after: iso(now + 3_000), revision: session.revision + 1 });
       return;
     }
 
-    const participants = await provider.listParticipants(session.room_name).catch((error) => {
+    const participants = await provider.listParticipants(session.room_name).catch((error: unknown) => {
       if (missingRoom(error)) return null;
       throw error;
     });
-    const host = participants?.find((item) => item.identity === `host-${session.id}`);
+    const host = participants?.find((item: ParticipantInfo) => item.identity === `host-${session.id}`);
     const cameras = assertDb(await db.from("live_cameras").select("identity").eq("session_id", session.id).is("revoked_at", null));
-    const hasCamera = participants?.some((item) => item.state === ParticipantInfo_State.ACTIVE
+    const hasCamera = participants?.some((item: ParticipantInfo) => item.state === ParticipantInfo_State.ACTIVE
       && (item === host || cameras?.some((camera) => camera.identity === item.identity))
-      && item.tracks.some((track) => track.source === TrackSource.CAMERA && !track.muted));
+      && item.tracks.some((track: TrackInfo) => track.source === TrackSource.CAMERA && !track.muted));
     const broadcasting = host?.state === ParticipantInfo_State.ACTIVE && hasCamera;
     const status = broadcasting ? "live" : session.status === "live" ? "reconnecting" : session.status;
     await save(status === session.status && participants !== null ? { work_after: iso(now + 8_000) } : {

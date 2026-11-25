@@ -65,15 +65,23 @@ export async function POST(request: Request) {
 
         // Also sync order_items if present
         if (ord.items && Array.isArray(ord.items) && ord.items.length > 0) {
-          const itemRows = ord.items.map((item: any) => ({
-            order_id: ord.id,
-            product_id: item.productId,
-            product_name: item.productName || "",
-            unit_label: item.unitLabel || "",
-            quantity: item.quantity || 1,
-            unit_price_vnd: item.unitPriceVnd || 0,
-            image: item.image || "",
-          }));
+          const itemRows = ord.items.map(
+            (item: {
+              productId: string;
+              productName?: string;
+              unitLabel?: string;
+              quantity?: number;
+              unitPriceVnd?: number;
+              image?: string;
+            }) => ({
+              order_id: ord.id,
+              product_id: item.productId,
+              product_name: item.productName || "",
+              unit_label: item.unitLabel || "",
+              quantity: item.quantity || 1,
+              unit_price_vnd: item.unitPriceVnd || 0,
+              image: item.image || "",
+            }));
 
           await supabase.from("order_items").delete().eq("order_id", ord.id);
           await supabase.from("order_items").insert(itemRows);

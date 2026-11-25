@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { createHash } from "node:crypto";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, type ContentEmbedding } from "@google/genai";
 import { createClient } from "@supabase/supabase-js";
 import { INITIAL_BATCHES } from "../src/data/demo/batches";
 import { INITIAL_FARMS } from "../src/data/demo/farms";
@@ -25,7 +25,7 @@ async function main() {
   for(let index=0;index<records.length;index+=16){
     const batch=records.slice(index,index+16);
     const response=await ai.models.embedContent({model:GEMINI_EMBEDDING_MODEL,contents:batch.map(record=>`title: ${record.title} | text: ${record.content}`),config:{outputDimensionality:dimensions}});
-    if(response.embeddings?.length!==batch.length||response.embeddings.some(item=>item.values?.length!==dimensions))throw new Error("Gemini trả số lượng hoặc chiều embedding không khớp. Chưa ghi catalog.");
+    if(response.embeddings?.length!==batch.length||response.embeddings.some((item:ContentEmbedding)=>item.values?.length!==dimensions))throw new Error("Gemini trả số lượng hoặc chiều embedding không khớp. Chưa ghi catalog.");
     rows.push(...batch.map((record,offset)=>{const hash=createHash("sha256").update(record.content).digest("hex");return{source_id:record.id,source_hash:hash,chunk_index:1,title:record.title,href:record.href,content:record.content,metadata:{kind:"catalog",demo:true},embedding:response.embeddings![offset].values};}));
   }
   const db=createClient(SUPABASE_URL,SUPABASE_SECRET_KEY);

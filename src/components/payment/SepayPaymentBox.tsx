@@ -33,9 +33,7 @@ export function SepayPaymentBox({
   const [qrSrcIndex, setQrSrcIndex] = useState(0);
   const [simulating, setSimulating] = useState(false);
 
-  useEffect(() => {
-    if (initialPaid) setIsPaid(true);
-  }, [initialPaid]);
+  const paid = isPaid || Boolean(initialPaid);
 
   const transferContent = orderId;
   const primaryQr = getSepayQrUrl({ amount: amountVnd, orderId });
@@ -51,7 +49,7 @@ export function SepayPaymentBox({
   };
 
   const checkStatus = useCallback(async () => {
-    if (isPaid) return;
+    if (paid) return;
     setChecking(true);
     try {
       const res = await fetch(`/api/payment/status?orderId=${encodeURIComponent(orderId)}`);
@@ -70,7 +68,7 @@ export function SepayPaymentBox({
 
   // Polling every 3.5 seconds if unpaid
   useEffect(() => {
-    if (isPaid) return;
+    if (paid) return;
     const timer = setInterval(() => {
       void checkStatus();
     }, 3500);
@@ -99,7 +97,7 @@ export function SepayPaymentBox({
     }
   };
 
-  if (isPaid) {
+  if (paid) {
     return (
       <div className={`rounded-[16px] border border-[#245B3D] bg-[#EAF0E5] p-5 ${className}`}>
         <div className="flex items-center gap-3">

@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import mammoth from "mammoth";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, type ContentEmbedding } from "@google/genai";
 import { createClient } from "@supabase/supabase-js";
 
 const [fileArg, ...flags] = process.argv.slice(2);
@@ -24,7 +24,7 @@ async function extractText(file: string, bytes: Buffer) {
     for (let pageNumber = 1; pageNumber <= doc.numPages; pageNumber++) {
       const page = await doc.getPage(pageNumber);
       const text = await page.getTextContent();
-      pages.push(`Trang ${pageNumber}\n${text.items.map(item => "str" in item ? item.str : "").join(" ")}`);
+      pages.push(`Trang ${pageNumber}\n${text.items.map((item: { str?: string }) => "str" in item ? item.str : "").join(" ")}`);
     }
     return pages.join("\n\n");
   }
@@ -77,10 +77,10 @@ async function main() {
   const embeddings: number[][] = [];
   for (let start = 0; start < chunks.length; start += 16) {
     const batch = chunks.slice(start, start + 16);
-    const response = await ai.models.embedContent({ model, contents: batch.map(chunk => `title: ${sourceId} | text: ${chunk}`), config: { outputDimensionality: dimensions } });
+    const response: { embeddings?: ContentEmbedding[] } = await ai.models.embedContent({ model, contents: batch.map(chunk => `title: ${sourceId} | text: ${chunk}`), config: { outputDimensionality: dimensions } });
     for (const item of response.embeddings ?? []) {
       if (item.values?.length !== dimensions) throw new Error(`Sai kích thước embedding. Mong đợi ${dimensions}.`);
-      embeddings.push(item.values);
+      embeddings.push(item.values!);
     }
   }
   if (embeddings.length !== chunks.length) throw new Error("Gemini trả thiếu embedding. Chưa thay thế dữ liệu đã nhập.");

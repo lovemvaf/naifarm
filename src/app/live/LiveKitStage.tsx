@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ConnectionQuality, Room, RoomEvent, Track, VideoPresets, type RemoteTrackPublication, type RemoteTrack } from "livekit-client";
+import { ConnectionQuality, Room, RoomEvent, Track, VideoPresets, type Participant, type RemoteTrack, type RemoteTrackPublication } from "livekit-client";
 import { Button } from "@/components/ui/Primitives";
 import { liveFetch, type LiveConnection } from "@/lib/live/client";
 
@@ -85,12 +85,12 @@ export function LiveKitStage({ sessionId, role, token, cameraDevice, micDevice, 
       synchronize();
     }
     if (role === "host") {
-      room.on(RoomEvent.ConnectionQualityChanged, (next, participant) => {
+      room.on(RoomEvent.ConnectionQualityChanged, (next: ConnectionQuality, participant: Participant) => {
         if (participant === room.localParticipant && !disposed) setQuality(next);
       });
     }
     room.on(RoomEvent.TrackSubscribed, attach);
-    room.on(RoomEvent.TrackUnsubscribed, (track) => { track.detach(); synchronize(); });
+    room.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) => { track.detach(); synchronize(); });
     room.on(RoomEvent.TrackPublished, synchronize);
     room.on(RoomEvent.TrackUnpublished, synchronize);
     room.on(RoomEvent.TrackMuted, synchronize);
