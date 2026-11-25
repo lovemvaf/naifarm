@@ -26,7 +26,6 @@ import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
 import { resolveCampaignRuntimeState } from "@/lib/commerce/promotion-engine";
 import { UnifiedHero } from "@/components/home/UnifiedHero";
 import { ProductCard } from "@/components/marketplace/ProductCard";
-import { NaiFarmHomeChat } from "@/components/chatbot/NaiFarmHomeChat";
 import { Badge, Button, Card, EmptyState } from "@/components/ui/Primitives";
 import { normalizeSearchText } from "@/lib/geography/normalize-address";
 import { cn } from "@/lib/format";
@@ -701,8 +700,6 @@ export default function HomePage() {
           </div>
         </Card>
       </section>
-
-      <NaiFarmHomeChat />
     </div>
   );
 }

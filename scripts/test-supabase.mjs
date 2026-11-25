@@ -46,6 +46,39 @@ const TABLES = [
    "document_review_cases",
    "admin_grants",
   "audit_logs",
+  "calendar_events",
+  "official_observances",
+  "campaigns",
+  "promotions",
+  "lessons",
+  "school_classes",
+  "student_submissions",
+  "seasons",
+  "diary_entries",
+  "credentials",
+  "credential_evidence",
+  "notifications",
+  "tickets",
+  "address_book",
+  "partner_orgs",
+  "sponsor_campaigns",
+  "warehouses",
+  "warehouse_stocks",
+  "inventory_movements",
+  "suppliers",
+  "purchase_orders",
+  "coop_pools",
+  "member_deliveries",
+  "expenses",
+  "receivables_payables",
+  "logistics_trips",
+  "product_reviews",
+  "mentor_cases",
+  "international_inquiries",
+  "volunteer_hours",
+  "refund_requests",
+  "tour_packages",
+  "farm_certifications",
 ];
 
 const ACCOUNTS = [
@@ -109,7 +142,7 @@ async function main() {
     if (response.status === 200) tableOk += 1;
     else console.log(`  ${table}: HTTP ${response.status} ${(await response.text()).slice(0, 100)}`);
   }
-  check("19 bảng tồn tại & select được", tableOk === TABLES.length, `${tableOk}/${TABLES.length}`);
+  check(`${TABLES.length} bảng tồn tại & select được`, tableOk === TABLES.length, `${tableOk}/${TABLES.length}`);
 
   const farms = await json("/rest/v1/farms?select=id,region,lat,lng&limit=5", {
     apikey: anon,
@@ -133,6 +166,7 @@ async function main() {
   });
   check("RLS: anon không thấy profiles", anonProfiles.status === 200 && anonProfiles.data.length === 0);
 
+  let customerToken = null;
   for (const [email, expectedRole] of ACCOUNTS) {
     const response = await request("/auth/v1/token?grant_type=password", {
       method: "POST",
@@ -146,6 +180,7 @@ async function main() {
     if (!ok) continue;
 
     const token = JSON.parse(text).access_token;
+    if (expectedRole === "customer") customerToken = token;
     const profile = await json("/rest/v1/profiles?select=id,role,farm_id", {
       apikey: anon,
       Authorization: `Bearer ${token}`,
@@ -156,6 +191,25 @@ async function main() {
       `RLS: ${expectedRole} đọc đúng profile`,
       profile.status === 200 && own?.role === expectedRole,
       `${own?.role ?? "?"} (${rows.length} dòng thấy được)`
+    );
+  }
+
+  if (customerToken) {
+    const uid = tokenUserId(customerToken);
+    const upsert = await request("/rest/v1/lesson_progress", {
+      method: "POST",
+      headers: { apikey: anon, Authorization: `Bearer ${customerToken}`, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify({ user_id: uid, practice_points: 7 }),
+    });
+    const ownProgress = await json("/rest/v1/lesson_progress?select=user_id,practice_points&limit=1", {
+      apikey: anon,
+      Authorization: `Bearer ${customerToken}`,
+    });
+    const row = ownProgress.data?.[0];
+    check(
+      "RLS: lesson_progress đọc đúng bản ghi của user",
+      ownProgress.status === 200 && row?.user_id === uid && row?.practice_points === 7,
+      row?.user_id === uid ? `1 dòng của user (${row?.practice_points} điểm)` : "không đúng user"
     );
   }
 

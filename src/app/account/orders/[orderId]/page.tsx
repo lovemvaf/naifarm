@@ -14,6 +14,7 @@ import { useDemoStore } from "@/context/DemoStoreContext";
 import { formatVnd } from "@/lib/format";
 import { notifyError, notifySuccess } from "@/lib/toast";
 import { Badge, Button, Card, EmptyState } from "@/components/ui/Primitives";
+import { SepayPaymentBox } from "@/components/payment/SepayPaymentBox";
 import type { OrderStatus } from "@/types/naifarm";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -38,6 +39,7 @@ export default function OrderDetailPage({
     updateOrderStatus,
     requestOrderRefund,
     submitProductReview,
+    markOrderPaid,
   } = useDemoStore();
 
   const order = orders.find((o) => o.id === decodeURIComponent(orderId));
@@ -294,7 +296,34 @@ export default function OrderDetailPage({
                 <span className="tabular-nums">{formatVnd(order.totalVnd)}</span>
               </div>
             </div>
+
+            <div className="space-y-1.5 border-t border-[#EAEFE6] pt-3 text-xs text-[#52645A]">
+              <div className="flex items-center justify-between">
+                <span>Phương thức:</span>
+                <span className="font-semibold text-[#25352B]">{order.paymentLabel}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Trạng thái thanh toán:</span>
+                {order.paymentStatus === "paid_bank" ? (
+                  <Badge tone="success">Đã thanh toán MBBank</Badge>
+                ) : order.paymentStatus === "collected_cod" ? (
+                  <Badge tone="success">Đã thu COD</Badge>
+                ) : (
+                  <Badge tone="warning">Chờ thanh toán</Badge>
+                )}
+              </div>
+            </div>
           </Card>
+
+          {/* SePay VietQR Payment Card */}
+          {order.status !== "cancelled" ? (
+            <SepayPaymentBox
+              orderId={order.id}
+              amountVnd={order.totalVnd}
+              initialPaid={order.paymentStatus === "paid_bank"}
+              onPaymentSuccess={() => markOrderPaid(order.id)}
+            />
+          ) : null}
 
           {/* Refund Request Workflow */}
           {order.status !== "cancelled" ? (

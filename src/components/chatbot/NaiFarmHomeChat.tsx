@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import {
   ArrowUp,
   ImagePlus,
@@ -56,8 +57,11 @@ function SourceLink({ source, isEn }: { source: SourceReference; isEn: boolean }
 }
 
 export function NaiFarmHomeChat() {
+  const pathname = usePathname();
   const { locale } = useLocale();
   const isEn = locale === "en";
+  const isCheckout = pathname.startsWith("/checkout");
+  const isPdp = pathname.startsWith("/products/");
   const prompts = isEn
     ? ["Trace batch NF-DEMO-001", "How to list farm produce?", "How do youth support growers?"]
     : ["Tra lô NF-DEMO-001", "Đăng bán nông sản thế nào?", "Thanh niên hỗ trợ nhà vườn ra sao?"];
@@ -234,6 +238,8 @@ export function NaiFarmHomeChat() {
     }
   }
 
+  if (isCheckout) return null;
+
   return (
     <>
       {!open ? (
@@ -246,7 +252,12 @@ export function NaiFarmHomeChat() {
             setMinimized(false);
           }}
           aria-label={isEn ? "Open NaiAI assistant" : "Mở trợ lý NaiAI"}
-          className="fixed right-3 bottom-[calc(4.6rem+env(safe-area-inset-bottom))] z-40 flex h-13 w-13 cursor-pointer items-center justify-center rounded-full bg-[#245B3D] text-white shadow-[0_8px_28px_rgba(24,61,42,.28)] transition hover:-translate-y-0.5 hover:bg-[#183D2A] sm:right-5 md:bottom-5 md:h-14 md:w-14"
+          className={cn(
+            "fixed right-3 z-40 flex h-13 w-13 cursor-pointer items-center justify-center rounded-full bg-[#245B3D] text-white shadow-[0_8px_28px_rgba(24,61,42,.28)] transition hover:-translate-y-0.5 hover:bg-[#183D2A] sm:right-5 md:bottom-5 md:h-14 md:w-14",
+            isPdp
+              ? "bottom-[calc(8.6rem+env(safe-area-inset-bottom))]"
+              : "bottom-[calc(4.6rem+env(safe-area-inset-bottom))]",
+          )}
         >
           <MessageCircle size={22} aria-hidden="true" />
           <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#89B57C]" />
@@ -260,7 +271,10 @@ export function NaiFarmHomeChat() {
           data-naiai-panel="home"
           aria-label={isEn ? "NaiAI · NaiFarm Assistant" : "NaiAI · Trợ lý NaiFarm"}
           className={cn(
-            "fixed right-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 flex flex-col overflow-hidden rounded-[20px] border border-[#D6DED2] bg-[#FCFCF8] shadow-[0_14px_44px_rgba(24,61,42,.22)] transition-[height,width] duration-200 sm:right-5 md:bottom-5",
+            "fixed right-3 z-40 flex flex-col overflow-hidden rounded-[20px] border border-[#D6DED2] bg-[#FCFCF8] shadow-[0_14px_44px_rgba(24,61,42,.22)] transition-[height,width] duration-200 sm:right-5 md:bottom-5",
+            isPdp
+              ? "bottom-[calc(8.4rem+env(safe-area-inset-bottom))]"
+              : "bottom-[calc(4.5rem+env(safe-area-inset-bottom))]",
             minimized
               ? "h-[54px] w-[min(280px,calc(100vw-24px))]"
               : zoom === 0
@@ -405,15 +419,15 @@ export function NaiFarmHomeChat() {
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
-                          p: ({ children }) => <p className="mb-1.5 last:mb-0">{children}</p>,
-                          strong: ({ children }) => <strong className="font-bold">{children}</strong>,
-                          ul: ({ children }) => (
+                          p: ({ children }: { children?: ReactNode }) => <p className="mb-1.5 last:mb-0">{children}</p>,
+                          strong: ({ children }: { children?: ReactNode }) => <strong className="font-bold">{children}</strong>,
+                          ul: ({ children }: { children?: ReactNode }) => (
                             <ul className="my-1.5 list-disc space-y-0.5 pl-4">{children}</ul>
                           ),
-                          ol: ({ children }) => (
+                          ol: ({ children }: { children?: ReactNode }) => (
                             <ol className="my-1.5 list-decimal space-y-0.5 pl-4">{children}</ol>
                           ),
-                          a: ({ href, children }) => (
+                          a: ({ href, children }: { href?: string; children?: ReactNode }) => (
                             <a
                               href={href}
                               target={href?.startsWith("http") ? "_blank" : undefined}

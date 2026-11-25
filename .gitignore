@@ -46,6 +46,8 @@ next-env.d.ts
 /artifacts/
 NAIFARM_*.zip
 *.wav
+/projects
+/docs
 /scripts/.geo-cache/
 /local-media/
 /services/video-worker/data/

@@ -2,7 +2,7 @@
 
 ## Cấu hình
 
-Tạo hoặc dùng Supabase project, chạy `supabase/migrations/202611250001_nai_documents.sql` trong SQL Editor. Dùng `SUPABASE_URL` và `SUPABASE_SECRET_KEY` từ `.env` cục bộ. Giữ secret key trong môi trường server. Không đổi khóa database hoặc model thành biến `NEXT_PUBLIC_`.
+Tạo hoặc dùng Supabase project, chạy các migration NaiAI `202611250001_nai_documents.sql` và `202611250005_nai_documents_permissions.sql`. Migration đầu tạo pgvector/FTS; migration sau thu hồi quyền từ `public`, `anon`, `authenticated`, chỉ cấp truy cập bảng và RPC cho `service_role`. Dùng `SUPABASE_URL` và `SUPABASE_SECRET_KEY` từ `.env` cục bộ. Giữ secret key trong môi trường server. Không đổi khóa database hoặc model thành biến `NEXT_PUBLIC_`.
 
 Cấu hình API ở `.env` được đọc phía server. `DEEPSEEK_API_KEY` tạo câu trả lời; `GEMINI_API_KEY` dùng cho vision và embedding; `TYPESAFE_API_KEY` định tuyến intent qua Jev; `TAVILY_API_KEY` bật web search/ảnh tham khảo; LangSmith tracing cần `LANGSMITH_API_KEY`, `LANGSMITH_TRACING=true`, `LANGSMITH_ENDPOINT=https://api.smith.langchain.com`, `LANGSMITH_AGENT_ID=naifarm` và `LANGSMITH_AGENT_ENVIRONMENT=local`. Sau khi sửa `.env`, khởi động lại Next.js server rồi gửi một câu nghiệp vụ mới như `Tra lô NF-DEMO-001`; câu danh tính được trả lời trực tiếp nên không tạo graph trace. Traces được gửi vào agent address `naifarm/local`; callback LangSmith tùy biến giữ cấu trúc, tên node và thời gian nhưng gửi input/output rỗng và thông báo lỗi đã khử nội dung. Supabase dùng `SUPABASE_URL` và `SUPABASE_SECRET_KEY`. `SUPABASE_PUBLISHABLE_KEY` hiện không dùng vì không có truy vấn Supabase từ trình duyệt. Khi thiếu Supabase/Gemini embedding, chatbot vẫn dùng seed. Khi thiếu DeepSeek, có FAQ/demo fallback. Khi Jev lỗi, router quy tắc tiếp tục chạy.
 
@@ -28,6 +28,7 @@ npm run nai:ingest -- .\documents\huong-dan.md --dry-run
 npm run nai:ingest -- .\documents\huong-dan.md
 npm run nai:ingest -- .\documents\quy-trinh.docx --dry-run
 npm run nai:ingest -- .\documents\quy-trinh.pdf
+npm run nai:sync:catalog -- --dry-run
 npm run nai:sync:catalog
 npm run nai:eval:jev
 npm run nai:test
@@ -45,4 +46,4 @@ Tavily chỉ chạy trong nhánh tìm sản phẩm hoặc livestream. Ảnh web 
 
 The graph callback uses the configured `LANGSMITH_AGENT_ID` and `LANGSMITH_AGENT_ENVIRONMENT` destination. Do not set `LANGSMITH_PROJECT` or `LANGCHAIN_PROJECT` alongside agent addressing: a project destination overrides or conflicts with the agent route. The callback redacts run inputs, outputs, and error content before transmission. A local offline contract test verifies that the trace payload targets `naifarm/local` and contains no question/history/answer/error markers. For live confirmation, restart Next.js and submit a graph-routed query such as `Tra lô NF-DEMO-001`, then open the NaiFarm agent's Local tracing view.
 
-Migration smoke validation was run against a disposable local Supabase PostgreSQL image with networking disabled. The migration applied and both vector match and full-text search RPCs returned the inserted smoke row. This does not apply the migration to the configured Supabase project.
+The NaiAI migrations `202611250001_nai_documents` and `202611250005_nai_documents_permissions` are applied to the configured Supabase project. The server-only catalog sync has inserted 425 demo documents with 768-dimensional vectors. A live Gemini embedding query returned the expected Tân Triều pomelo records from vector search; the PostgreSQL full-text RPC also returned related farm/batch records. Live API smoke for `NF-DEMO-001` returned HTTP 200 with the matching rambutan passport and product card. LangSmith showed the supervisor, traceability, evidence-critic, and synthesis nodes with redacted inputs and outputs. These checks confirm the local integration against the configured providers; they do not verify the hosted Vercel deployment.

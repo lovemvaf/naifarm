@@ -1,4 +1,4 @@
-import { ParticipantInfo_State, TrackSource } from "livekit-server-sdk";
+import { ParticipantInfo_State, TrackSource, type ParticipantInfo, type TrackInfo } from "livekit-server-sdk";
 import { assertDb, body, jsonError, liveJson, livekit, LiveError, rateLimit, requireDatabase, uuid } from "@/lib/live/server";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -24,8 +24,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       if (!camera) throw new LiveError(409, "Camera nÃ y khÃ´ng cÃ²n Ä‘Æ°á»£c ghÃ©p vá»›i phiÃªn.");
     }
     const participants = await livekit.listParticipants(session.room_name);
-    const participant = participants.find((item) => item.identity === identity && item.state === ParticipantInfo_State.ACTIVE);
-    if (!participant?.tracks.some((track) => track.source === TrackSource.CAMERA && !track.muted)) {
+    const participant = participants.find((item: ParticipantInfo) => item.identity === identity && item.state === ParticipantInfo_State.ACTIVE);
+    if (!participant?.tracks.some((track: TrackInfo) => track.source === TrackSource.CAMERA && !track.muted)) {
       throw new LiveError(409, "Camera Ä‘ang chá»n khÃ´ng phÃ¡t video.");
     }
     const changed = assertDb(await db.rpc("live_select_camera", { p_session_id: id, p_identity: identity }));

@@ -15,6 +15,7 @@ import { inferIntent, type Intent } from "@/lib/naiai/routing";
 type Source = { title: string; href?: string };
 type Card = { title: string; image: string; href: string; label: string };
 type Evidence = RankedEvidence & { metadata?: Record<string, unknown> };
+type GraphState = { question: string; history: string; image: string; intent: Intent; retrievalQuery: string; retrievalAttempts: number; evidenceCount: number; context: string; sources: Source[]; cards: Card[]; answer: string };
 const intents: Intent[] = ["traceability", "marketplace", "farmer_guide", "volunteer_guide", "live_search", "other"];
 class RedactedLangSmithTracer extends LangChainTracer {
   override copyWithTracingConfig({ metadata, tags }: { metadata?: Record<string, unknown>; tags?: string[] }) {
@@ -218,30 +219,30 @@ export async function answerQuestion(question: string, history: string, imageNot
   };
 
   const graph = new StateGraph(state)
-    .addNode("supervisor", async current => ({ intent: await classifyWithJev(current.question, current.image) }))
-    .addNode("traceability_agent", async current => {
+    .addNode("supervisor", async (current: GraphState) => ({ intent: await classifyWithJev(current.question, current.image) }))
+    .addNode("traceability_agent", async (current: GraphState) => {
       const catalog = catalogEvidence(current.question, "traceability", current.image);
       const docs = await searchDocuments(getClient(), [current.question, current.image].filter(Boolean).join("\n"), current.retrievalQuery);
       const requestedCode = current.question.toUpperCase().match(/NF-[A-Z0-9-]{4,}/)?.[0];
       const matchedDocs = requestedCode ? docs.filter(item => `${item.title} ${item.content} ${"metadata" in item ? JSON.stringify(item.metadata) : ""}`.toUpperCase().includes(requestedCode)) : docs;
       return { context: [catalog.context, ...matchedDocs.map(item => item.content)].join("\n"), sources: uniqueSources([...catalog.sources, ...matchedDocs.map(item => ({ title: item.title, href: item.href }))]), cards: catalog.cards, evidenceCount: catalog.evidenceCount + matchedDocs.length };
     })
-    .addNode("marketplace_agent", async current => {
+    .addNode("marketplace_agent", async (current: GraphState) => {
       const catalog = catalogEvidence(current.question, "marketplace", current.image);
       const [docs, web] = await Promise.all([searchDocuments(getClient(), current.question, current.retrievalQuery), searchWeb(current.retrievalQuery, "marketplace")]);
       return { context: [catalog.context, ...docs.map(item => item.content), ...web.evidence.map(item => `Nguồn web ${item.title}: ${item.content}`)].join("\n"), sources: uniqueSources([...catalog.sources, ...docs.map(item => ({ title: item.title, href: item.href })), ...web.evidence]), cards: [...catalog.cards, ...web.cards], evidenceCount: catalog.evidenceCount + docs.length + web.evidence.length };
     })
-    .addNode("farmer_agent", async current => {
+    .addNode("farmer_agent", async (current: GraphState) => {
       const catalog = catalogEvidence(current.question, "farmer_guide", current.image);
       const docs = await searchDocuments(getClient(), [current.question, current.image].filter(Boolean).join("\n"), current.retrievalQuery);
       return { context: [catalog.context, ...docs.map(item => item.content)].join("\n"), sources: uniqueSources([...catalog.sources, ...docs.map(item => ({ title: item.title, href: item.href }))]), cards: [], evidenceCount: catalog.evidenceCount + docs.length };
     })
-    .addNode("volunteer_agent", async current => {
+    .addNode("volunteer_agent", async (current: GraphState) => {
       const catalog = catalogEvidence(current.question, "volunteer_guide", current.image);
       const docs = await searchDocuments(getClient(), [current.question, current.image].filter(Boolean).join("\n"), current.retrievalQuery);
       return { context: [catalog.context, ...docs.map(item => item.content)].join("\n"), sources: uniqueSources([...catalog.sources, ...docs.map(item => ({ title: item.title, href: item.href }))]), cards: [], evidenceCount: catalog.evidenceCount + docs.length };
     })
-    .addNode("live_agent", async current => {
+    .addNode("live_agent", async (current: GraphState) => {
       const catalog = catalogEvidence(current.question, "live_search", current.image);
       const [docs, web] = await Promise.all([searchDocuments(getClient(), current.question, current.retrievalQuery), searchWeb(current.retrievalQuery, "live_search")]);
       return { context: [catalog.context, ...docs.map(item => item.content), ...web.evidence.map(item => `Nguồn web ${item.title}: ${item.content}`)].join("\n"), sources: uniqueSources([...catalog.sources, ...docs.map(item => ({ title: item.title, href: item.href })), ...web.evidence]), cards: web.cards, evidenceCount: catalog.evidenceCount + docs.length + web.evidence.length };
@@ -249,7 +250,7 @@ export async function answerQuestion(question: string, history: string, imageNot
     .addNode("out_of_scope", async () => ({ context: "Câu hỏi ngoài phạm vi trợ lý OCOP Đồng Nai.", sources: [], cards: [], evidenceCount: 0 }))
     .addNode("evidence_critic", async () => ({}))
     // shortcut: refinement stops after one retry per turn to cap latency and cost; raise only after eval and p95 checks.
-    .addNode("query_refinement_agent", async current => {
+    .addNode("query_refinement_agent", async (current: GraphState) => {
       const fallbackTerms: Record<Intent, string> = { traceability: "mã lô hồ sơ truy xuất", marketplace: "nông sản Đồng Nai sản phẩm nhà vườn", farmer_guide: "hướng dẫn nhà vườn đăng bán nhật ký mùa vụ đơn hàng", volunteer_guide: "nhiệm vụ thanh niên tình nguyện hỗ trợ nhà vườn", live_search: "lịch chương trình OCOP Live Đồng Nai", other: "" };
       let query = `${current.question} ${fallbackTerms[current.intent]}`.trim().slice(0, 300);
       if (process.env.DEEPSEEK_API_KEY) {
@@ -266,7 +267,7 @@ export async function answerQuestion(question: string, history: string, imageNot
       }
       return { retrievalQuery: query, retrievalAttempts: current.retrievalAttempts + 1, evidenceCount: 0, context: "", sources: [], cards: [] };
     })
-    .addNode("synthesize", async current => {
+    .addNode("synthesize", async (current: GraphState) => {
       if (current.intent === "other") return { answer: "Mình chỉ hỗ trợ thông tin trong Chợ OCOP Đồng Nai: tra cứu lô hàng, tìm nông sản, hướng dẫn nhà vườn, hoạt động thanh niên và lịch OCOP Live. Với câu hỏi ngoài phạm vi, bạn nên hỏi cơ quan hoặc chuyên gia phù hợp." };
       if (current.evidenceCount === 0) return { answer: current.intent === "traceability" ? "Mình chưa tìm thấy mã lô chính xác trong hồ sơ hiện có. Bạn kiểm tra lại mã QR hoặc gửi mã lô rõ hơn để mình đối chiếu." : "Mình chưa tìm thấy tài liệu phù hợp trong hồ sơ NaiFarm sau khi thử một truy vấn tìm kiếm bổ sung. Bạn có thể cung cấp thêm tên sản phẩm, mã lô hoặc tài liệu liên quan." };
       if (!process.env.DEEPSEEK_API_KEY) return { answer: "NaiAI đang ở chế độ demo vì chưa có mô hình trả lời. Bạn có thể xem các nguồn và hồ sơ demo bên dưới." };
@@ -279,10 +280,10 @@ export async function answerQuestion(question: string, history: string, imageNot
       return { answer: typeof reply.content === "string" ? reply.content : "Mình chưa tạo được câu trả lời. Vui lòng thử lại." };
     })
     .addEdge(START, "supervisor")
-    .addConditionalEdges("supervisor", current => current.intent, { traceability: "traceability_agent", marketplace: "marketplace_agent", farmer_guide: "farmer_agent", volunteer_guide: "volunteer_agent", live_search: "live_agent", other: "out_of_scope" })
+    .addConditionalEdges("supervisor", (current: GraphState) => current.intent, { traceability: "traceability_agent", marketplace: "marketplace_agent", farmer_guide: "farmer_agent", volunteer_guide: "volunteer_agent", live_search: "live_agent", other: "out_of_scope" })
     .addEdge("traceability_agent", "evidence_critic").addEdge("marketplace_agent", "evidence_critic").addEdge("farmer_agent", "evidence_critic").addEdge("volunteer_agent", "evidence_critic").addEdge("live_agent", "evidence_critic")
-    .addConditionalEdges("evidence_critic", current => current.evidenceCount > 0 || current.retrievalAttempts >= 1 || current.intent === "traceability" ? "synthesize" : "query_refinement_agent", { synthesize: "synthesize", query_refinement_agent: "query_refinement_agent" })
-    .addConditionalEdges("query_refinement_agent", current => current.intent, { traceability: "traceability_agent", marketplace: "marketplace_agent", farmer_guide: "farmer_agent", volunteer_guide: "volunteer_agent", live_search: "live_agent", other: "synthesize" })
+    .addConditionalEdges("evidence_critic", (current: GraphState) => current.evidenceCount > 0 || current.retrievalAttempts >= 1 || current.intent === "traceability" ? "synthesize" : "query_refinement_agent", { synthesize: "synthesize", query_refinement_agent: "query_refinement_agent" })
+    .addConditionalEdges("query_refinement_agent", (current: GraphState) => current.intent, { traceability: "traceability_agent", marketplace: "marketplace_agent", farmer_guide: "farmer_agent", volunteer_guide: "volunteer_agent", live_search: "live_agent", other: "synthesize" })
     .addEdge("out_of_scope", "synthesize").addEdge("synthesize", END)
     .compile();
 

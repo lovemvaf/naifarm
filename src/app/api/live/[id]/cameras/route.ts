@@ -10,7 +10,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const db = requireDatabase();
     const camera = assertDb(await db.from("live_cameras").select("id,identity").eq("session_id", id).is("revoked_at", null).maybeSingle());
     if (camera) {
-      await livekit.removeParticipant(session.room_name, camera.identity, { revokeTokenTs: BigInt(Math.floor(Date.now() / 1000) + 5) }).catch((error) => {
+      await livekit.removeParticipant(session.room_name, camera.identity, { revokeTokenTs: BigInt(Math.floor(Date.now() / 1000) + 5) }).catch((error: unknown) => {
         if (!(error instanceof TwirpError && error.status === 404)) throw error;
       });
       assertDb(await db.from("live_cameras").update({ revoked_at: new Date().toISOString() }).eq("id", camera.id));

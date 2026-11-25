@@ -33,7 +33,7 @@ export class LiveError extends Error {
 }
 
 export function requireDatabase() {
-  if ((process.env.NAIFARM_LIVE_ENABLED ?? process.env.LIVE_ENABLED) !== "1") throw new LiveError(503, "Livestream chưa bật. Đặt NAIFARM_LIVE_ENABLED=1 sau khi áp dụng migration.");
+  if ((process.env.NAIFARM_LIVE_ENABLED ?? process.env.LIVE_ENABLED) !== "1") throw new LiveError(503, "Livestream chưa bật. Đặt NAIFARM_LIVE_ENABLED=1 sau khi áp dụng ba migration livestream.");
   if (!database || !process.env.LIVEKIT_URL || !process.env.LIVEKIT_API_KEY || !process.env.LIVEKIT_API_SECRET) throw new LiveError(503, "Livestream chưa được cấu hình.");
   return database;
 }
@@ -79,7 +79,7 @@ export function jsonError(error: unknown) {
   const missingSchema = ["PGRST205", "PGRST202", "42703", "42P01", "PGRST204"].includes(String(code));
   const status = error instanceof LiveError ? error.status : missingSchema ? 503 : 500;
   const message = error instanceof LiveError ? error.message : missingSchema
-    ? "Supabase chưa có schema livestream. Áp dụng hai migration livestream rồi thử lại."
+    ? "Supabase chưa có schema livestream. Áp dụng đủ ba migration livestream rồi thử lại."
     : "Đã xảy ra lỗi. Vui lòng thử lại.";
   return Response.json({ error: message }, { status, headers: { "Cache-Control": "no-store" } });
 }

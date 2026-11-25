@@ -43,6 +43,7 @@ import {
   INITIAL_CALENDAR_EVENTS,
   INITIAL_CAMPAIGNS,
   INITIAL_PROMOTIONS,
+  OFFICIAL_OBSERVANCES,
 } from "@/data/fixtures/calendar-campaigns";
 import { DEFAULT_CLOCK_ISO, getActiveClockIso } from "@/lib/clock/vn-clock";
 import { applyPromotionsToCart } from "@/lib/commerce/promotion-engine";
@@ -103,6 +104,7 @@ import type {
   MemberDelivery,
   MentorCase,
   OrderStatus,
+  ObservanceRecord,
   OrganizationKind,
   PartnerOrganization,
   Product,
@@ -130,7 +132,8 @@ import type {
 } from "@/types/naifarm";
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { mapProfile } from "@/lib/supabase/mappers";
+import { mapFarmCertificationToCredential, mapProfile } from "@/lib/supabase/mappers";
+import { fetchCoreData } from "@/lib/supabase/hydrate";
 
 const STORAGE_KEY = "naifarm_demo_state_v4";
 
@@ -248,6 +251,7 @@ interface DemoState {
   calendarEvents: CalendarEvent[];
   campaigns: CampaignRecord[];
   promotions: PromotionRecord[];
+  officialObservances: ObservanceRecord[];
   internationalInquiries: InternationalInquiry[];
   dismissedReminderKeys: string[];
   schoolClasses: SchoolClass[];
@@ -362,6 +366,7 @@ function getInitialState(): DemoState {
     calendarEvents: INITIAL_CALENDAR_EVENTS,
     campaigns: INITIAL_CAMPAIGNS,
     promotions: INITIAL_PROMOTIONS,
+    officialObservances: OFFICIAL_OBSERVANCES,
     internationalInquiries: INITIAL_INQUIRIES,
     dismissedReminderKeys: [],
     schoolClasses: INITIAL_SCHOOL_CLASSES,
@@ -399,6 +404,7 @@ interface PlaceOrderInput {
   deliveryAddress: string;
   deliverySlotLabel?: string;
   couponCode?: string;
+  paymentMethod?: "cod" | "sepay_bank";
 }
 
 interface SignUpGuestInput {
@@ -501,8 +507,13 @@ interface DemoStoreContextValue extends DemoState {
     ok: boolean;
     orderId?: string;
     orderIds?: string[];
+    orders?: DemoOrder[];
     message: string;
   };
+  markOrderPaid: (
+    orderId: string,
+    transactionInfo?: { gateway?: string; referenceCode?: string; amountVnd?: number }
+  ) => void;
   updateOrderStatus: (orderId: string, status: OrderStatus, cancelReason?: string) => void;
   requestOrderRefund: (
     orderId: string,
@@ -681,6 +692,43 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const persistCart = useCallback((cart: CartItem[]) => {
+    if (!supabase || !state.session) return;
+    const userId = state.session.user.id;
+    void (async () => {
+      await supabase.from("cart_items").delete().eq("user_id", userId);
+      if (cart.length) {
+        await supabase.from("cart_items").insert(
+          cart.map((item) => ({
+            user_id: userId,
+            product_id: item.productId,
+            quantity: item.quantity,
+            selected_option_label: item.selectedOptionLabel ?? null,
+          })),
+        );
+      }
+    })();
+  }, [state.session]);
+
+  const persistIds = useCallback(
+    (table: "favorites" | "season_follows", ids: string[]) => {
+      if (!supabase || !state.session) return;
+      const userId = state.session.user.id;
+      void (async () => {
+        await supabase.from(table).delete().eq("user_id", userId);
+        if (ids.length) {
+          await supabase.from(table).insert(ids.map((id) => ({ user_id: userId, product_id: id })));
+        }
+      })();
+    },
+    [state.session],
+  );
+
+  const persistMission = useCallback((id: string, patch: Record<string, unknown>) => {
+    if (!supabase) return;
+    void supabase.from("missions").update(patch).eq("id", id).then(() => {});
+  }, []);
+
   const activeClockIso = getActiveClockIso(state.clockOverrideIso);
 
   const setClockOverrideIso = useCallback((iso: string | null) => {
@@ -813,6 +861,89 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     },
     [],
   );
+
+  useEffect(() => {
+    if (!supabase || !storageReady) return;
+    let mounted = true;
+
+    void fetchCoreData()
+      .then((core) => {
+        if (!mounted) return;
+        setState((prev) => ({
+          ...prev,
+          farms: core.farms.length ? core.farms : prev.farms,
+          products: core.products.length ? core.products : prev.products,
+          batches: core.batches.length ? core.batches : prev.batches,
+          orders: core.orders.length ? core.orders : prev.orders,
+          missions: core.missions.length ? core.missions : prev.missions,
+          supportRequests: core.supportRequests.length ? core.supportRequests : prev.supportRequests,
+          experienceBookings: core.experienceBookings.length ? core.experienceBookings : prev.experienceBookings,
+          docCases: core.docCases.length ? core.docCases : prev.docCases,
+          adminGrants: core.adminGrants.length ? core.adminGrants : prev.adminGrants,
+          auditLogs: core.auditLogs.length ? core.auditLogs : prev.auditLogs,
+          calendarEvents: core.calendarEvents.length ? core.calendarEvents : prev.calendarEvents,
+          campaigns: core.campaigns.length ? core.campaigns : prev.campaigns,
+          promotions: core.promotions.length ? core.promotions : prev.promotions,
+          officialObservances: core.observances.length ? core.observances : prev.officialObservances,
+          seasons: core.seasons.length ? core.seasons : prev.seasons,
+          diaryEntries: core.diaryEntries.length ? core.diaryEntries : prev.diaryEntries,
+          credentials: core.credentials.length ? core.credentials : prev.credentialRecords,
+          lessons: core.lessons.length ? core.lessons : prev.lessons,
+          studentSubmissions: core.submissions.length ? core.submissions : prev.studentSubmissions,
+          schoolClasses: core.schoolClasses.length ? core.schoolClasses : prev.schoolClasses,
+          cart: core.cartItems.length ? core.cartItems : prev.cart,
+          favoriteProductIds: core.favoriteIds.length ? core.favoriteIds : prev.favoriteProductIds,
+          followedProductIds: core.followedIds.length ? core.followedIds : prev.followedProductIds,
+          notifications: core.notifications.length ? core.notifications : prev.notifications,
+          tickets: core.tickets.length ? core.tickets : prev.tickets,
+          addressBook: core.addressBook.length ? core.addressBook : prev.addressBook,
+          organizations: core.partnerOrgs.length ? core.partnerOrgs : prev.organizations,
+          sponsorCampaigns: core.sponsorCampaigns.length ? core.sponsorCampaigns : prev.sponsorCampaigns,
+          warehouses: core.warehouses.length ? core.warehouses : prev.warehouses,
+          warehouseStocks: core.warehouseStocks.length ? core.warehouseStocks : prev.warehouseStocks,
+          inventoryMovements: core.inventoryMovements.length ? core.inventoryMovements : prev.inventoryMovements,
+          suppliers: core.suppliers.length ? core.suppliers : prev.suppliers,
+          purchaseOrders: core.purchaseOrders.length ? core.purchaseOrders : prev.purchaseOrders,
+          coopPools: core.coopPools.length ? core.coopPools : prev.coopPools,
+          memberDeliveries: core.memberDeliveries.length ? core.memberDeliveries : prev.memberDeliveries,
+          expenses: core.expenses.length ? core.expenses : prev.expenses,
+          receivablesPayables: core.receivablesPayables.length ? core.receivablesPayables : prev.receivablesPayables,
+          refundRequests: core.refundRequests.length ? core.refundRequests : prev.refundRequests,
+          volunteerHours: core.volunteerHours.length ? core.volunteerHours : prev.volunteerHours,
+          logisticsTrips: core.logisticsTrips.length ? core.logisticsTrips : prev.logisticsTrips,
+          productReviews: core.productReviews.length ? core.productReviews : prev.productReviews,
+          internationalInquiries: core.internationalInquiries.length ? core.internationalInquiries : prev.internationalInquiries,
+          tourPackages: core.tourPackages.length ? core.tourPackages : prev.tourPackages,
+          certifications: core.certifications.length ? core.certifications : prev.certifications,
+          learningProgress: {
+            ...prev.learningProgress,
+            ...core.learningProgress,
+          },
+        }));
+      })
+      .catch(() => {});
+
+    return () => {
+      mounted = false;
+    };
+  }, [storageReady, state.session?.user.id]);
+
+  useEffect(() => {
+    if (!supabase || !state.session?.user?.id) return;
+    void supabase
+      .from("lesson_progress")
+      .upsert({
+        user_id: state.session.user.id,
+        completed_lesson_ids: state.learningProgress.completedLessonIds,
+        quiz_answers: state.learningProgress.quizAnswers,
+        mastered_phrase_ids: state.learningProgress.masteredPhraseIds,
+        matched_pair_ids: state.learningProgress.matchedPairIds,
+        roleplay_choices: state.learningProgress.roleplayChoices,
+        practice_points: state.learningProgress.practicePoints,
+        updated_at: new Date().toISOString(),
+      })
+      .then(() => {});
+  }, [state.learningProgress, state.session?.user?.id]);
 
   useEffect(() => {
     if (!supabase) return;
@@ -974,6 +1105,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const markNotificationRead = (id: string) => {
+    if (supabase) {
+      void supabase.from("notifications").update({ read: true }).eq("id", id).then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       notifications: prev.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
@@ -981,6 +1115,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const markAllNotificationsRead = () => {
+    if (supabase) {
+      void supabase.from("notifications").update({ read: true }).then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       notifications: prev.notifications.map((n) => ({ ...n, read: true })),
@@ -1012,10 +1149,29 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       ...prev,
       addressBook: [created, ...prev.addressBook],
     }));
+    if (supabase) {
+      void supabase
+        .from("address_book")
+        .insert({
+          id: created.id,
+          label: created.label,
+          recipient_name: created.recipientName,
+          phone_demo: created.phoneDemo,
+          detail_address: created.detailAddress,
+          administrative_unit_code: created.administrativeUnitCode,
+          full_address: created.fullAddress,
+          is_default: created.isDefault,
+          user_id: state.session?.user.id ?? null,
+        })
+        .then(() => {});
+    }
     return { ok: true, message: `Đã lưu địa chỉ tại ${unit.tenDayDu}.` };
   };
 
   const removeAddressEntry = (id: string) => {
+    if (supabase) {
+      void supabase.from("address_book").delete().eq("id", id).then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       addressBook: prev.addressBook.filter((a) => a.id !== id),
@@ -1060,6 +1216,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       } else {
         nextCart.push({ productId, quantity, selectedOptionLabel: optionLabel });
       }
+      persistCart(nextCart);
       return { ...prev, cart: nextCart };
     });
     return { ok: true, message: `Đã thêm ${product.name} vào giỏ hàng.` };
@@ -1070,44 +1227,44 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     if (!product) return;
     setState((prev) => {
       if (nextQty <= 0) {
-        return { ...prev, cart: prev.cart.filter((c) => c.productId !== productId) };
+        const nextCart = prev.cart.filter((c) => c.productId !== productId);
+        persistCart(nextCart);
+        return { ...prev, cart: nextCart };
       }
       const clamped = Math.min(product.stockKg, nextQty);
-      return {
-        ...prev,
-        cart: prev.cart.map((c) => (c.productId === productId ? { ...c, quantity: clamped } : c)),
-      };
+      const nextCart = prev.cart.map((c) => (c.productId === productId ? { ...c, quantity: clamped } : c));
+      persistCart(nextCart);
+      return { ...prev, cart: nextCart };
     });
   };
 
   const removeFromCart = (productId: string) => {
-    setState((prev) => ({
-      ...prev,
-      cart: prev.cart.filter((c) => c.productId !== productId),
-    }));
+    setState((prev) => {
+      const nextCart = prev.cart.filter((c) => c.productId !== productId);
+      persistCart(nextCart);
+      return { ...prev, cart: nextCart };
+    });
   };
 
   const toggleFollowSeason = (productId: string) => {
     setState((prev) => {
       const exists = prev.followedProductIds.includes(productId);
-      return {
-        ...prev,
-        followedProductIds: exists
-          ? prev.followedProductIds.filter((id) => id !== productId)
-          : [...prev.followedProductIds, productId],
-      };
+      const next = exists
+        ? prev.followedProductIds.filter((id) => id !== productId)
+        : [...prev.followedProductIds, productId];
+      persistIds("season_follows", next);
+      return { ...prev, followedProductIds: next };
     });
   };
 
   const toggleFavorite = (productId: string) => {
     setState((prev) => {
       const exists = prev.favoriteProductIds.includes(productId);
-      return {
-        ...prev,
-        favoriteProductIds: exists
-          ? prev.favoriteProductIds.filter((id) => id !== productId)
-          : [...prev.favoriteProductIds, productId],
-      };
+      const next = exists
+        ? prev.favoriteProductIds.filter((id) => id !== productId)
+        : [...prev.favoriteProductIds, productId];
+      persistIds("favorites", next);
+      return { ...prev, favoriteProductIds: next };
     });
   };
 
@@ -1253,6 +1410,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     status,
     review,
   ) => {
+    if (supabase) {
+      void supabase
+        .from("experience_bookings")
+        .update({ status })
+        .eq("id", bookingId)
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       experienceBookings: prev.experienceBookings.map((b) =>
@@ -1277,6 +1441,34 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       };
     }
     const overlaps = detectCalendarOverlap(state.calendarEvents, ev);
+    if (supabase) {
+      void supabase.from("calendar_events").upsert({
+        id: ev.id,
+        title: ev.title,
+        title_en: ev.titleEn,
+        description: ev.description,
+        description_en: ev.descriptionEn,
+        event_kind: ev.eventKind,
+        classification: ev.classification,
+        organizer: ev.organizer,
+        status: ev.status,
+        start_iso: ev.startIso,
+        end_iso: ev.endIso,
+        all_day: ev.allDay,
+        timezone: ev.timezone,
+        recurrence_rule: ev.recurrenceRule ?? null,
+        priority: ev.priority,
+        visibility: ev.visibility,
+        administrative_unit_code: ev.administrativeUnitCode ?? null,
+        farm_id: ev.farmId ?? null,
+        organization_id: ev.organizationId ?? null,
+        assigned_to: ev.assignedTo ?? null,
+        linked_route: ev.linkedRoute ?? null,
+        linked_entity_id: ev.linkedEntityId ?? null,
+        location_label: ev.locationLabel ?? null,
+        is_official_read_only: ev.isOfficialReadOnly ?? false,
+      }).then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       calendarEvents: existing
@@ -1311,6 +1503,54 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       fixtureOrdersCount: 0,
       fixtureRevenueVnd: 0,
     };
+    if (supabase) {
+      void supabase.from("campaigns").insert({
+        id: created.id,
+        slug:
+          created.slug ||
+          created.titleVi
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/đ/g, "d")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, ""),
+        title_vi: created.titleVi,
+        title_en: created.titleEn,
+        subtitle_vi: created.subtitleVi,
+        subtitle_en: created.subtitleEn,
+        objective_vi: created.objectiveVi,
+        objective_en: created.objectiveEn,
+        classification: created.classification,
+        organizer: created.organizer,
+        target_audience: created.targetAudience,
+        status: created.status,
+        start_iso: created.startIso,
+        end_iso: created.endIso,
+        timezone: created.timezone,
+        priority: created.priority,
+        show_national_flag_accent: created.showNationalFlagAccent,
+        banner_image: created.bannerImage,
+        banner_alt_vi: created.bannerAltVi,
+        banner_alt_en: created.bannerAltEn,
+        primary_cta_label_vi: created.primaryCtaLabelVi,
+        primary_cta_label_en: created.primaryCtaLabelEn,
+        primary_cta_href: created.primaryCtaHref,
+        maker_name: created.makerName,
+        product_ids: created.productIds,
+        farm_ids: created.farmIds,
+        experience_slugs: created.experienceSlugs,
+        live_ids: created.liveIds,
+        lesson_slugs: created.lessonSlugs,
+        promotion_ids: created.promotionIds,
+        budget_planned_vnd: created.budgetPlannedVnd,
+        budget_spent_vnd: 0,
+        fixture_sessions_count: 0,
+        fixture_orders_count: 0,
+        fixture_revenue_vnd: 0,
+        agenda_items: created.agendaItems,
+      }).then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       campaigns: [created, ...prev.campaigns],
@@ -1334,6 +1574,19 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
             check.reason ?? "Người tạo chiến dịch không thể tự phê duyệt phát hành (Maker ≠ Checker).",
         };
       }
+    }
+    if (supabase) {
+      void supabase
+        .from("campaigns")
+        .update({
+          status: nextStatus,
+          approver_name:
+            nextStatus === "approved" || nextStatus === "scheduled" || nextStatus === "active"
+              ? actorName
+              : null,
+        })
+        .eq("id", campaignId)
+        .then(() => {});
     }
     setState((prev) => ({
       ...prev,
@@ -1598,7 +1851,11 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         refundedShippingVnd: 0,
         platformFeeVnd: Math.round((subtotalVnd - discountVnd) * 0.05),
         couponCode: discountVnd > 0 ? couponNorm : undefined,
-        paymentLabel: "Thanh toán khi nhận hàng (không gian trải nghiệm)",
+        paymentMethod: input.paymentMethod ?? "cod",
+        paymentLabel:
+          input.paymentMethod === "sepay_bank"
+            ? "Chuyển khoản VietQR qua SePay (MBBank)"
+            : "Thanh toán khi nhận hàng (không gian trải nghiệm)",
         paymentStatus: "unpaid",
         settlementStatus: "pending",
         status: "pending_confirm",
@@ -1623,6 +1880,48 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     const appliedIds = new Set(promoEval.applied.map((a) => a.promo.id));
+
+    if (supabase && state.session) {
+      const userId = state.session.user.id;
+      void (async () => {
+        for (const order of createdOrders) {
+          const { error } = await supabase.from("orders").insert({
+            id: order.id,
+            customer_id: userId,
+            customer_name: order.customerName,
+            customer_phone_demo: order.customerPhoneDemo,
+            farm_id: order.farmId,
+            farm_name: order.farmName,
+            delivery_method: order.deliveryMethod,
+            delivery_address: order.deliveryAddress,
+            subtotal_vnd: order.subtotalVnd,
+            shipping_fee_vnd: order.shippingFeeVnd,
+            total_vnd: order.totalVnd,
+            payment_label: order.paymentLabel,
+            status: order.status,
+            timeline: order.timeline,
+            created_at_label: order.createdAtLabel,
+          });
+          if (error) continue;
+          await supabase.from("order_items").insert(
+            order.items.map((item) => ({
+              order_id: order.id,
+              product_id: item.productId,
+              product_name: item.productName,
+              unit_label: item.unitLabel,
+              quantity: item.quantity,
+              unit_price_vnd: item.unitPriceVnd,
+              image: item.image,
+            })),
+          );
+        }
+        persistCart([]);
+        const redeemedPromoIds = promoEval.applied.map((a) => a.promo.id);
+        if (supabase && redeemedPromoIds.length) {
+          void supabase.rpc("increment_promo_redemption", { promo_id: redeemedPromoIds[0], qty: redeemedPromoIds.length });
+        }
+      })();
+    }
 
     setState((prev) => ({
       ...prev,
@@ -1649,6 +1948,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       ok: true,
       orderId: createdOrders[0].id,
       orderIds: createdOrders.map((o) => o.id),
+      orders: createdOrders,
       message:
         createdOrders.length > 1
           ? `Đã tách ${createdOrders.length} đơn theo từng nhà vườn (${createdOrders.map((o) => o.id).join(", ")}).`
@@ -1657,6 +1957,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateOrderStatus = (orderId: string, status: OrderStatus, cancelReason?: string) => {
+    if (supabase) {
+      void supabase
+        .from("orders")
+        .update({ status, cancel_reason: cancelReason ?? null })
+        .eq("id", orderId)
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       orders: prev.orders.map((ord) => {
@@ -1697,6 +2004,31 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
             time: idx === activeSteps.length - 1 ? "Cập nhật từ nhà vườn" : "Hoàn tất",
             done: true,
           })),
+        };
+      }),
+    }));
+  };
+
+  const markOrderPaid = (
+    orderId: string,
+    transactionInfo?: { gateway?: string; referenceCode?: string; amountVnd?: number }
+  ) => {
+    setState((prev) => ({
+      ...prev,
+      orders: prev.orders.map((ord) => {
+        if (ord.id !== orderId && ord.parentOrderId !== orderId) return ord;
+        return {
+          ...ord,
+          paymentStatus: "paid_bank",
+          paymentLabel: `Đã thanh toán MBBank (SePay)${transactionInfo?.referenceCode ? ` · ${transactionInfo.referenceCode}` : ""}`,
+          timeline: [
+            ...ord.timeline,
+            {
+              step: "Xác nhận chuyển khoản MBBank (SePay)",
+              time: "Vừa xong",
+              done: true,
+            },
+          ],
         };
       }),
     }));
@@ -1744,6 +2076,23 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         ...prev.auditLogs,
       ],
     }));
+    if (supabase) {
+      void supabase
+        .from("refund_requests")
+        .insert({
+          id: created.id,
+          order_id: created.orderId,
+          farm_id: created.farmId,
+          requester_name: created.requesterName,
+          reason: created.reason,
+          amount_vnd: created.amountVnd,
+          restock_qty: created.restockQty,
+          status: created.status,
+          maker_name: created.makerName,
+          requested_date_iso: created.requestedDateIso,
+        })
+        .then(() => {});
+    }
     return { ok: true, message: `Đã gửi đề xuất hoàn tiền ${created.id} vào hàng chờ duyệt độc lập.` };
   };
 
@@ -1795,6 +2144,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         ...prev.auditLogs,
       ],
     }));
+    if (supabase) {
+      void supabase
+        .from("refund_requests")
+        .update({ status: decision, checker_name: checkerName })
+        .eq("id", refundId)
+        .then(() => {});
+    }
     return {
       ok: true,
       message:
@@ -1869,6 +2225,28 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       isDemo: true,
     };
 
+    if (supabase) {
+      void supabase
+        .from("products")
+        .insert({
+          id: newProduct.id,
+          slug: newProduct.slug,
+          name: newProduct.name,
+          category: newProduct.category,
+          farm_id: newProduct.farmId,
+          farm_name: newProduct.farmName,
+          region: newProduct.region,
+          unit_label: newProduct.unitLabel,
+          price_vnd: newProduct.priceVnd,
+          stock_kg: newProduct.stockKg,
+          season_status: newProduct.seasonStatus,
+          batch_code: newProduct.batchCode,
+          short_description: newProduct.shortDescription,
+          image: newProduct.image,
+          gallery: newProduct.gallery,
+        })
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       products: [newProduct, ...prev.products],
@@ -1891,6 +2269,21 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addHarvestDiaryEvent = (batchCode: string, event: Omit<BatchEvent, "id">) => {
+    if (supabase) {
+      void supabase
+        .from("batch_events")
+        .insert({
+          id: `ev-${Date.now()}`,
+          batch_code: batchCode,
+          date_label: event.dateLabel,
+          title: event.title,
+          detail: event.detail,
+          actor_category: event.actorCategory,
+          source_declaration: event.sourceDeclaration,
+          photo: event.photo ?? null,
+        })
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       batches: prev.batches.map((b) =>
@@ -1925,6 +2318,29 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       version: 1,
       isDemo: true,
     };
+
+    if (supabase) {
+      void supabase
+        .from("diary_entries")
+        .insert({
+          id: created.id,
+          season_id: created.seasonId,
+          batch_code: created.batchCode || null,
+          farm_id: created.farmId || null,
+          farm_name: created.farmName,
+          date_label: created.dateLabel,
+          stage: created.stage,
+          title: created.title,
+          detail: created.detail,
+          actor_name: created.actorName,
+          source_declaration: created.sourceDeclaration,
+          photo: created.photo || null,
+          visibility: visibility,
+          version: created.version,
+          user_id: state.session?.user.id ?? null,
+        })
+        .then(() => {});
+    }
 
     setState((prev) => ({
       ...prev,
@@ -1982,6 +2398,28 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       batchCodes: [farm.id === "farm-ba-tu-demo" ? "NF-DEMO-001" : "NF-TT-2026-01"],
       isDemo: true,
     };
+    if (supabase) {
+      void supabase
+        .from("seasons")
+        .insert({
+          id: created.id,
+          farm_id: created.farmId,
+          farm_name: created.farmName,
+          administrative_unit_code: created.administrativeUnitCode,
+          administrative_unit_name: created.administrativeUnitName,
+          crop_name: created.cropName,
+          variety: created.variety,
+          season_name: created.seasonName,
+          start_date: created.startDate,
+          expected_harvest_date: created.expectedHarvestDate,
+          area_ha: created.areaHa,
+          growing_zone_code: created.growingZoneCode,
+          status: created.status,
+          summary: created.summary,
+          batch_codes: created.batchCodes,
+        })
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       seasons: [created, ...prev.seasons],
@@ -2036,6 +2474,12 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       ...prev,
       certifications: [created, ...prev.certifications],
     }));
+    if (supabase) {
+      void supabase
+        .from("credentials")
+        .upsert(mapFarmCertificationToCredential(created, farm), { onConflict: "id" })
+        .then(() => {});
+    }
     return created;
   };
 
@@ -2045,6 +2489,16 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     note: string,
     actorName = "Điều phối / Chuyên môn",
   ) => {
+    if (supabase) {
+      const patch: Record<string, unknown> = {
+        lifecycle_status: nextStatus,
+        checked_at: "2026-11-25",
+        notes_internal: note,
+      };
+      if (nextStatus === "source_verified") patch.verification_level = "verifier_checked";
+      if (nextStatus === "document_matched") patch.verification_level = "doc_matched";
+      void supabase.from("credentials").update(patch).eq("id", recordId).then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       credentialRecords: prev.credentialRecords.map((r) =>
@@ -2091,6 +2545,40 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       renewedFromId: oldRec.id,
       checkedAt: "2026-11-25",
     };
+    if (supabase) {
+      void supabase
+        .from("credentials")
+        .insert({
+          id: renewed.id,
+          type_id: renewed.typeId,
+          holder_id: renewed.holderId,
+          holder_legal_name: renewed.holderLegalName,
+          product_ids: renewed.productIds,
+          site_ids: renewed.siteIds,
+          facility_ids: renewed.facilityIds,
+          lot_ids: renewed.lotIds ?? null,
+          issuer: renewed.issuer,
+          certificate_number: renewed.certificateNumber ?? null,
+          decision_number: renewed.decisionNumber ?? null,
+          standard_version: renewed.standardVersion ?? null,
+          issue_date: renewed.issueDate ?? null,
+          valid_from: renewed.validFrom ?? null,
+          valid_to: renewed.validTo ?? null,
+          evidence_ids: renewed.evidenceIds,
+          source_url: renewed.sourceUrl ?? null,
+          source_published_at: renewed.sourcePublishedAt ?? null,
+          checked_at: renewed.checkedAt ?? null,
+          verification_level: renewed.verificationLevel,
+          lifecycle_status: renewed.lifecycleStatus,
+          scope_description: renewed.scopeDescription,
+          origin: renewed.origin,
+          permission_to_publish: renewed.permissionToPublish,
+          notes_internal: renewed.notesInternal ?? null,
+          renewed_from_id: renewed.renewedFromId ?? null,
+          eligible_category_hint: renewed.eligibleCategoryHint,
+        })
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       credentialRecords: [renewed, ...prev.credentialRecords],
@@ -2229,6 +2717,25 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       ],
     }));
 
+    if (supabase) {
+      void supabase
+        .from("inventory_movements")
+        .insert({
+          id: mv.id,
+          warehouse_id: mv.warehouseId,
+          product_id: mv.productId,
+          batch_code: mv.batchCode,
+          type: mv.type,
+          quantity_delta: mv.quantityDelta,
+          unit_label: mv.unitLabel,
+          date_iso: mv.dateIso,
+          actor_name: mv.actorName,
+          reason: mv.reason,
+          is_internal_transfer: mv.isInternalTransfer ?? null,
+        })
+        .then(() => {});
+    }
+
     return { ok: true, message: `Đã ghi nhận phiếu kho ${mv.id}.` };
   };
 
@@ -2237,6 +2744,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     nextStatus: PurchaseOrder["status"],
     qcNote?: string,
   ) => {
+    if (supabase) {
+      void supabase
+        .from("purchase_orders")
+        .update({ status: nextStatus, qc_note: qcNote ?? null })
+        .eq("id", poId)
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       purchaseOrders: prev.purchaseOrders.map((po) =>
@@ -2253,6 +2767,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         ok: false,
         message: "Người lập phiếu thanh toán xã viên không thể tự duyệt đối soát.",
       };
+    }
+    if (supabase) {
+      void supabase
+        .from("member_deliveries")
+        .update({ settlement_status: "da_duyet_thanh_toan", checker_name: checkerName })
+        .eq("id", deliveryId)
+        .then(() => {});
     }
     setState((prev) => ({
       ...prev,
@@ -2285,6 +2806,22 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         message: "Tài khoản học sinh nhỏ tuổi chưa có xác nhận đồng thuận của phụ huynh/người giám hộ.",
       };
     }
+    if (supabase && state.session) {
+      void supabase
+        .from("student_submissions")
+        .upsert({
+          id: submissionId,
+          class_id: sub.classId,
+          student_name: sub.studentName,
+          is_minor: sub.isMinor,
+          has_guardian_consent: sub.hasGuardianConsent,
+          title: sub.title,
+          rubric_score: score,
+          status: "graded",
+          user_id: state.session.user.id,
+        })
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       studentSubmissions: prev.studentSubmissions.map((s) =>
@@ -2299,6 +2836,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     status: LogisticsTrip["status"],
     podNote?: string,
   ) => {
+    if (supabase) {
+      void supabase
+        .from("logistics_trips")
+        .update({ status, pod_note: podNote ?? null })
+        .eq("id", tripId)
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       logisticsTrips: prev.logisticsTrips.map((t) =>
@@ -2314,6 +2858,23 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       status: "Chờ điều phối phân công",
       createdAtLabel: "25/11/2026 · Vừa gửi",
     };
+    if (supabase) {
+      void supabase
+        .from("support_requests")
+        .insert({
+          id: created.id,
+          farm_id: created.farmId,
+          farm_name: created.farmName,
+          title: created.title,
+          need_type: created.needType,
+          preferred_time: created.preferredTime,
+          location_mode: created.locationMode,
+          note: created.note,
+          status: created.status,
+          created_at_label: created.createdAtLabel,
+        })
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       supportRequests: [created, ...prev.supportRequests],
@@ -2322,6 +2883,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const acceptMission = (missionId: string, volunteerName = "Minh Anh") => {
+    if (state.session) {
+      persistMission(missionId, { status: "assigned", assignee_id: state.session.user.id });
+    }
     setState((prev) => ({
       ...prev,
       missions: prev.missions.map((m) =>
@@ -2336,6 +2900,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     hours: number,
     evidenceImage = "/images/stitch/stitch-32.jpg",
   ) => {
+    persistMission(missionId, {
+      status: "submitted",
+      evidence_note: evidenceNote,
+      submitted_hours: hours,
+      evidence_image: evidenceImage,
+      revision_reason: null,
+    });
     setState((prev) => ({
       ...prev,
       missions: prev.missions.map((m) =>
@@ -2354,6 +2925,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const confirmMissionByFarmer = (missionId: string) => {
+    persistMission(missionId, { status: "farm_accepted" });
     setState((prev) => ({
       ...prev,
       missions: prev.missions.map((m) =>
@@ -2388,6 +2960,10 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         message: "Chưa đủ điều kiện: Nhà vườn (W02) phải xác nhận đã nhận bàn giao trước khi Điều phối duyệt giờ.",
       };
     }
+    persistMission(missionId, {
+      status: "coordinator_approved",
+      approved_hours: m.submittedHours,
+    });
     setState((prev) => ({
       ...prev,
       missions: prev.missions.map((x) =>
@@ -2411,6 +2987,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const requestMissionRevision = (missionId: string, reason: string) => {
+    persistMission(missionId, { status: "revision_requested", revision_reason: reason });
     setState((prev) => ({
       ...prev,
       missions: prev.missions.map((x) =>
@@ -2460,6 +3037,23 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       id: `EXP-BOOK-${String(state.experienceBookings.length + 1).padStart(2, "0")}`,
       status: "Chờ nhà vườn xác nhận",
     };
+    if (supabase) {
+      void supabase
+        .from("experience_bookings")
+        .insert({
+          id: created.id,
+          farm_id: created.farmId,
+          farm_name: created.farmName,
+          package_title: created.packageTitle,
+          guest_name: created.guestName,
+          guest_count: created.guestCount,
+          date_label: created.dateLabel,
+          note: created.note,
+          status: created.status,
+          guest_id: state.session?.user.id ?? null,
+        })
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       experienceBookings: [created, ...prev.experienceBookings],
@@ -2473,6 +3067,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     note: string,
   ) => {
     const targetCase = state.docCases.find((d) => d.id === caseId);
+    if (supabase) {
+      void supabase
+        .from("document_review_cases")
+        .update({ status, reviewer_note: note })
+        .eq("id", caseId)
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       docCases: prev.docCases.map((c) =>
@@ -2494,6 +3095,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     if (!grant) return;
     const beforeSummary = grant.active ? "Đang hiệu lực" : "Đã tạm thu hồi";
     const afterSummary = grant.active ? "Đã tạm thu hồi" : "Đang hiệu lực";
+    if (supabase) {
+      void supabase
+        .from("admin_grants")
+        .update({ active: !grant.active, last_reason: reason })
+        .eq("id", grantId)
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       adminGrants: prev.adminGrants.map((g) =>
@@ -2541,10 +3149,32 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       ...prev,
       tickets: [created, ...prev.tickets],
     }));
+    if (supabase) {
+      void supabase
+        .from("tickets")
+        .insert({
+          id: created.id,
+          requester_name: created.requesterName,
+          role_label: created.roleLabel,
+          category: created.category,
+          subject: created.subject,
+          administrative_unit_code: created.administrativeUnitCode,
+          administrative_unit_name: created.administrativeUnitName,
+          status: created.status,
+          priority: created.priority,
+          created_at_label: created.createdAtLabel,
+          note: created.note,
+          user_id: state.session?.user.id ?? null,
+        })
+        .then(() => {});
+    }
     return created;
   };
 
   const updateTicketStatus = (ticketId: string, status: SupportTicket["status"]) => {
+    if (supabase) {
+      void supabase.from("tickets").update({ status }).eq("id", ticketId).then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       tickets: prev.tickets.map((t) => (t.id === ticketId ? { ...t, status } : t)),
@@ -2607,6 +3237,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         toggleCompareProduct,
         clearCompareProducts,
         placeDemoOrder,
+        markOrderPaid,
         updateOrderStatus,
         requestOrderRefund,
         decideRefundRequest,

@@ -24,7 +24,7 @@ const GOLDEN_BATCHES: TraceBatch[] = [
     declarationLevel: "Nhà vườn tự khai · Thanh niên hỗ trợ ghi nhận (Chưa xác minh OCOP chính thức)",
     docStatus: "Hồ sơ mẫu đang hoàn thiện",
     summary:
-      "Lô NF-DEMO-001 gồm chôm chôm Java và sầu riêng thu hoạch tại Nhà vườn Ba Tư (2,5 ha). Dữ liệu nhật ký hiển thị minh bạch nguồn khai báo.",
+      "Lô NF-DEMO-001 ghi nhận chôm chôm Java thu hoạch tại Nhà vườn Ba Tư (2,5 ha). Dữ liệu nhật ký hiển thị minh bạch nguồn khai báo.",
     events: [
       {
         id: "ev-01",
