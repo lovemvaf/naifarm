@@ -20,6 +20,7 @@ import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
 import { CulturalCampaignBanner } from "@/components/events/CulturalCampaignBanner";
 import { EditorialCursorStage } from "@/components/motion/MotionSystem";
 import { ProductCard } from "@/components/marketplace/ProductCard";
+import { NaiFarmHomeChat } from "@/components/chatbot/NaiFarmHomeChat";
 import { Badge, Button, Card, DemoBanner, EmptyState } from "@/components/ui/Primitives";
 import { normalizeSearchText } from "@/lib/geography/normalize-address";
 import { cn } from "@/lib/format";
@@ -395,6 +396,7 @@ export default function HomePage() {
             </div>
         </Card>
       </section>
+      <NaiFarmHomeChat />
     </div>
   );
 }
