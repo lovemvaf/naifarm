@@ -209,7 +209,16 @@ export type ProductCategory =
   | "Thảo mộc & Gia vị hữu cơ mẫu"
   | "Đặc sản du lịch & Hộp quà";
 
-export type AnatomyKind = "pomelo" | "rambutan" | "cashew" | "durian";
+export type AnatomyKind =
+  | "pomelo"
+  | "rambutan"
+  | "cashew"
+  | "durian"
+  | "coffee"
+  | "pepper"
+  | "cacao"
+  | "avocado"
+  | "honey";
 
 export interface DemoGeoPoint {
   lat: number;
@@ -463,8 +472,9 @@ export interface DemoOrder {
   refundedShippingVnd?: number;
   platformFeeVnd?: number;
   couponCode?: string;
+  paymentMethod?: "cod" | "sepay_bank";
   paymentLabel: string;
-  paymentStatus?: "unpaid" | "collected_cod" | "refunded_partial" | "refunded_full";
+  paymentStatus?: "unpaid" | "paid_bank" | "collected_cod" | "refunded_partial" | "refunded_full";
   settlementStatus?: "pending" | "settled" | "disputed";
   status: OrderStatus;
   orderDateIso?: string;

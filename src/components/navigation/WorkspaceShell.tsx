@@ -50,7 +50,7 @@ export function WorkspaceShell({
               {!collapsed ? (
                 <p className="text-xs font-semibold text-[#52645A]">{t.nav.workspaceLabel}</p>
               ) : (
-                <span className="text-[11px] font-bold text-[#245B3D]">{workspaceId}</span>
+                <span className="sr-only">{t.nav.workspaceLabel}</span>
               )}
               <button
                 type="button"

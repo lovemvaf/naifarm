@@ -9,6 +9,8 @@ import { useDemoStore } from "@/context/DemoStoreContext";
 import { useLocale } from "@/context/LocaleContext";
 import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
 import { notifyAccountSwitch, notifySignOut } from "@/lib/toast";
+import { stripWorkspaceCodePrefix } from "@/lib/format";
+import { localizeAdminUnitName } from "@/lib/i18n/domain-en";
 import { Badge, Card, DemoBanner } from "@/components/ui/Primitives";
 import type { WorkspaceId } from "@/types/naifarm";
 
@@ -83,46 +85,62 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1040px] space-y-6 px-4 py-8 lg:px-8">
+    <div className="mx-auto w-full max-w-[1200px] space-y-6 overflow-x-clip px-4 py-8 lg:px-8">
       <div>
-        <Badge tone="info">Truy cập nhanh · Không gian trải nghiệm</Badge>
+        <Badge tone="info">
+          {isEn ? "Quick Access · Experience Workspace" : "Truy cập nhanh · Không gian trải nghiệm"}
+        </Badge>
         <h1 className="mt-2 font-editorial text-3xl font-semibold text-[#25352B]">
-          Đăng nhập NaiFarm — Chọn nhanh 6 tài khoản trải nghiệm
+          {isEn
+            ? "Sign in to NaiFarm — Choose an experience profile"
+            : "Đăng nhập NaiFarm — Chọn nhanh 6 hồ sơ trải nghiệm"}
         </h1>
         <p className="mt-1 text-sm text-[#52645A]">
-          Phiên hoạt động cục bộ trên trình duyệt để bạn trải nghiệm đầy đủ các không gian chức năng
-          mà không cần nhập mật khẩu thật.
+          {isEn
+            ? "Sessions run locally in your browser so you can explore every role smoothly without entering real credentials."
+            : "Phiên hoạt động cục bộ trên trình duyệt để bạn trải nghiệm đầy đủ các không gian chức năng mà không cần nhập mật khẩu thật."}
         </p>
       </div>
 
       <DemoBanner
-        title="Truy cập nhanh 1 chạm"
-        detail="Chọn một hồ sơ bên dưới để trải nghiệm ngay không gian Khách mua (W01), Nhà nông & HTX (W02), Thanh niên Tình nguyện (W03), Điều phối (W04), Tổ chức & Đối tác (W05) hoặc Quản trị (W06)."
+        title={isEn ? "1-Tap Workspace Switcher" : "Truy cập nhanh 1 chạm"}
+        detail={
+          isEn
+            ? "Pick a profile below to preview Buyer, Orchard & Cooperative, Youth Volunteer, Community Coordinator, Partner Organization, or Governance views."
+            : "Chọn một hồ sơ bên dưới để trải nghiệm ngay không gian Khách mua, Nhà nông & HTX, Thanh niên Tình nguyện, Điều phối, Tổ chức & Đối tác hoặc Quản trị."
+        }
       />
 
       {authUser ? (
         <Card className="flex flex-wrap items-center justify-between gap-4 border-[#245B3D] bg-[#EAF0E5]/70 p-5">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <span
-              className="flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold text-white"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
               style={{ backgroundColor: authUser.avatarBg }}
             >
               {authUser.avatarText}
             </span>
-            <div>
-              <p className="text-xs font-semibold text-[#245B3D]">Đang hoạt động · Không gian trải nghiệm</p>
-              <p className="text-base font-bold text-[#25352B]">
-                {authUser.name} · {authUser.roleLabel}
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-[#245B3D]">
+                {isEn ? "Active session · Experience workspace" : "Đang hoạt động · Không gian trải nghiệm"}
               </p>
-              <p className="text-xs text-[#52645A]">{authUser.unitName}, Thành phố Đồng Nai</p>
+              <p className="truncate text-base font-bold text-[#25352B]">
+                {authUser.name} ·{" "}
+                {stripWorkspaceCodePrefix(
+                  isEn && authUser.roleLabelEn ? authUser.roleLabelEn : authUser.roleLabel,
+                )}
+              </p>
+              <p className="text-xs text-[#52645A]">
+                {localizeAdminUnitName(authUser.unitName, undefined, locale)}, {t.brand.cityLabel}
+              </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
-              href={WORKSPACE_HOME[authUser.workspaceId]}
+              href={buildLocalizedHref(WORKSPACE_HOME[authUser.workspaceId], locale)}
               className="inline-flex min-h-[42px] items-center gap-1.5 rounded-[10px] bg-[#245B3D] px-4 text-xs font-semibold text-white hover:bg-[#19472E]"
             >
-              <span>Vào không gian hiện tại</span>
+              <span>{isEn ? "Open active workspace" : "Vào không gian hiện tại"}</span>
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
             <button
@@ -133,32 +151,35 @@ export default function SignInPage() {
               }}
               className="min-h-[42px] rounded-[10px] border border-[#D6DED2] bg-white px-4 text-xs font-semibold text-[#25352B] hover:bg-[#F5F3E9] cursor-pointer"
             >
-              Đăng xuất
+              {t.nav.signOut}
             </button>
           </div>
         </Card>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <div className="space-y-4 lg:col-span-7">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+        <div className="min-w-0 space-y-4 lg:col-span-7 xl:col-span-8">
           <h2 className="text-base font-bold text-[#25352B]">
-            Chọn tài khoản 1 chạm (6 hồ sơ theo vai trò)
+            {isEn ? "1-Tap Profiles (6 Role Views)" : "Chọn tài khoản 1 chạm (6 hồ sơ theo vai trò)"}
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {demoAccounts.slice(0, 6).map((acc) => {
               const isSelected = acc.id === authUser?.id;
+              const cleanRoleLabel = stripWorkspaceCodePrefix(
+                isEn && acc.roleLabelEn ? acc.roleLabelEn : acc.roleLabel,
+              );
               return (
                 <Card
                   key={acc.id}
                   className={
                     isSelected
-                      ? "flex flex-col justify-between border-[#245B3D] bg-[#FAF8F1] p-4"
-                      : "flex flex-col justify-between p-4"
+                      ? "flex min-w-0 flex-col justify-between border-[#245B3D] bg-[#FAF8F1] p-4"
+                      : "flex min-w-0 flex-col justify-between p-4"
                   }
                 >
-                  <div>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2.5">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2.5">
                         <span
                           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                           style={{ backgroundColor: acc.avatarBg }}
@@ -167,8 +188,8 @@ export default function SignInPage() {
                         </span>
                         <div className="min-w-0">
                           <p className="truncate text-sm font-bold text-[#25352B]">{acc.name}</p>
-                          <p className="text-[11px] font-semibold text-[#245B3D]">
-                            {isEn && acc.roleLabelEn ? acc.roleLabelEn : acc.roleLabel}
+                          <p className="truncate text-[11px] font-semibold text-[#245B3D]">
+                            {cleanRoleLabel}
                           </p>
                         </div>
                       </div>
@@ -182,7 +203,7 @@ export default function SignInPage() {
                       {isEn && acc.bioEn ? acc.bioEn : acc.bio}
                     </p>
                     <p className="mt-2 text-[11px] font-medium text-[#52645A]">
-                      {isEn ? "Area" : "Địa bàn"}: {acc.unitName} ({acc.unitCode})
+                      {isEn ? "Area" : "Địa bàn"}: {localizeAdminUnitName(acc.unitName, undefined, locale)}
                     </p>
                   </div>
                   <button
@@ -196,7 +217,15 @@ export default function SignInPage() {
                     ) : (
                       <UserCheck className="h-3.5 w-3.5" aria-hidden="true" />
                     )}
-                    <span>{quickPendingId === acc.id ? (isEn ? "Signing in..." : "Đang đăng nhập...") : "Chọn tài khoản này"}</span>
+                    <span>
+                      {quickPendingId === acc.id
+                        ? isEn
+                          ? "Signing in..."
+                          : "Đang đăng nhập..."
+                        : isEn
+                        ? "Use this profile"
+                        : "Chọn tài khoản này"}
+                    </span>
                   </button>
                 </Card>
               );
@@ -204,7 +233,7 @@ export default function SignInPage() {
           </div>
         </div>
 
-        <Card className="h-fit space-y-4 p-5 lg:col-span-5">
+        <Card className="h-fit min-w-0 space-y-4 p-5 lg:sticky lg:top-24 lg:col-span-5 xl:col-span-4">
           <div className="flex items-center gap-2 text-sm font-bold text-[#25352B]">
             <LogIn className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
             <span>{isEn ? "Sign in with Email & Password" : "Đăng nhập bằng Email & Mật khẩu"}</span>
@@ -278,21 +307,21 @@ export default function SignInPage() {
             <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#80520C]" aria-hidden="true" />
             <span>
               {isEn
-                ? "Coordinator (W04), Organization (W05), and Admin (W06) scopes are never granted via public self-signup."
-                : "Các vai trò Điều phối (W04), Tổ chức (W05) và Quản trị (W06) không cấp từ form đăng ký công khai."}
+                ? "Coordinator, Organization, and Platform Governance scopes are granted through internal review, not public signup."
+                : "Các vai trò Điều phối, Tổ chức và Quản trị không cấp từ form đăng ký công khai."}
             </span>
           </p>
         </Card>
       </div>
 
-      {/* Expandable 15 Permission Role Bundles (inside W01-W06, incl. Minor Safeguarding account) */}
+      {/* Expandable 15 Permission Role Bundles (incl. Minor Safeguarding account) */}
       <Card className="space-y-4 p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="text-base font-bold text-[#25352B]">
               {isEn
-                ? `15 Granular Permission Role Bundles (inside W01–W06)`
-                : `15 Hồ sơ Phân quyền chi tiết theo 6 Không gian (W01–W06)`}
+                ? `15 Granular Permission Role Bundles`
+                : `15 Hồ sơ Phân quyền chi tiết theo vai trò`}
             </h2>
             <p className="text-xs text-[#52645A]">
               {isEn

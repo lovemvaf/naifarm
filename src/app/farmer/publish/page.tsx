@@ -183,6 +183,7 @@ export default function FarmerPublishWizardPage() {
   // Audio Recording & Voice Recognition States (Step 2)
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isBrowserListening, setIsBrowserListening] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [micErrorMessage, setMicErrorMessage] = useState<string | null>(null);
   const [transcript, setTranscript] = useState("");
@@ -205,18 +206,22 @@ export default function FarmerPublishWizardPage() {
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const pcmChunksRef = useRef<Float32Array[]>([]);
   const isRecordingRef = useRef<boolean>(false);
+  const browserRecognitionRef = useRef<BrowserSpeechRecognitionInstance | null>(null);
 
   useEffect(() => {
     setActiveWorkspace("W02");
     return () => {
       setHideAiChatOnSubflow(false);
+      if (browserRecognitionRef.current) {
+        try { browserRecognitionRef.current.abort(); } catch {}
+      }
     };
   }, [setActiveWorkspace, setHideAiChatOnSubflow]);
 
   // Hide floating NaiAI widget when actively recording or transcribing
   useEffect(() => {
-    setHideAiChatOnSubflow(isRecording || isTranscribing);
-  }, [isRecording, isTranscribing, setHideAiChatOnSubflow]);
+    setHideAiChatOnSubflow(isRecording || isTranscribing || isBrowserListening);
+  }, [isRecording, isTranscribing, isBrowserListening, setHideAiChatOnSubflow]);
 
   // Timer counter for recording duration
   useEffect(() => {
@@ -295,6 +300,11 @@ export default function FarmerPublishWizardPage() {
   // Start recording audio from browser microphone using Direct PCM Recorder (16-bit PCM WAV 16kHz)
   const handleStartRecording = async () => {
     setMicErrorMessage(null);
+
+    if (browserRecognitionRef.current && isBrowserListening) {
+      try { browserRecognitionRef.current.abort(); } catch {}
+      setIsBrowserListening(false);
+    }
 
     if (typeof window === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setMicErrorMessage(
@@ -504,13 +514,19 @@ export default function FarmerPublishWizardPage() {
 
   interface BrowserSpeechResultItem {
     transcript: string;
+    confidence?: number;
+  }
+  interface BrowserSpeechResult {
+    isFinal?: boolean;
+    length: number;
+    [index: number]: BrowserSpeechResultItem;
   }
   interface BrowserSpeechResultList {
-    [index: number]: {
-      [index: number]: BrowserSpeechResultItem;
-    };
+    length: number;
+    [index: number]: BrowserSpeechResult;
   }
   interface BrowserSpeechEvent {
+    resultIndex?: number;
     results?: BrowserSpeechResultList;
     error?: string;
   }
@@ -521,14 +537,27 @@ export default function FarmerPublishWizardPage() {
     maxAlternatives: number;
     onresult: ((event: BrowserSpeechEvent) => void) | null;
     onerror: ((event: BrowserSpeechEvent) => void) | null;
+    onend: (() => void) | null;
     start: () => void;
     stop: () => void;
+    abort: () => void;
   }
   type BrowserSpeechConstructor = new () => BrowserSpeechRecognitionInstance;
 
-  // Fallback: Web Speech API độc lập cho trình duyệt hỗ trợ khi không dùng microphone AudioContext
-  const handleStartBrowserSpeechRecognition = () => {
+  // Web Speech API: STT từ trình duyệt nhập trực tiếp theo thời gian thực khi bấm nút "Bắt đầu nói"
+  const handleToggleBrowserSpeechRecognition = () => {
     if (isRecording || isTranscribing) return;
+
+    if (isBrowserListening) {
+      if (browserRecognitionRef.current) {
+        try {
+          browserRecognitionRef.current.stop();
+        } catch {}
+      }
+      setIsBrowserListening(false);
+      return;
+    }
+
     const SpeechRecognitionClass =
       (window as unknown as { SpeechRecognition?: BrowserSpeechConstructor }).SpeechRecognition ||
       (window as unknown as { webkitSpeechRecognition?: BrowserSpeechConstructor }).webkitSpeechRecognition;
@@ -540,33 +569,54 @@ export default function FarmerPublishWizardPage() {
 
     try {
       const recognition = new SpeechRecognitionClass();
+      browserRecognitionRef.current = recognition;
       recognition.lang = "vi-VN";
-      recognition.continuous = false;
-      recognition.interimResults = false;
+      recognition.continuous = true;
+      recognition.interimResults = true;
       recognition.maxAlternatives = 1;
 
-      notifyInfo("Trình duyệt đang lắng nghe... Bác nói đi nhé!");
+      notifyInfo("Trình duyệt đang lắng nghe trực tiếp... Bác nói đi nhé!");
+      setIsBrowserListening(true);
+      setMicErrorMessage(null);
 
       recognition.onresult = (event: BrowserSpeechEvent) => {
-        const text = event.results?.[0]?.[0]?.transcript || "";
+        if (!event.results) return;
+        let finalStr = "";
+        let interimStr = "";
+        for (let i = 0; i < event.results.length; ++i) {
+          const res = event.results[i];
+          if (res && res[0]) {
+            if (res.isFinal) {
+              finalStr += res[0].transcript + " ";
+            } else {
+              interimStr += res[0].transcript;
+            }
+          }
+        }
+        const text = (finalStr + interimStr).trim();
         if (text) {
           setTranscript(text);
-          notifySuccess("Đã ghi nhận xong lời nói của bác!");
         }
       };
 
       recognition.onerror = (event: BrowserSpeechEvent) => {
-        console.warn("[Web Speech Fallback] Error:", event?.error);
+        console.warn("[Web Speech API] Error:", event?.error);
         if (event?.error === "not-allowed") {
           notifyError("Trình duyệt chưa được cấp quyền micro.");
-        } else {
+        } else if (event?.error !== "no-speech") {
           notifyInfo("Chưa nhận dạng được giọng nói từ trình duyệt. Bác nói lại nhé!");
         }
+        setIsBrowserListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsBrowserListening(false);
       };
 
       recognition.start();
     } catch (e: unknown) {
       console.error(e);
+      setIsBrowserListening(false);
       notifyError("Không thể kích hoạt nhận diện giọng nói trình duyệt.");
     }
   };
@@ -1112,24 +1162,23 @@ export default function FarmerPublishWizardPage() {
                     <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
                       <Button
                         type="button"
-                        variant="farmer"
+                        variant={isBrowserListening ? "destructive" : "farmer"}
                         size="lg"
-                        onClick={handleStartRecording}
+                        onClick={handleToggleBrowserSpeechRecognition}
                         className="min-h-[54px] px-8 text-[18px] font-bold shadow-md hover:scale-102 transition cursor-pointer"
+                        title="Bấm để nhận dạng giọng nói tiếng Việt trực tiếp theo thời gian thực bằng trình duyệt"
                       >
-                        <Mic className="h-6 w-6 mr-2" aria-hidden="true" />
-                        <span>Bắt đầu nói (AI ASR chuẩn 16kHz)</span>
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="lg"
-                        onClick={handleStartBrowserSpeechRecognition}
-                        className="min-h-[54px] px-5 text-[16px] font-semibold text-[#245B3D] border-[#245B3D]/30 hover:bg-white bg-white/80 transition cursor-pointer"
-                        title="Nhận dạng giọng nói tiếng Việt trực tiếp bằng trình duyệt Web Speech API"
-                      >
-                        <Volume2 className="h-5 w-5 mr-2 text-[#245B3D]" aria-hidden="true" />
-                        <span>Nói qua trình duyệt (Web Speech)</span>
+                        {isBrowserListening ? (
+                          <>
+                            <Square className="h-5 w-5 fill-current mr-2" aria-hidden="true" />
+                            <span>Dừng nói (Đang nhập trực tiếp...)</span>
+                          </>
+                        ) : (
+                          <>
+                            <Mic className="h-6 w-6 mr-2" aria-hidden="true" />
+                            <span>Bắt đầu nói</span>
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>

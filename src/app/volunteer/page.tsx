@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ClipboardList,
   Download,
+  ExternalLink,
   Filter,
   Globe2,
   MapPin,
@@ -21,30 +22,27 @@ import { useLocale } from "@/context/LocaleContext";
 import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
 import { NaiCalendarBoard } from "@/components/calendar/NaiCalendarBoard";
 import { ScopeSelector } from "@/components/permissions/ScopeSelector";
+import { CertificatePreviewModal } from "@/components/credentials/CertificatePreviewModal";
+import {
+  resolveAchievementCredential,
+  type AchievementCredential,
+} from "@/lib/credentials/achievement-registry";
 import { buildScopedCsvContent, triggerCsvDownload } from "@/lib/export/csv-export";
+import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
+import { localizeAdminUnitName } from "@/lib/i18n/domain-en";
 import { evaluateMinorSafeguarding, hasMinorConsent } from "@/lib/permissions/access-control";
+import { cn } from "@/lib/format";
 import { notifyError, notifySuccess } from "@/lib/toast";
 import { Badge, Button, Card, DemoBanner, EmptyState } from "@/components/ui/Primitives";
 import type { VolunteerMission } from "@/types/naifarm";
 
 type VolunteerTab = "missions" | "ambassador" | "pass" | "calendar" | "fieldlab";
-
-const MISSION_STATUS_LABEL: Record<
-  VolunteerMission["status"],
-  { text: string; tone: "neutral" | "info" | "warning" | "success" | "danger" }
-> = {
-  open: { text: "Đang mở", tone: "neutral" },
-  assigned: { text: "Đang thực hiện", tone: "info" },
-  submitted: { text: "Chờ W02 xác nhận", tone: "warning" },
-  farm_accepted: { text: "W02 đã xác nhận · Chờ W04 duyệt giờ", tone: "info" },
-  coordinator_approved: { text: "Đã duyệt vào NaiPass", tone: "success" },
-  revision_requested: { text: "Cần bổ sung minh chứng", tone: "danger" },
-};
+type MissionBucketTab = "explore" | "mine" | "completed" | "all";
 
 const EVIDENCE_SAMPLES = [
-  { id: "sample1", label: "Ảnh chụp vườn & tem QR", src: "/images/stitch/stitch-32.jpg" },
-  { id: "sample2", label: "Ảnh đóng gói nông sản tại vườn", src: "/images/stitch/stitch-40.jpg" },
-  { id: "sample3", label: "Ảnh bảng tin mùa vụ", src: "/images/stitch/stitch-53.jpg" },
+  { id: "sample1", labelVi: "Ảnh chụp vườn & tem QR", labelEn: "Orchard & QR Tag Photo", src: "/images/stitch/stitch-32.jpg" },
+  { id: "sample2", labelVi: "Ảnh đóng gói nông sản tại vườn", labelEn: "Harvest Packing Photo", src: "/images/stitch/stitch-40.jpg" },
+  { id: "sample3", labelVi: "Ảnh bảng tin mùa vụ", labelEn: "Harvest Logboard Photo", src: "/images/stitch/stitch-53.jpg" },
 ];
 
 export default function VolunteerWorkspacePage() {
@@ -66,10 +64,10 @@ export default function VolunteerWorkspacePage() {
   const minorCheck = evaluateMinorSafeguarding(authUser?.isMinor, authUser?.hasGuardianConsent);
 
   const [tab, setTab] = useState<VolunteerTab>("missions");
+  const [bucketTab, setBucketTab] = useState<MissionBucketTab>("explore");
   const [skillFilter, setSkillFilter] = useState<string>("all");
   const [modeFilter, setModeFilter] = useState<string>("all");
   const [durationFilter, setDurationFilter] = useState<"all" | "short" | "long">("all");
-  const [statusViewFilter, setStatusViewFilter] = useState<"split" | "open_only" | "joined_only">("split");
 
   const [evidenceOpenId, setEvidenceOpenId] = useState<string | null>(null);
   const [evidenceNote, setEvidenceNote] = useState("");
@@ -77,12 +75,46 @@ export default function VolunteerWorkspacePage() {
   const [evidencePhoto, setEvidencePhoto] = useState(EVIDENCE_SAMPLES[0].src);
   const [isMinorParticipant, setIsMinorParticipant] = useState(false);
   const [guardianConsentChecked, setGuardianConsentChecked] = useState(true);
+  const [previewCert, setPreviewCert] = useState<AchievementCredential | null>(null);
 
   useEffect(() => {
     setActiveWorkspace("W03");
   }, [setActiveWorkspace]);
 
-  const volunteerName = authUser?.workspaceId === "W03" ? authUser.name : "Minh Anh (TNV)";
+  const volunteerName = authUser?.workspaceId === "W03" ? authUser.name : isEn ? "Minh Anh (Volunteer)" : "Minh Anh (TNV)";
+
+  const getStatusMeta = (status: VolunteerMission["status"]): { text: string; tone: "neutral" | "info" | "warning" | "success" | "danger" } => {
+    if (isEn) {
+      switch (status) {
+        case "open":
+          return { text: "Open", tone: "neutral" };
+        case "assigned":
+          return { text: "In Progress", tone: "info" };
+        case "submitted":
+          return { text: "Awaiting Farmer Confirmation", tone: "warning" };
+        case "farm_accepted":
+          return { text: "Farmer Confirmed · Coordinator Review", tone: "info" };
+        case "coordinator_approved":
+          return { text: "Verified in NaiPass", tone: "success" };
+        case "revision_requested":
+          return { text: "Revision Requested", tone: "danger" };
+      }
+    }
+    switch (status) {
+      case "open":
+        return { text: "Đang mở", tone: "neutral" };
+      case "assigned":
+        return { text: "Đang thực hiện", tone: "info" };
+      case "submitted":
+        return { text: "Chờ Nhà vườn xác nhận", tone: "warning" };
+      case "farm_accepted":
+        return { text: "Nhà vườn đã xác nhận · Chờ Điều phối duyệt giờ", tone: "info" };
+      case "coordinator_approved":
+        return { text: "Đã duyệt vào NaiPass", tone: "success" };
+      case "revision_requested":
+        return { text: "Cần bổ sung minh chứng", tone: "danger" };
+    }
+  };
 
   const filteredMissions = useMemo(() => {
     return missions.filter((m) => {
@@ -102,7 +134,21 @@ export default function VolunteerWorkspacePage() {
   }, [missions, activeScopeUnitCode, skillFilter, modeFilter, durationFilter]);
 
   const openMissions = filteredMissions.filter((m) => m.status === "open");
-  const joinedMissions = filteredMissions.filter((m) => m.status !== "open");
+  const inProgressMissions = filteredMissions.filter(
+    (m) => m.status !== "open" && m.status !== "coordinator_approved",
+  );
+  const completedMissions = filteredMissions.filter(
+    (m) => m.status === "coordinator_approved",
+  );
+
+  const visibleMissions =
+    bucketTab === "explore"
+      ? openMissions
+      : bucketTab === "mine"
+      ? inProgressMissions
+      : bucketTab === "completed"
+      ? completedMissions
+      : filteredMissions;
 
   const approvedMissions = missions.filter((m) => m.status === "coordinator_approved");
   const confirmedHours = approvedMissions.reduce((sum, m) => sum + m.approvedHours, 0);
@@ -110,30 +156,53 @@ export default function VolunteerWorkspacePage() {
     .filter((m) => m.status === "submitted" || m.status === "farm_accepted")
     .reduce((sum, m) => sum + m.submittedHours, 0);
 
+  const openVolunteerCertificate = () => {
+    const cert = resolveAchievementCredential("NF-CERT-2026-001", {
+      recipientName: authUser?.name ?? "Minh Anh",
+      hoursCompleted: confirmedHours || 18,
+      scoreText: isEn
+        ? `${approvedMissions.length} verified missions · ${learningProgress.practicePoints} practice pts`
+        : `${approvedMissions.length} nhiệm vụ đã duyệt · ${learningProgress.practicePoints} điểm thực hành`,
+    });
+    if (cert) setPreviewCert(cert);
+  };
+
   const handleSubmitEvidence = (e: React.FormEvent, m: VolunteerMission) => {
     e.preventDefault();
     const consentCheck = hasMinorConsent(isMinorParticipant, guardianConsentChecked);
     if (!consentCheck.allowed) {
-      notifyError(consentCheck.reason ?? "Thiếu đồng thuận phụ huynh cho thành viên dưới 18 tuổi.");
+      notifyError(
+        consentCheck.reason ??
+          (isEn
+            ? "Guardian consent is required for participants under 18."
+            : "Thiếu đồng thuận phụ huynh cho thành viên dưới 18 tuổi."),
+      );
       return;
     }
     const hrs = Number(evidenceHours);
     if (!evidenceNote.trim() || !hrs || hrs <= 0 || hrs > 24) {
-      notifyError("Vui lòng nhập mô tả sản phẩm bàn giao và số giờ hợp lệ (0.5–24 giờ).");
+      notifyError(
+        isEn
+          ? "Please enter deliverable notes and valid hours (0.5–24h)."
+          : "Vui lòng nhập mô tả sản phẩm bàn giao và số giờ hợp lệ (0.5–24 giờ).",
+      );
       return;
     }
     submitMissionEvidence(m.id, evidenceNote.trim(), hrs, evidencePhoto);
     setEvidenceOpenId(null);
     setEvidenceNote("");
-    notifySuccess(`Đã nộp minh chứng ${m.id}. Tiếp theo Chủ vườn W02 sẽ xác nhận bàn giao.`);
+    notifySuccess(
+      isEn
+        ? `Submitted evidence for ${m.id}. Pending orchard confirmation.`
+        : `Đã nộp minh chứng ${m.id}. Tiếp theo Nhà vườn sẽ xác nhận bàn giao.`,
+    );
   };
 
   const renderMissionCard = (m: VolunteerMission) => {
-    const statusInfo = MISSION_STATUS_LABEL[m.status];
+    const statusInfo = getStatusMeta(m.status);
+    const isOpen = m.status === "open";
     const stepNum =
-      m.status === "open"
-        ? 1
-        : m.status === "assigned" || m.status === "revision_requested"
+      m.status === "assigned" || m.status === "revision_requested"
         ? 2
         : m.status === "submitted"
         ? 3
@@ -142,7 +211,7 @@ export default function VolunteerWorkspacePage() {
         : 5;
 
     return (
-      <Card key={m.id} className="space-y-4 p-5">
+      <Card key={m.id} className="space-y-3.5 p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -155,50 +224,57 @@ export default function VolunteerWorkspacePage() {
             <p className="inline-flex flex-wrap items-center gap-1.5 text-xs text-[#52645A]">
               <MapPin className="h-3.5 w-3.5 text-[#245B3D]" aria-hidden="true" />
               <span>
-                {m.farmName} · {m.location} · Dự kiến <strong className="text-[#25352B]">{m.expectedHours} giờ</strong> ·
-                Hạn {m.dueDate}
+                {m.farmName} · {localizeAdminUnitName(m.location, undefined, locale)} ·{" "}
+                {isEn ? "Est." : "Dự kiến"}{" "}
+                <strong className="text-[#25352B]">
+                  {m.expectedHours} {isEn ? "hrs" : "giờ"}
+                </strong>{" "}
+                · {isEn ? "Due" : "Hạn"} {m.dueDate}
               </span>
             </p>
           </div>
           {m.assigneeName ? (
             <span className="rounded-[10px] bg-[#EAF0E5] px-3 py-1.5 text-xs font-semibold text-[#245B3D]">
-              Phụ trách: {m.assigneeName}
+              {isEn ? "Assigned:" : "Phụ trách:"} {m.assigneeName}
             </span>
           ) : null}
         </div>
 
         <p className="text-sm text-[#25352B]">{m.deliverableSummary}</p>
 
-        {/* 4-step workflow */}
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {[
-            { n: 1, label: "1. Nhận việc" },
-            { n: 2, label: "2. Nộp minh chứng" },
-            { n: 3, label: "3. W02 Xác nhận" },
-            { n: 4, label: "4. W04 Duyệt giờ" },
-          ].map((s) => {
-            const done = stepNum > s.n;
-            const active = stepNum === s.n;
-            return (
-              <div
-                key={s.n}
-                className={`rounded-[10px] border px-3 py-2 text-xs font-semibold ${
-                  done
-                    ? "border-[#6C9C5B] bg-[#E6F3E9] text-[#24603B]"
-                    : active
-                    ? "border-[#245B3D] bg-[#245B3D] text-white"
-                    : "border-[#D6DED2] bg-[#FAF8F1] text-[#52645A]"
-                }`}
-              >
-                {s.label}
-              </div>
-            );
-          })}
-        </div>
+        {/* State-aware 4-step workflow bar: shown ONLY once a volunteer has joined */}
+        {!isOpen ? (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              { n: 1, label: isEn ? "1. Joined" : "1. Nhận việc" },
+              { n: 2, label: isEn ? "2. Submit Proof" : "2. Nộp minh chứng" },
+              { n: 3, label: isEn ? "3. Farmer Confirm" : "3. Nhà vườn xác nhận" },
+              { n: 4, label: isEn ? "4. Hours Approved" : "4. Điều phối duyệt giờ" },
+            ].map((s) => {
+              const done = stepNum > s.n;
+              const active = stepNum === s.n;
+              return (
+                <div
+                  key={s.n}
+                  className={`rounded-[10px] border px-3 py-2 text-xs font-semibold ${
+                    done
+                      ? "border-[#6C9C5B] bg-[#E6F3E9] text-[#24603B]"
+                      : active
+                      ? "border-[#245B3D] bg-[#245B3D] text-white"
+                      : "border-[#D6DED2] bg-[#FAF8F1] text-[#52645A]"
+                  }`}
+                >
+                  {s.label}
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
 
         {m.status === "revision_requested" && m.revisionReason ? (
           <div className="rounded-[12px] border border-[#A32D2D]/35 bg-[#FDECEC] p-3 text-xs text-[#A32D2D]">
-            <strong>Yêu cầu bổ sung từ Điều phối W04:</strong> {m.revisionReason}
+            <strong>{isEn ? "Coordinator feedback:" : "Yêu cầu bổ sung từ Điều phối:"}</strong>{" "}
+            {m.revisionReason}
           </div>
         ) : null}
 
@@ -206,46 +282,77 @@ export default function VolunteerWorkspacePage() {
           <div className="flex flex-col gap-3 rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] p-3 sm:flex-row sm:items-center">
             <img
               src={m.evidenceImage}
-              alt={`Minh chứng ${m.id}`}
+              alt={`${isEn ? "Evidence" : "Minh chứng"} ${m.id}`}
               className="h-16 w-24 shrink-0 rounded-[8px] object-cover"
             />
             <div className="text-xs text-[#52645A]">
-              <p className="font-bold text-[#25352B]">Minh chứng đã nộp ({m.submittedHours} giờ):</p>
+              <p className="font-bold text-[#25352B]">
+                {isEn
+                  ? `Submitted deliverables (${m.submittedHours}h):`
+                  : `Minh chứng đã nộp (${m.submittedHours} giờ):`}
+              </p>
               <p>{m.evidenceNote}</p>
             </div>
           </div>
         ) : null}
 
         {/* Actions */}
-        <div className="flex flex-wrap gap-2">
-          {m.status === "open" ? (
+        <div className="flex flex-wrap items-center gap-2">
+          {isOpen ? (
             <Button
               size="sm"
               variant="primary"
               onClick={() => {
                 acceptMission(m.id, volunteerName);
-                notifySuccess(`Bạn đã nhận nhiệm vụ ${m.id}.`);
+                setBucketTab("mine");
+                notifySuccess(
+                  isEn
+                    ? `Joined mission ${m.id}. Moved to "My missions".`
+                    : `Bạn đã nhận nhiệm vụ ${m.id} — đã chuyển sang mục Của tôi.`,
+                );
               }}
             >
-              Nhận nhiệm vụ này
+              {isEn ? "Join this mission" : "Nhận nhiệm vụ này"}
             </Button>
           ) : null}
 
-          {(m.status === "assigned" || m.status === "revision_requested") ? (
+          {m.status === "assigned" || m.status === "revision_requested" ? (
             <Button
               size="sm"
               variant="secondary"
               onClick={() => setEvidenceOpenId(evidenceOpenId === m.id ? null : m.id)}
             >
-              {evidenceOpenId === m.id ? "Đóng biểu mẫu" : "Nộp minh chứng & giờ công"}
+              {evidenceOpenId === m.id
+                ? isEn
+                  ? "Close form"
+                  : "Đóng biểu mẫu"
+                : isEn
+                ? "Submit proof & hours"
+                : "Nộp minh chứng & giờ công"}
             </Button>
           ) : null}
 
           {m.status === "submitted" ? (
-            <Badge tone="warning">Đang chờ chủ vườn {m.farmName} xác nhận (không thể tự duyệt)</Badge>
+            <Badge tone="warning">
+              {isEn
+                ? `Awaiting confirmation from ${m.farmName} (maker cannot self-approve)`
+                : `Đang chờ chủ vườn ${m.farmName} xác nhận (không thể tự duyệt)`}
+            </Badge>
           ) : null}
+
           {m.status === "farm_accepted" ? (
-            <Badge tone="info">Đã gửi Điều phối viên W04 duyệt giờ công</Badge>
+            <Badge tone="info">
+              {isEn
+                ? "Sent to Community Coordinator for hour approval"
+                : "Đã gửi Điều phối viên duyệt giờ công"}
+            </Badge>
+          ) : null}
+
+          {m.status === "coordinator_approved" ? (
+            <Button size="sm" variant="secondary" onClick={openVolunteerCertificate}>
+              <Award className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{isEn ? "Certificate & PDF" : "Chứng nhận & Tải PDF"}</span>
+            </Button>
           ) : null}
         </div>
 
@@ -257,7 +364,7 @@ export default function VolunteerWorkspacePage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label htmlFor={`hrs-${m.id}`} className="block text-xs font-semibold text-[#25352B]">
-                  Số giờ thực tế đóng góp
+                  {isEn ? "Actual contributed hours" : "Số giờ thực tế đóng góp"}
                 </label>
                 <input
                   id={`hrs-${m.id}`}
@@ -272,7 +379,7 @@ export default function VolunteerWorkspacePage() {
               </div>
               <div>
                 <label htmlFor={`photo-${m.id}`} className="block text-xs font-semibold text-[#25352B]">
-                  Ảnh minh chứng bàn giao
+                  {isEn ? "Sample deliverable photo" : "Ảnh minh chứng bàn giao"}
                 </label>
                 <select
                   id={`photo-${m.id}`}
@@ -282,7 +389,7 @@ export default function VolunteerWorkspacePage() {
                 >
                   {EVIDENCE_SAMPLES.map((s) => (
                     <option key={s.id} value={s.src}>
-                      {s.label}
+                      {isEn ? s.labelEn : s.labelVi}
                     </option>
                   ))}
                 </select>
@@ -291,14 +398,18 @@ export default function VolunteerWorkspacePage() {
 
             <div>
               <label htmlFor={`note-${m.id}`} className="block text-xs font-semibold text-[#25352B]">
-                Mô tả kết quả đã hỗ trợ cho vườn
+                {isEn ? "Summary of deliverables" : "Mô tả kết quả đã hỗ trợ cho vườn"}
               </label>
               <textarea
                 id={`note-${m.id}`}
                 rows={2}
                 value={evidenceNote}
                 onChange={(e) => setEvidenceNote(e.target.value)}
-                placeholder="VD: Đã chụp 6 ảnh bưởi Tân Triều, tạo mã QR lô NF-TT-2026-01 và hướng dẫn chủ vườn..."
+                placeholder={
+                  isEn
+                    ? "e.g. Photographed Tan Trieu pomelo lots, generated QR NF-TT-2026-01, and guided farmer..."
+                    : "VD: Đã chụp 6 ảnh bưởi Tân Triều, tạo mã QR lô NF-TT-2026-01 và hướng dẫn chủ vườn..."
+                }
                 className="mt-1 w-full rounded-[10px] border border-[#788A7B] bg-white p-2.5 text-xs"
               />
             </div>
@@ -310,22 +421,22 @@ export default function VolunteerWorkspacePage() {
                   checked={isMinorParticipant}
                   onChange={(e) => setIsMinorParticipant(e.target.checked)}
                 />
-                <span>Thành viên dưới 18 tuổi tham gia thực tế</span>
+                <span>{isEn ? "Participant under 18 (minor)" : "Thành viên dưới 18 tuổi tham gia thực tế"}</span>
               </label>
               {isMinorParticipant ? (
-                <label className="inline-flex items-center gap-2 text-[#245B3D] font-semibold">
+                <label className="inline-flex items-center gap-2 font-semibold text-[#245B3D]">
                   <input
                     type="checkbox"
                     checked={guardianConsentChecked}
                     onChange={(e) => setGuardianConsentChecked(e.target.checked)}
                   />
-                  <span>Có giấy đồng thuận phụ huynh / nhà trường</span>
+                  <span>{isEn ? "Guardian / school consent attached" : "Có giấy đồng thuận phụ huynh / nhà trường"}</span>
                 </label>
               ) : null}
             </div>
 
             <Button type="submit" size="sm" variant="primary">
-              Gửi minh chứng tới Nhà vườn W02
+              {isEn ? "Send proof to Orchard Host" : "Gửi minh chứng tới Nhà vườn"}
             </Button>
           </form>
         ) : null}
@@ -333,13 +444,21 @@ export default function VolunteerWorkspacePage() {
     );
   };
 
+  if (!hydrated) {
+    return (
+      <div className="mx-auto max-w-[1280px] px-4 py-12 text-sm text-[#52645A]">
+        {isEn ? "Loading Youth Volunteer space..." : "Đang mở không gian Thanh niên Tình nguyện..."}
+      </div>
+    );
+  }
+
   return (
     <WorkspaceShell
       workspaceId="W03"
-      title="Thanh niên Tình nguyện"
+      title={t.workspaces.w03Title}
       navItems={[
         {
-          label: `Nhiệm vụ hỗ trợ (${filteredMissions.length})`,
+          label: isEn ? `Support Missions (${filteredMissions.length})` : `Nhiệm vụ hỗ trợ (${filteredMissions.length})`,
           href: "#missions",
           active: tab === "missions",
           onClick: () => setTab("missions"),
@@ -353,7 +472,7 @@ export default function VolunteerWorkspacePage() {
           icon: <Globe2 className="h-4 w-4" aria-hidden="true" />,
         },
         {
-          label: `Hộ chiếu NaiPass (${confirmedHours} giờ)`,
+          label: isEn ? `NaiPass (${confirmedHours}h)` : `Hộ chiếu NaiPass (${confirmedHours} giờ)`,
           href: "#pass",
           active: tab === "pass",
           onClick: () => setTab("pass"),
@@ -367,7 +486,7 @@ export default function VolunteerWorkspacePage() {
           icon: <CalendarDays className="h-4 w-4" aria-hidden="true" />,
         },
         {
-          label: "Field Lab & Đồng hành vườn",
+          label: isEn ? "Field Lab & Mentoring" : "Field Lab & Đồng hành vườn",
           href: "#fieldlab",
           active: tab === "fieldlab",
           onClick: () => setTab("fieldlab"),
@@ -378,105 +497,101 @@ export default function VolunteerWorkspacePage() {
       <div className="space-y-6">
         {tab === "missions" ? (
           <>
-            {/* Filter Toolbar */}
+            {/* Clean Filter Toolbar + Segmented Tabs (No truncated select!) */}
             <Card className="space-y-4 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm font-bold text-[#25352B]">
                   <Filter className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
-                  <span>Lọc nhiệm vụ Thanh niên Tình nguyện</span>
+                  <span>{isEn ? "Youth Support Missions" : "Nhiệm vụ Thanh niên Tình nguyện"}</span>
                 </div>
-                <ScopeSelector compact label="Xã / Phường Đồng Nai" />
+                <ScopeSelector
+                  compact
+                  label={isEn ? "Ward / Commune (Dong Nai City)" : "Xã / Phường Thành phố Đồng Nai"}
+                />
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
-                <select
-                  aria-label="Hiển thị bảng nhiệm vụ"
-                  value={statusViewFilter}
-                  onChange={(e) => setStatusViewFilter(e.target.value as "split" | "open_only" | "joined_only")}
-                  className="min-h-[40px] rounded-[10px] border border-[#788A7B] bg-white px-3 text-xs font-semibold"
-                >
-                  <option value="split">Tách rõ: Chưa tham gia &amp; Đã tham gia</option>
-                  <option value="open_only">Chỉ nhiệm vụ chưa tham gia ({openMissions.length})</option>
-                  <option value="joined_only">Chỉ nhiệm vụ đã tham gia ({joinedMissions.length})</option>
-                </select>
+              {/* Crisp Pill Tabs for Mission Lifecycle */}
+              <div
+                role="tablist"
+                aria-label={isEn ? "Mission buckets" : "Phân nhóm trạng thái nhiệm vụ"}
+                className="flex flex-wrap gap-2"
+              >
+                {(
+                  [
+                    { id: "explore", label: isEn ? `Explore (${openMissions.length})` : `Khám phá (${openMissions.length})` },
+                    { id: "mine", label: isEn ? `My missions (${inProgressMissions.length})` : `Của tôi (${inProgressMissions.length})` },
+                    { id: "completed", label: isEn ? `Completed (${completedMissions.length})` : `Đã hoàn thành (${completedMissions.length})` },
+                    { id: "all", label: isEn ? `All (${filteredMissions.length})` : `Tất cả (${filteredMissions.length})` },
+                  ] as const
+                ).map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={bucketTab === b.id}
+                    onClick={() => setBucketTab(b.id)}
+                    className={cn(
+                      "min-h-[38px] rounded-full px-4 text-xs font-semibold transition cursor-pointer",
+                      bucketTab === b.id
+                        ? "bg-[#245B3D] text-white"
+                        : "border border-[#D6DED2] bg-[#FAF8F1] text-[#25352B] hover:bg-[#EAF0E5]",
+                    )}
+                  >
+                    {b.label}
+                  </button>
+                ))}
+              </div>
 
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <select
-                  aria-label="Lọc theo kỹ năng"
+                  aria-label={isEn ? "Filter by skill" : "Lọc theo kỹ năng"}
                   value={skillFilter}
                   onChange={(e) => setSkillFilter(e.target.value)}
                   className="min-h-[40px] rounded-[10px] border border-[#788A7B] bg-white px-3 text-xs"
                 >
-                  <option value="all">Tất cả kỹ năng</option>
-                  <option value="Chụp ảnh & AI đăng bán">Chụp ảnh &amp; AI đăng bán</option>
-                  <option value="Thiết lập QR & Nhật ký">Thiết lập QR &amp; Nhật ký</option>
-                  <option value="Livestream bán hàng">Livestream bán hàng</option>
+                  <option value="all">{isEn ? "All skills" : "Tất cả kỹ năng"}</option>
+                  <option value="Chụp ảnh & AI đăng bán">{isEn ? "Photo & Digital Listing" : "Chụp ảnh & AI đăng bán"}</option>
+                  <option value="Thiết lập QR & Nhật ký">{isEn ? "QR Setup & Field Diary" : "Thiết lập QR & Nhật ký"}</option>
+                  <option value="Livestream bán hàng">{isEn ? "OCOP Live Hosting" : "Livestream bán hàng"}</option>
                 </select>
 
                 <select
-                  aria-label="Lọc theo hình thức"
+                  aria-label={isEn ? "Filter by mode" : "Lọc theo hình thức"}
                   value={modeFilter}
                   onChange={(e) => setModeFilter(e.target.value)}
                   className="min-h-[40px] rounded-[10px] border border-[#788A7B] bg-white px-3 text-xs"
                 >
-                  <option value="all">Tại vườn &amp; Online</option>
-                  <option value="Trực tiếp tại vườn">Trực tiếp tại vườn</option>
-                  <option value="Hỗ trợ từ xa (Online)">Hỗ trợ từ xa (Online)</option>
+                  <option value="all">{isEn ? "On-site & Remote" : "Tại vườn & Online"}</option>
+                  <option value="Trực tiếp tại vườn">{isEn ? "On-site at orchard" : "Trực tiếp tại vườn"}</option>
+                  <option value="Hỗ trợ từ xa (Online)">{isEn ? "Remote (Online)" : "Hỗ trợ từ xa (Online)"}</option>
                 </select>
 
                 <select
-                  aria-label="Lọc theo thời lượng"
+                  aria-label={isEn ? "Filter by duration" : "Lọc theo thời lượng"}
                   value={durationFilter}
                   onChange={(e) => setDurationFilter(e.target.value as "all" | "short" | "long")}
                   className="min-h-[40px] rounded-[10px] border border-[#788A7B] bg-white px-3 text-xs"
                 >
-                  <option value="all">Mọi thời lượng</option>
-                  <option value="short">Nhanh (≤ 4 giờ)</option>
-                  <option value="long">Chuyên sâu (&gt; 4 giờ)</option>
+                  <option value="all">{isEn ? "Any duration" : "Mọi thời lượng"}</option>
+                  <option value="short">{isEn ? "Quick (≤ 4h)" : "Nhanh (≤ 4 giờ)"}</option>
+                  <option value="long">{isEn ? "Extended (> 4h)" : "Chuyên sâu (> 4 giờ)"}</option>
                 </select>
               </div>
             </Card>
 
-            {/* Open Missions (Chưa tham gia) */}
-            {(statusViewFilter === "split" || statusViewFilter === "open_only") ? (
-              <section aria-label="Nhiệm vụ đang mở chưa tham gia" className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-[#25352B]">
-                    Nhiệm vụ đang mở · Chưa tham gia ({openMissions.length})
-                  </h2>
-                  <Badge tone="neutral">Có thể nhận việc ngay</Badge>
-                </div>
-                {openMissions.length === 0 ? (
-                  <EmptyState
-                    icon={<ClipboardList className="h-6 w-6" aria-hidden="true" />}
-                    title="Không còn nhiệm vụ trống khớp bộ lọc"
-                    description="Thử chọn Tất cả xã/phường hoặc chuyển sang nhiệm vụ đã tham gia."
-                  />
-                ) : (
-                  <div className="space-y-4">{openMissions.map(renderMissionCard)}</div>
-                )}
-              </section>
-            ) : null}
-
-            {/* Joined Missions (Đã tham gia) */}
-            {(statusViewFilter === "split" || statusViewFilter === "joined_only") ? (
-              <section aria-label="Nhiệm vụ đã tham gia và đang xử lý" className="space-y-3 pt-2">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-[#25352B]">
-                    Nhiệm vụ đã tham gia &amp; theo dõi duyệt giờ ({joinedMissions.length})
-                  </h2>
-                  <Badge tone="info">Đang theo dõi 4 bước</Badge>
-                </div>
-                {joinedMissions.length === 0 ? (
-                  <EmptyState
-                    icon={<CheckCircle2 className="h-6 w-6" aria-hidden="true" />}
-                    title="Chưa có nhiệm vụ đã nhận trong bộ lọc này"
-                    description="Hãy nhận một nhiệm vụ từ danh sách đang mở phía trên."
-                  />
-                ) : (
-                  <div className="space-y-4">{joinedMissions.map(renderMissionCard)}</div>
-                )}
-              </section>
-            ) : null}
+            {visibleMissions.length === 0 ? (
+              <EmptyState
+                icon={<ClipboardList className="h-6 w-6" aria-hidden="true" />}
+                title={isEn ? "No missions in this view" : "Không có nhiệm vụ phù hợp ở mục này"}
+                description={
+                  isEn
+                    ? "Try switching tabs above or setting area filter to All of Dong Nai City."
+                    : "Thử chuyển tab Khám phá / Của tôi / Đã hoàn thành hoặc đặt bộ lọc toàn Thành phố Đồng Nai."
+                }
+              />
+            ) : (
+              <div className="space-y-4">{visibleMissions.map(renderMissionCard)}</div>
+            )}
           </>
         ) : null}
 
@@ -488,10 +603,16 @@ export default function VolunteerWorkspacePage() {
                   <Badge tone="success">Youth Impact Pass · NaiPass</Badge>
                   <h2 className="mt-2 font-editorial text-2xl font-bold text-[#25352B]">{volunteerName}</h2>
                   <p className="text-xs text-[#52645A]">
-                    Giờ công chỉ được ghi chính thức sau khi Chủ vườn (W02) và Điều phối (W04) duyệt độc lập.
+                    {isEn
+                      ? "Hours are recorded only after independent Orchard Host confirmation and Coordinator approval."
+                      : "Giờ công chỉ được ghi chính thức sau khi Nhà vườn và Điều phối duyệt độc lập."}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 print:hidden">
+                  <Button size="sm" variant="gold" onClick={openVolunteerCertificate}>
+                    <Award className="h-4 w-4" aria-hidden="true" />
+                    <span>{isEn ? "Certificate & Download PDF" : "Chứng nhận & Tải PDF (QR)"}</span>
+                  </Button>
                   <Button
                     size="sm"
                     variant="secondary"
@@ -506,42 +627,69 @@ export default function VolunteerWorkspacePage() {
                         },
                       );
                       triggerCsvDownload("naipass-hours.csv", csv);
-                      notifySuccess("Đã xuất danh sách giờ công đã duyệt.");
+                      notifySuccess(isEn ? "Exported verified NaiPass hours CSV." : "Đã xuất danh sách giờ công đã duyệt.");
                     }}
                   >
                     <Download className="h-4 w-4" aria-hidden="true" />
-                    <span>Xuất CSV</span>
+                    <span>{t.workspaces.exportCsvBtn}</span>
                   </Button>
                   <Button size="sm" variant="primary" onClick={() => window.print()}>
                     <Printer className="h-4 w-4" aria-hidden="true" />
-                    <span>In NaiPass</span>
+                    <span>{isEn ? "Print Pass" : "In NaiPass"}</span>
                   </Button>
                 </div>
               </div>
 
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="rounded-[12px] bg-[#E6F3E9] p-4">
-                  <p className="text-xs font-semibold text-[#24603B]">Tổng giờ đã duyệt chính thức</p>
-                  <p className="mt-1 tabular-nums text-2xl font-bold text-[#24603B]">{confirmedHours} giờ</p>
+                  <p className="text-xs font-semibold text-[#24603B]">
+                    {isEn ? "Verified hours" : "Tổng giờ đã duyệt chính thức"}
+                  </p>
+                  <p className="mt-1 tabular-nums text-2xl font-bold text-[#24603B]">
+                    {confirmedHours} {isEn ? "h" : "giờ"}
+                  </p>
                 </div>
                 <div className="rounded-[12px] bg-[#FFF8E7] p-4">
-                  <p className="text-xs font-semibold text-[#80520C]">Đang chờ xác nhận (tách riêng)</p>
-                  <p className="mt-1 tabular-nums text-2xl font-bold text-[#80520C]">{pendingHours} giờ</p>
+                  <p className="text-xs font-semibold text-[#80520C]">
+                    {isEn ? "Pending review (separate)" : "Đang chờ xác nhận (tách riêng)"}
+                  </p>
+                  <p className="mt-1 tabular-nums text-2xl font-bold text-[#80520C]">
+                    {pendingHours} {isEn ? "h" : "giờ"}
+                  </p>
                 </div>
                 <div className="rounded-[12px] bg-[#FAF8F1] p-4">
-                  <p className="text-xs font-semibold text-[#52645A]">Số nhiệm vụ hoàn tất</p>
+                  <p className="text-xs font-semibold text-[#52645A]">
+                    {isEn ? "Completed missions" : "Số nhiệm vụ hoàn tất"}
+                  </p>
                   <p className="mt-1 tabular-nums text-2xl font-bold text-[#25352B]">{approvedMissions.length}</p>
                 </div>
               </div>
 
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] px-4 py-3 text-xs">
+                <span>
+                  {isEn
+                    ? "Sample verification code: NF-CERT-2026-001 (includes QR & Vietnamese diacritic PDF export)"
+                    : "Mã tra cứu chứng nhận mẫu: NF-CERT-2026-001 (kèm mã QR & tải PDF chuẩn tiếng Việt)"}
+                </span>
+                <Link
+                  href={buildLocalizedHref("/credentials/NF-CERT-2026-001", locale)}
+                  className="inline-flex items-center gap-1 font-bold text-[#245B3D] underline"
+                >
+                  <span>{isEn ? "Open verification page" : "Mở trang kiểm tra chứng nhận"}</span>
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                </Link>
+              </div>
+
               <div className="mt-5 space-y-2 text-xs">
-                <h3 className="text-sm font-bold text-[#25352B]">Danh sách nhiệm vụ đã xác nhận vào sổ</h3>
+                <h3 className="text-sm font-bold text-[#25352B]">
+                  {isEn ? "Verified Mission Log" : "Danh sách nhiệm vụ đã xác nhận vào sổ"}
+                </h3>
                 {approvedMissions.map((m) => (
                   <div key={m.id} className="flex flex-wrap items-center justify-between gap-2 rounded-[10px] border border-[#EAEFE6] px-3 py-2">
                     <span>
                       <strong className="text-[#245B3D]">{m.id}</strong> · {m.title} ({m.farmName})
                     </span>
-                    <Badge tone="success">+{m.approvedHours} giờ</Badge>
+                    <Badge tone="success">+{m.approvedHours} {isEn ? "h" : "giờ"}</Badge>
                   </div>
                 ))}
               </div>
@@ -554,16 +702,16 @@ export default function VolunteerWorkspacePage() {
             <Card className="space-y-4 p-5 lg:col-span-6">
               <h2 className="flex items-center gap-2 text-lg font-bold text-[#25352B]">
                 <Sparkles className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
-                <span>Học liệu Field Lab &amp; Trao đổi kỹ năng ({lessons.length})</span>
+                <span>{isEn ? `Field Lab Courses (${lessons.length})` : `Học liệu Field Lab & Trao đổi kỹ năng (${lessons.length})`}</span>
               </h2>
               <div className="space-y-2.5 text-xs">
                 {lessons.slice(0, 6).map((les) => (
                   <Link
                     key={les.id}
-                    href={`/learn`}
+                    href={buildLocalizedHref(`/learn/${les.slug}`, locale)}
                     className="block rounded-[12px] border border-[#EAEFE6] bg-[#FAF8F1] p-3 hover:bg-[#EAF0E5]"
                   >
-                    <p className="font-bold text-[#25352B]">{les.title}</p>
+                    <p className="font-bold text-[#25352B]">{isEn && les.titleEn ? les.titleEn : les.title}</p>
                     <p className="mt-0.5 text-[#52645A]">
                       {les.topicTag} · {les.durationLabel} · {les.regionName}
                     </p>
@@ -575,14 +723,14 @@ export default function VolunteerWorkspacePage() {
             <Card className="space-y-4 p-5 lg:col-span-6">
               <h2 className="flex items-center gap-2 text-lg font-bold text-[#25352B]">
                 <ShieldAlert className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
-                <span>Vườn đồng hành dài hạn &amp; Cố vấn kỹ thuật</span>
+                <span>{isEn ? "Orchard Mentoring Partnerships" : "Vườn đồng hành dài hạn & Cố vấn kỹ thuật"}</span>
               </h2>
               <div className="space-y-2.5 text-xs">
                 {mentorCases.map((mc) => (
                   <div key={mc.id} className="rounded-[12px] border border-[#D6DED2] bg-white p-3">
                     <p className="font-bold text-[#25352B]">{mc.title}</p>
                     <p className="text-[#245B3D]">
-                      {mc.farmName} · Cố vấn: {mc.mentorName}
+                      {mc.farmName} · {isEn ? "Mentor:" : "Cố vấn:"} {mc.mentorName}
                     </p>
                     <p className="mt-1 text-[#52645A]">{mc.scheduledAt}</p>
                   </div>
@@ -590,11 +738,13 @@ export default function VolunteerWorkspacePage() {
                 {farms.slice(0, 3).map((f) => (
                   <div key={f.id} className="flex items-center justify-between rounded-[10px] bg-[#FAF8F1] px-3 py-2">
                     <div>
-                      <p className="font-bold text-[#25352B]">{f.name}</p>
-                      <p className="text-[11px] text-[#52645A]">{f.administrativeUnitName} · {f.areaHa} ha</p>
+                      <p className="font-bold text-[#25352B]">{isEn && f.enName ? f.enName : f.name}</p>
+                      <p className="text-[11px] text-[#52645A]">
+                        {localizeAdminUnitName(f.administrativeUnitName, undefined, locale)} · {f.areaHa} ha
+                      </p>
                     </div>
-                    <Link href={`/farms/${f.slug}`} className="font-semibold text-[#245B3D] hover:underline">
-                      Xem vườn →
+                    <Link href={buildLocalizedHref(`/farms/${f.slug}`, locale)} className="font-semibold text-[#245B3D] hover:underline">
+                      {isEn ? "View →" : "Xem vườn →"}
                     </Link>
                   </div>
                 ))}
@@ -627,7 +777,7 @@ export default function VolunteerWorkspacePage() {
               </Card>
               <Card className="p-4">
                 <p className="text-xs text-[#52645A]">
-                  {isEn ? "Confirmed Volunteer Hours (W02+W04)" : "Giờ tình nguyện đã duyệt (2 lớp)"}
+                  {isEn ? "Confirmed Volunteer Hours (2-Tier)" : "Giờ tình nguyện đã duyệt (2 lớp)"}
                 </p>
                 <p className="mt-1 tabular-nums text-2xl font-bold text-[#24603B]">
                   {confirmedHours} h
@@ -641,7 +791,7 @@ export default function VolunteerWorkspacePage() {
                   {isEn ? "Open Bilingual Practice" : "Thực hành Song ngữ A1–B1"}
                 </p>
                 <Link
-                  href="/learn"
+                  href={buildLocalizedHref("/learn", locale)}
                   className="mt-2 inline-flex min-h-[38px] items-center justify-center rounded-[10px] bg-[#245B3D] px-3 text-xs font-semibold text-white"
                 >
                   {t.nav.learn} →
@@ -670,6 +820,8 @@ export default function VolunteerWorkspacePage() {
 
         {tab === "calendar" ? <NaiCalendarBoard scope="W03" allowCreate /> : null}
       </div>
+
+      <CertificatePreviewModal credential={previewCert} onClose={() => setPreviewCert(null)} />
     </WorkspaceShell>
   );
 }

@@ -46,3 +46,7 @@ next-env.d.ts
 *.wav
 /projects
 /docs
+/scripts/.geo-cache/
+/local-media/
+/services/video-worker/data/
+*.sqlite*

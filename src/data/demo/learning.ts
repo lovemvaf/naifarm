@@ -214,10 +214,10 @@ export const INITIAL_LESSONS: LearningLesson[] = [
   {
     id: "LESSON-08",
     slug: "ho-tro-nong-ho-u50-dang-ban-3-buoc",
-    title: "Phương pháp đồng hành cùng nông hộ U50+ số hóa gian hàng",
+    title: "Phương pháp đồng hành cùng nông hộ lớn tuổi số hóa gian hàng",
     topicTag: "Kỹ năng Tình nguyện số",
     durationLabel: "8 phút",
-    levelLabel: "TNV W03",
+    levelLabel: "Thanh niên Tình nguyện",
     regionCode: "26080",
     regionName: "Phường Long Khánh",
     summary: "Cách TNV hướng dẫn bác nông dân chụp ảnh đủ sáng, ghi âm mô tả giọng nói và tự kiểm tra đơn hàng.",

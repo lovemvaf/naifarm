@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import concurrent.futures
 import json
 import math
 import os
@@ -9,23 +10,27 @@ BASE_URL = (
     "https://raw.githubusercontent.com/thanglequoc/vietnamese-provinces-database/"
     "master/json/geojson/75_dong_nai"
 )
+WARDS_API_URL = (
+    "https://api.github.com/repos/thanglequoc/vietnamese-provinces-database/"
+    "contents/json/geojson/75_dong_nai/wards"
+)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE_DIR = os.path.join(ROOT, "scripts", ".geo-cache")
 OUT_DIR = os.path.join(ROOT, "public", "geo")
 
-TOLERANCE = 0.00035
+TOLERANCE = 0.0005
 
-WARD_FILES = {
-    "26188_tan_trieu": "Phường Tân Triều",
-    "26080_long_khanh": "Phường Long Khánh",
-    "26347_xuan_duong": "Xã Xuân Đường",
-    "26341_cam_my": "Xã Cẩm Mỹ",
-    "26206_dinh_quan": "Xã Định Quán",
-    "26425_xuan_loc": "Phường Xuân Lộc",
-    "26041_tran_bien": "Phường Trấn Biên",
-    "26068_bien_hoa": "Phường Biên Hoà",
-}
+FALLBACK_WARDS = [
+    "26188_tan_trieu.geojson",
+    "26080_long_khanh.geojson",
+    "26347_xuan_duong.geojson",
+    "26341_cam_my.geojson",
+    "26206_dinh_quan.geojson",
+    "26425_xuan_loc.geojson",
+    "26041_tran_bien.geojson",
+    "26068_bien_hoa.geojson",
+]
 
 
 def perp_dist(p, a, b):
@@ -114,47 +119,90 @@ def fetch(url, dest):
     if os.path.exists(dest) and os.path.getsize(dest) > 0:
         return
     os.makedirs(os.path.dirname(dest), exist_ok=True)
-    with urllib.request.urlopen(url) as resp, open(dest, "wb") as fh:
+    req = urllib.request.Request(url, headers={"User-Agent": "NaiFarm-Geo-Builder"})
+    with urllib.request.urlopen(req, timeout=20) as resp, open(dest, "wb") as fh:
         fh.write(resp.read())
+
+
+def compute_bbox(geom):
+    min_lng, min_lat = 180.0, 90.0
+    max_lng, max_lat = -180.0, -90.0
+    polys = [geom["coordinates"]] if geom["type"] == "Polygon" else geom["coordinates"]
+    for poly in polys:
+        for ring in poly:
+            for lng, lat in ring:
+                min_lng = min(min_lng, lng)
+                min_lat = min(min_lat, lat)
+                max_lng = max(max_lng, lng)
+                max_lat = max(max_lat, lat)
+    return [round(min_lat, 5), round(min_lng, 5), round(max_lat, 5), round(max_lng, 5)]
+
+
+def list_remote_ward_files():
+    try:
+        req = urllib.request.Request(WARDS_API_URL, headers={"User-Agent": "NaiFarm-Geo-Builder"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            items = json.loads(resp.read().decode("utf-8"))
+        names = sorted(it["name"] for it in items if it.get("name", "").endswith(".geojson"))
+        if names:
+            return names
+    except Exception as exc:
+        print(f"Warning: could not list GitHub wards directory ({exc}), using fallback subset")
+    return FALLBACK_WARDS
 
 
 def main():
     os.makedirs(CACHE_DIR, exist_ok=True)
     os.makedirs(OUT_DIR, exist_ok=True)
 
+    ward_filenames = list_remote_ward_files()
+
+    def download_one(fname):
+        src = os.path.join(CACHE_DIR, fname)
+        fetch(f"{BASE_URL}/wards/{fname}", src)
+        return fname, src
+
+    downloaded = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+        for res in pool.map(download_one, ward_filenames):
+            downloaded.append(res)
+
     features = []
     centroids = {}
-    for key, full_name in WARD_FILES.items():
-        src = os.path.join(CACHE_DIR, f"{key}.geojson")
-        fetch(f"{BASE_URL}/wards/{key}.geojson", src)
+    for fname, src in downloaded:
         data = json.load(open(src, encoding="utf-8"))
         feature = data["features"][0]
         geometry = simplify_geometry(feature["geometry"])
         props = feature["properties"]
+        name_val = props.get("name", "")
+        full_name = props.get("fullName") or props.get("name_with_type") or name_val
         features.append(
             {
                 "type": "Feature",
                 "properties": {
-                    "code": props["code"],
-                    "name": props["name"],
+                    "code": str(props.get("code", fname.split("_")[0])),
+                    "name": name_val,
                     "fullName": full_name,
-                    "level": "Phường" if full_name.startswith("Phường") else "Xã",
+                    "level": "Phường" if str(full_name).startswith("Phường") else "Xã",
                     "areaKm2": props.get("areaKm2"),
                 },
                 "geometry": geometry,
             }
         )
-        centroids[full_name] = centroid(geometry)
+        centroids[str(props.get("code", fname.split("_")[0]))] = centroid(geometry)
 
     wards_out = {"type": "FeatureCollection", "features": features}
-    with open(os.path.join(OUT_DIR, "dong-nai-wards.json"), "w", encoding="utf-8") as fh:
+    wards_path = os.path.join(OUT_DIR, "dong-nai-wards.json")
+    with open(wards_path, "w", encoding="utf-8") as fh:
         json.dump(wards_out, fh, ensure_ascii=False, separators=(",", ":"))
 
     prov_src = os.path.join(CACHE_DIR, "75_dong_nai.geojson")
     fetch(f"{BASE_URL}/75_dong_nai.geojson", prov_src)
     prov_data = json.load(open(prov_src, encoding="utf-8"))
     prov_feature = prov_data["features"][0]
-    province_out = {
+    outline_geom = simplify_geometry(prov_feature["geometry"])
+    outline_bbox = compute_bbox(outline_geom)
+    outline_out = {
         "type": "FeatureCollection",
         "features": [
             {
@@ -164,16 +212,42 @@ def main():
                     "fullName": "Thành phố Đồng Nai",
                     "level": "Thành phố",
                 },
-                "geometry": simplify_geometry(prov_feature["geometry"]),
+                "geometry": outline_geom,
             }
         ],
     }
-    with open(os.path.join(OUT_DIR, "dong-nai-province.json"), "w", encoding="utf-8") as fh:
-        json.dump(province_out, fh, ensure_ascii=False, separators=(",", ":"))
+    outline_path = os.path.join(OUT_DIR, "dong-nai-outline.json")
+    prov_compat_path = os.path.join(OUT_DIR, "dong-nai-province.json")
+    with open(outline_path, "w", encoding="utf-8") as fh:
+        json.dump(outline_out, fh, ensure_ascii=False, separators=(",", ":"))
+    with open(prov_compat_path, "w", encoding="utf-8") as fh:
+        json.dump(outline_out, fh, ensure_ascii=False, separators=(",", ":"))
 
-    print("Đã ghi public/geo/dong-nai-wards.json và public/geo/dong-nai-province.json")
-    for name, center in centroids.items():
-        print(f"  {name}: lat {center[1]}, lng {center[0]}")
+    manifest = {
+        "sourceRepo": "https://github.com/thanglequoc/vietnamese-provinces-database",
+        "sourcePath": "json/geojson/75_dong_nai",
+        "license": "MIT (Community Open Data)",
+        "retrievedAt": "2026-11-25",
+        "boundaryStatus": "community_reference_not_legal_boundary",
+        "wardPolygonCount": len(features),
+        "expectedAdminUnitCount": 95,
+        "coverageRatio": round(len(features) / 95, 4),
+        "bbox": {
+            "south": outline_bbox[0],
+            "west": outline_bbox[1],
+            "north": outline_bbox[2],
+            "east": outline_bbox[3],
+        },
+        "outlineBytes": os.path.getsize(outline_path),
+        "wardsBytes": os.path.getsize(wards_path),
+    }
+    with open(os.path.join(OUT_DIR, "manifest.json"), "w", encoding="utf-8") as fh:
+        json.dump(manifest, fh, ensure_ascii=False, indent=2)
+
+    print(
+        f"Generated {len(features)}/95 ward polygons ({os.path.getsize(wards_path)} bytes) "
+        f"+ outline ({os.path.getsize(outline_path)} bytes) bbox={outline_bbox}"
+    )
 
 
 if __name__ == "__main__":
