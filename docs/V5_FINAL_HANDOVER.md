@@ -3,8 +3,8 @@
 Tài liệu bàn giao hoàn chỉnh phiên bản **NaiFarm V5 — Chợ OCOP Thanh niên Đồng Nai** (tổng hợp V1–V5 + OCOP AI Video Studio Free Plan).
 
 ## 1. Tổng quan sản phẩm đã hoàn thiện
-- **Repo GitHub:** `https://github.com/lovemvaf/naifarm.git` (nhánh `main`)
-- **Production Web:** `https://naifarm.vercel.app/`
+- **Repo GitHub:** `https://github.com/lovemvaf/naifarm.git` (nhánh `main`, hợp nhất V5 + PR #3 NaiAI & LiveKit tại commit `22ff5f2`)
+- **Production Web:** `https://naifarm.vercel.app/` (đã kiểm chứng Playwright & HTTP 200 trực tiếp trên live domain, `44` route tĩnh + API `/api/video/*`, `/api/live/*`, `/api/nai-ai/chat`)
 - **Quy mô dữ liệu kiểm chứng:** `95` phường/xã Đồng Nai 2026 (`dong-nai-wards.json` cục bộ), `40` nhà vườn, `168` nông sản OCOP & đặc sản kèm `88` ảnh đã băm SHA-256 (`V5_MEDIA_PROVENANCE.csv`), `26` chuẩn chất lượng / `80` hồ sơ kiểm định, `17` hồ sơ tham khảo công bố UBND độc lập.
 - **Khả năng cốt lõi V5:**
   1. Header & Footer song ngữ VI/EN cố định lưới (`0.00px` lệch chiều cao khi chuyển ngôn ngữ), hỗ trợ từ `320px` đến `1920px`.

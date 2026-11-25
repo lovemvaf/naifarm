@@ -38,4 +38,12 @@ Báo cáo tổng hợp toàn bộ kết quả kiểm thử đã chạy thực t�
 
 ## 4. Kiểm thử Production Live (`https://naifarm.vercel.app/`)
 
-- Đang chờ chạy sau khi đẩy commit mới lên nhánh `main` (M11–M12).
+- **Commit triển khai:** `22ff5f28108b250c86c059af349b03c00164fea6` (`22ff5f2`, hợp nhất V5 + PR #3 NaiAI & LiveKit, `44` static routes).
+- **Live Endpoints:**
+  - `GET https://naifarm.vercel.app/api/video/health` → HTTP `200` (`workerOnline: false`, `workerMode: "serverless_sample_preview"`, `aiProvider.status: "disabled_manual_login_required"`, `samplesCount: 3`).
+  - `GET https://naifarm.vercel.app/api/video/jobs` → HTTP `200` (trả về đủ 3 manifest sample FFmpeg + SHA-256).
+- **Live Playwright Verification (`node scripts/v5-playwright-qa.mjs https://naifarm.vercel.app`):** **Command exited with code 0** (`ALL PLAYWRIGHT CHECKS PASSED ON https://naifarm.vercel.app`):
+  - Header VI ↔ EN lệch **`0.00px`** tại `1280px` & `1440px`.
+  - `0` lỗi tràn ngang (`320–1920px`), `0` ảnh nội dung gãy, `0` lỗi JS console/pageerror.
+  - Xác thực Supabase Auth 1 chạm thật trên production cho `Minh Anh` (`W03` `/volunteer`) & `Chú Ba Tư` (`W02` `/farmer?mode=erp&tab=studio`), phát được `/media/studio-samples/p06-buoi-tan-trieu-vi.mp4` (`200 video/mp4`).
+  - Lộ trình học 6 bước + giải phẫu 2D 9 nông sản, bản đồ `/explore` ngoại tuyến (`97` SVG vector paths), và nút xóa NaiAI hoạt động ổn định trên domain live.

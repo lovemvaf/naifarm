@@ -203,6 +203,15 @@ async function main() {
     // Volunteer page clean filters, open cards, & Certificate PDF modal check
     await page.goto(`${BASE_URL}/volunteer`, { waitUntil: "networkidle" });
     await page.waitForTimeout(400);
+    if (page.url().includes("/sign-in")) {
+      const minhAnhCard = page
+        .locator("div.grid.grid-cols-1.gap-3.sm\\:grid-cols-2 > div")
+        .filter({ hasText: "Minh Anh" })
+        .first();
+      await minhAnhCard.locator("button", { hasText: /Chọn tài khoản|Select account/i }).first().click();
+      await page.waitForURL(/\/volunteer/, { timeout: 15000 });
+      await page.waitForTimeout(600);
+    }
     const volText = await page.locator("main").innerText();
     assert.equal(/3\. W02 Xác nhận|4\. W04 Duyệt giờ/.test(volText), false, "W02/W04 leaked into open volunteer cards");
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, "06-volunteer-clean-cards.png") });
@@ -235,9 +244,20 @@ async function main() {
     }
     console.log("[PASS] Learn sequential 6-step & 9-crop 2D SVG anatomy verified");
 
-    // Video Studio real MP4 check in W02 ERP Studio tab
+    // Video Studio real MP4 check in W02 ERP Studio tab (sign in 1-touch as W02 Chú Ba Tư first)
+    await page.goto(`${BASE_URL}/sign-in`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(300);
+    const baTuCard = page
+      .locator("div.grid.grid-cols-1.gap-3.sm\\:grid-cols-2 > div")
+      .filter({ hasText: "Chú Ba Tư" })
+      .first();
+    if (await baTuCard.isVisible()) {
+      await baTuCard.locator("button", { hasText: /Chọn tài khoản|Select account/i }).first().click();
+      await page.waitForURL(/\/farmer/, { timeout: 15000 });
+      await page.waitForTimeout(500);
+    }
     await page.goto(`${BASE_URL}/farmer?mode=erp&tab=studio`, { waitUntil: "networkidle" });
-    await page.waitForSelector("[data-testid='ocop-video-studio-panel']", { timeout: 10000 });
+    await page.waitForSelector("[data-testid='ocop-video-studio-panel']", { timeout: 15000 });
     await page.waitForTimeout(600);
     const videoInfo = await page.evaluate(async () => {
       const vid = document.querySelector("video");
