@@ -76,11 +76,11 @@ export function NaiAIFloatingChat() {
   };
   const messages: ChatMessage[] = messagesByKey[stateKey] ?? [defaultGreeting];
 
-  // Auto-hide on checkout or during active recording/subflows
-  const suppressedByRoute = pathname.startsWith("/checkout") || hideAiChatOnSubflow;
+  // Auto-hide on homepage (rendered via NaiFarmHomeChat), checkout, or active recording subflows
+  const suppressedByRoute = pathname === "/" || pathname.startsWith("/checkout") || hideAiChatOnSubflow;
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || suppressedByRoute) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setOpen(false);
@@ -89,7 +89,7 @@ export function NaiAIFloatingChat() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open]);
+  }, [open, suppressedByRoute]);
 
   if (suppressedByRoute) return null;
 

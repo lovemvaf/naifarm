@@ -344,3 +344,34 @@ for (let i = 1; i <= INITIAL_PRODUCTS.length; i += 1) {
 }
 
 export const INITIAL_BATCHES: TraceBatch[] = [...GOLDEN_BATCHES, ...EXTRA_BATCHES];
+
+const batchCodes = new Set(INITIAL_BATCHES.map((batch) => batch.batchCode));
+for (const product of INITIAL_PRODUCTS) {
+  if (batchCodes.has(product.batchCode)) continue;
+  batchCodes.add(product.batchCode);
+  INITIAL_BATCHES.push({
+    batchCode: product.batchCode,
+    productId: product.id,
+    productName: product.name,
+    farmId: product.farmId,
+    farmName: product.farmName,
+    administrativeUnitCode: product.administrativeUnitCode,
+    administrativeUnitName: product.administrativeUnitName,
+    region: product.region,
+    seasonId: product.seasonId,
+    harvestDate: "21/11/2026",
+    packDate: "24/11/2026",
+    lotStatus: "active",
+    declarationLevel: "Hồ sơ minh họa theo sản phẩm · Nhà vườn tự khai",
+    docStatus: "Hồ sơ mẫu minh họa (Demo)",
+    summary: `Lô mẫu ${product.batchCode} (${product.name}) tại ${product.farmName}, ${product.administrativeUnitName}. Phục vụ tra cứu QR minh họa 3 chặng.`,
+    events: buildEventsForBatch(
+      product.batchCode,
+      product.name,
+      product.farmName,
+      product.administrativeUnitName,
+      product.image,
+    ),
+    isDemo: true,
+  });
+}

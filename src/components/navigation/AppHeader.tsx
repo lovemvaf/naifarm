@@ -518,7 +518,9 @@ export function AppHeader() {
                               ),
                               locale,
                             );
-                            router.push(linkHref(WORKSPACE_HOME[acc.workspaceId]));
+                            if (pathname !== "/live" && pathname !== "/live/demo") {
+                              router.push(linkHref(WORKSPACE_HOME[acc.workspaceId]));
+                            }
                           }}
                           className={cn(
                             "rounded-[8px] px-2 py-1.5 text-left text-[11px] font-medium transition cursor-pointer",
