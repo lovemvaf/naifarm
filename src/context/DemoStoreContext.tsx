@@ -893,6 +893,16 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           addressBook: core.addressBook.length ? core.addressBook : prev.addressBook,
           organizations: core.partnerOrgs.length ? core.partnerOrgs : prev.organizations,
           sponsorCampaigns: core.sponsorCampaigns.length ? core.sponsorCampaigns : prev.sponsorCampaigns,
+          warehouses: core.warehouses.length ? core.warehouses : prev.warehouses,
+          warehouseStocks: core.warehouseStocks.length ? core.warehouseStocks : prev.warehouseStocks,
+          inventoryMovements: core.inventoryMovements.length ? core.inventoryMovements : prev.inventoryMovements,
+          suppliers: core.suppliers.length ? core.suppliers : prev.suppliers,
+          purchaseOrders: core.purchaseOrders.length ? core.purchaseOrders : prev.purchaseOrders,
+          coopPools: core.coopPools.length ? core.coopPools : prev.coopPools,
+          memberDeliveries: core.memberDeliveries.length ? core.memberDeliveries : prev.memberDeliveries,
+          expenses: core.expenses.length ? core.expenses : prev.expenses,
+          receivablesPayables: core.receivablesPayables.length ? core.receivablesPayables : prev.receivablesPayables,
+          logisticsTrips: core.logisticsTrips.length ? core.logisticsTrips : prev.logisticsTrips,
         }));
       })
       .catch(() => {});
@@ -2540,6 +2550,25 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       ],
     }));
 
+    if (supabase) {
+      void supabase
+        .from("inventory_movements")
+        .insert({
+          id: mv.id,
+          warehouse_id: mv.warehouseId,
+          product_id: mv.productId,
+          batch_code: mv.batchCode,
+          type: mv.type,
+          quantity_delta: mv.quantityDelta,
+          unit_label: mv.unitLabel,
+          date_iso: mv.dateIso,
+          actor_name: mv.actorName,
+          reason: mv.reason,
+          is_internal_transfer: mv.isInternalTransfer ?? null,
+        })
+        .then(() => {});
+    }
+
     return { ok: true, message: `Đã ghi nhận phiếu kho ${mv.id}.` };
   };
 
@@ -2548,6 +2577,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     nextStatus: PurchaseOrder["status"],
     qcNote?: string,
   ) => {
+    if (supabase) {
+      void supabase
+        .from("purchase_orders")
+        .update({ status: nextStatus, qc_note: qcNote ?? null })
+        .eq("id", poId)
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       purchaseOrders: prev.purchaseOrders.map((po) =>
@@ -2564,6 +2600,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         ok: false,
         message: "Người lập phiếu thanh toán xã viên không thể tự duyệt đối soát.",
       };
+    }
+    if (supabase) {
+      void supabase
+        .from("member_deliveries")
+        .update({ settlement_status: "da_duyet_thanh_toan", checker_name: checkerName })
+        .eq("id", deliveryId)
+        .then(() => {});
     }
     setState((prev) => ({
       ...prev,
@@ -2610,6 +2653,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     status: LogisticsTrip["status"],
     podNote?: string,
   ) => {
+    if (supabase) {
+      void supabase
+        .from("logistics_trips")
+        .update({ status, pod_note: podNote ?? null })
+        .eq("id", tripId)
+        .then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       logisticsTrips: prev.logisticsTrips.map((t) =>
