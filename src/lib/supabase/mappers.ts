@@ -1,4 +1,5 @@
 import type {
+  AddressBookEntry,
   AdminGrant,
   AdminUnit,
   AppRole,
@@ -15,12 +16,16 @@ import type {
   ExperiencePackage,
   Farm,
   ObservanceRecord,
+  PartnerOrganization,
   Product,
   Profile,
   PromotionRecord,
   RfqRequest,
+  SponsorCampaign,
   SupportRequest,
+  SupportTicket,
   TraceBatch,
+  UserNotification,
   VolunteerMission,
 } from "@/types/naifarm";
 import { getAdministrativeUnitByCode } from "@/lib/geography/administrative-lookup";
@@ -479,5 +484,76 @@ export function mapAdminUnit(row: Row): AdminUnit {
     level: str(row.level),
     lat: num(row.lat),
     lng: num(row.lng),
+  };
+}
+
+export function mapNotification(row: Row): UserNotification {
+  return {
+    id: str(row.id),
+    title: str(row.title),
+    titleEn: row.title_en ? String(row.title_en) : undefined,
+    message: str(row.message),
+    messageEn: row.message_en ? String(row.message_en) : undefined,
+    category: str(row.category, "system") as UserNotification["category"],
+    createdAtLabel: str(row.created_at_label),
+    read: bool(row.read),
+    href: str(row.href),
+    dedupeKey: row.dedupe_key ? String(row.dedupe_key) : undefined,
+    roleScope: row.role_scope ? (String(row.role_scope) as UserNotification["roleScope"]) : undefined,
+  };
+}
+
+export function mapTicket(row: Row): SupportTicket {
+  return {
+    id: str(row.id),
+    requesterName: str(row.requester_name),
+    roleLabel: str(row.role_label),
+    category: str(row.category),
+    subject: str(row.subject),
+    administrativeUnitCode: row.administrative_unit_code ? String(row.administrative_unit_code) : "",
+    administrativeUnitName: str(row.administrative_unit_name),
+    status: str(row.status, "Mới tiếp nhận") as SupportTicket["status"],
+    priority: str(row.priority, "Thường") as SupportTicket["priority"],
+    createdAtLabel: str(row.created_at_label),
+    note: str(row.note),
+  };
+}
+
+export function mapAddressEntry(row: Row): AddressBookEntry {
+  return {
+    id: str(row.id),
+    label: str(row.label),
+    recipientName: str(row.recipient_name),
+    phoneDemo: str(row.phone_demo),
+    detailAddress: str(row.detail_address),
+    administrativeUnitCode: row.administrative_unit_code ? String(row.administrative_unit_code) : "",
+    fullAddress: str(row.full_address),
+    isDefault: bool(row.is_default),
+  };
+}
+
+export function mapPartnerOrg(row: Row): PartnerOrganization {
+  return {
+    id: str(row.id),
+    name: str(row.name),
+    type: str(row.type, "HTX") as PartnerOrganization["type"],
+    administrativeUnitCode: row.administrative_unit_code ? String(row.administrative_unit_code) : "",
+    administrativeUnitName: str(row.administrative_unit_name),
+    linkedFarmsCount: num(row.linked_farms_count),
+    contactRoleDemo: str(row.contact_role_demo),
+    focusArea: str(row.focus_area),
+    statusLabel: str(row.status_label),
+  };
+}
+
+export function mapSponsorCampaign(row: Row): SponsorCampaign {
+  return {
+    id: str(row.id),
+    sponsorName: str(row.sponsor_name),
+    title: str(row.title),
+    plannedBudgetVnd: num(row.planned_budget_vnd),
+    approvedBudgetVnd: num(row.approved_budget_vnd),
+    milestoneSummary: str(row.milestone_summary),
+    outputsAcceptedCount: num(row.outputs_accepted_count),
   };
 }

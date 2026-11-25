@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import {
+  mapAddressEntry,
   mapAdminUnit,
   mapAuditLog,
   mapBatch,
@@ -12,32 +13,41 @@ import {
   mapFarm,
   mapGrant,
   mapMission,
+  mapNotification,
   mapObservance,
   mapOrder,
   mapOrderItem,
+  mapPartnerOrg,
   mapProduct,
   mapPromotion,
   mapRfqRequest,
+  mapSponsorCampaign,
   mapSupportRequest,
+  mapTicket,
 } from "@/lib/supabase/mappers";
 import type {
-  CalendarEvent,
-  CampaignRecord,
-  ObservanceRecord,
-  PromotionRecord,
+  AddressBookEntry,
   AdminGrant,
   AdminUnit,
   AuditLogEntry,
+  CalendarEvent,
+  CampaignRecord,
+  DemoOrder,
   DocumentReviewCase,
   ExperienceBooking,
   ExperiencePackage,
   Farm,
+  ObservanceRecord,
+  PartnerOrganization,
   Product,
+  PromotionRecord,
   RfqRequest,
+  SponsorCampaign,
   SupportRequest,
+  SupportTicket,
   TraceBatch,
+  UserNotification,
   VolunteerMission,
-  DemoOrder,
 } from "@/types/naifarm";
 
 export interface CoreData {
@@ -60,6 +70,11 @@ export interface CoreData {
   cartItems: { productId: string; quantity: number; selectedOptionLabel?: string }[];
   favoriteIds: string[];
   followedIds: string[];
+  notifications: UserNotification[];
+  tickets: SupportTicket[];
+  addressBook: AddressBookEntry[];
+  partnerOrgs: PartnerOrganization[];
+  sponsorCampaigns: SponsorCampaign[];
 }
 
 const supabase = createClient();
@@ -96,6 +111,11 @@ export async function fetchCoreData(): Promise<CoreData> {
     cartRows,
     favoriteRows,
     followRows,
+    notificationRows,
+    ticketRows,
+    addressRows,
+    partnerOrgRows,
+    sponsorCampaignRows,
   ] = await Promise.all([
     selectAll("farms"),
     selectAll("experiences"),
@@ -125,6 +145,17 @@ export async function fetchCoreData(): Promise<CoreData> {
     userId
       ? supabase.from("season_follows").select("*").eq("user_id", userId).then((r) => (r.error ? [] : r.data ?? []))
       : Promise.resolve([]),
+    userId
+      ? supabase.from("notifications").select("*").eq("user_id", userId).then((r) => (r.error ? [] : r.data ?? []))
+      : Promise.resolve([]),
+    userId
+      ? supabase.from("tickets").select("*").eq("user_id", userId).then((r) => (r.error ? [] : r.data ?? []))
+      : Promise.resolve([]),
+    userId
+      ? supabase.from("address_book").select("*").eq("user_id", userId).then((r) => (r.error ? [] : r.data ?? []))
+      : Promise.resolve([]),
+    selectAll("partner_orgs"),
+    selectAll("sponsor_campaigns"),
   ]);
 
   const experiencesByFarm = new Map<string, ExperiencePackage[]>();
@@ -189,5 +220,10 @@ export async function fetchCoreData(): Promise<CoreData> {
     })),
     favoriteIds: favoriteRows.map((row) => String(row.product_id ?? "")),
     followedIds: followRows.map((row) => String(row.product_id ?? "")),
+    notifications: notificationRows.map(mapNotification),
+    tickets: ticketRows.map(mapTicket),
+    addressBook: addressRows.map(mapAddressEntry),
+    partnerOrgs: partnerOrgRows.map(mapPartnerOrg),
+    sponsorCampaigns: sponsorCampaignRows.map(mapSponsorCampaign),
   };
 }

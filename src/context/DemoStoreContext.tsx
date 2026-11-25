@@ -888,6 +888,11 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           cart: core.cartItems.length ? core.cartItems : prev.cart,
           favoriteProductIds: core.favoriteIds.length ? core.favoriteIds : prev.favoriteProductIds,
           followedProductIds: core.followedIds.length ? core.followedIds : prev.followedProductIds,
+          notifications: core.notifications.length ? core.notifications : prev.notifications,
+          tickets: core.tickets.length ? core.tickets : prev.tickets,
+          addressBook: core.addressBook.length ? core.addressBook : prev.addressBook,
+          organizations: core.partnerOrgs.length ? core.partnerOrgs : prev.organizations,
+          sponsorCampaigns: core.sponsorCampaigns.length ? core.sponsorCampaigns : prev.sponsorCampaigns,
         }));
       })
       .catch(() => {});
@@ -1057,6 +1062,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const markNotificationRead = (id: string) => {
+    if (supabase) {
+      void supabase.from("notifications").update({ read: true }).eq("id", id).then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       notifications: prev.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
@@ -1064,6 +1072,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const markAllNotificationsRead = () => {
+    if (supabase) {
+      void supabase.from("notifications").update({ read: true }).then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       notifications: prev.notifications.map((n) => ({ ...n, read: true })),
@@ -1095,10 +1106,29 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       ...prev,
       addressBook: [created, ...prev.addressBook],
     }));
+    if (supabase) {
+      void supabase
+        .from("address_book")
+        .insert({
+          id: created.id,
+          label: created.label,
+          recipient_name: created.recipientName,
+          phone_demo: created.phoneDemo,
+          detail_address: created.detailAddress,
+          administrative_unit_code: created.administrativeUnitCode,
+          full_address: created.fullAddress,
+          is_default: created.isDefault,
+          user_id: state.session?.user.id ?? null,
+        })
+        .then(() => {});
+    }
     return { ok: true, message: `Đã lưu địa chỉ tại ${unit.tenDayDu}.` };
   };
 
   const removeAddressEntry = (id: string) => {
+    if (supabase) {
+      void supabase.from("address_book").delete().eq("id", id).then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       addressBook: prev.addressBook.filter((a) => a.id !== id),
@@ -2886,10 +2916,32 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       ...prev,
       tickets: [created, ...prev.tickets],
     }));
+    if (supabase) {
+      void supabase
+        .from("tickets")
+        .insert({
+          id: created.id,
+          requester_name: created.requesterName,
+          role_label: created.roleLabel,
+          category: created.category,
+          subject: created.subject,
+          administrative_unit_code: created.administrativeUnitCode,
+          administrative_unit_name: created.administrativeUnitName,
+          status: created.status,
+          priority: created.priority,
+          created_at_label: created.createdAtLabel,
+          note: created.note,
+          user_id: state.session?.user.id ?? null,
+        })
+        .then(() => {});
+    }
     return created;
   };
 
   const updateTicketStatus = (ticketId: string, status: SupportTicket["status"]) => {
+    if (supabase) {
+      void supabase.from("tickets").update({ status }).eq("id", ticketId).then(() => {});
+    }
     setState((prev) => ({
       ...prev,
       tickets: prev.tickets.map((t) => (t.id === ticketId ? { ...t, status } : t)),
