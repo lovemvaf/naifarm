@@ -71,7 +71,81 @@ export const CAPABILITY_DEFINITIONS: CapabilityDefinition[] = [
     description: "Mọi thay đổi quyền bắt buộc ghi lý do và lưu bản ghi Trước/Sau.",
     allowedWorkspaces: ["W06"],
   },
+  {
+    key: "campaign.create",
+    label: "Soạn & lên lịch chiến dịch / ưu đãi",
+    description: "Tạo bản nháp chiến dịch, gửi duyệt (Maker không tự duyệt phát hành).",
+    allowedWorkspaces: ["W02", "W04", "W05"],
+  },
+  {
+    key: "campaign.approve",
+    label: "Phê duyệt phát hành chiến dịch & ưu đãi",
+    description: "Kiểm tra ngân sách, quy tắc tồn và tính trung thực nội dung VI/EN trước giờ mở.",
+    allowedWorkspaces: ["W04", "W06"],
+    makerCheckerRequired: true,
+  },
+  {
+    key: "calendar.manage",
+    label: "Quản lý sự kiện nội bộ trong NaiCalendar",
+    description: "Tạo/sửa lịch công việc theo phạm vi; mốc ngày lễ chính thức luôn khóa chỉ đọc.",
+    allowedWorkspaces: ["W02", "W03", "W04", "W05", "W06"],
+  },
+  {
+    key: "experience.manage",
+    label: "Mở ca trải nghiệm vườn & xác nhận check-in",
+    description: "Quản lý sức chứa ca, an toàn dị ứng và phản hồi yêu cầu tham quan.",
+    allowedWorkspaces: ["W02", "W05"],
+  },
+  {
+    key: "learning.grade",
+    label: "Chấm điểm bài tập & duyệt rubric lớp học",
+    description: "Chỉ dành cho giáo viên/cố vấn được giao lớp; không tính chồng sang giờ tình nguyện.",
+    allowedWorkspaces: ["W05"],
+    allowedOrgKinds: ["school", "mentor"],
+    makerCheckerRequired: true,
+  },
+  {
+    key: "report.export",
+    label: "Xuất báo cáo CSV & In đối chiếu theo phạm vi",
+    description: "Chỉ xuất các dòng đang hiển thị theo đúng quyền tổ chức/kỳ.",
+    allowedWorkspaces: ["W02", "W04", "W05", "W06"],
+  },
 ];
+
+export interface MinorSafeguardCheck {
+  allowPublicCommerce: boolean;
+  allowPublicChat: boolean;
+  allowAlcoholCatalog: boolean;
+  allowFieldTripSubmission: boolean;
+  reasonVi?: string;
+  reasonEn?: string;
+}
+
+export function evaluateMinorSafeguarding(
+  isMinor: boolean | undefined,
+  hasGuardianConsent: boolean | undefined,
+): MinorSafeguardCheck {
+  if (!isMinor) {
+    return {
+      allowPublicCommerce: true,
+      allowPublicChat: true,
+      allowAlcoholCatalog: true,
+      allowFieldTripSubmission: true,
+    };
+  }
+  return {
+    allowPublicCommerce: false,
+    allowPublicChat: false,
+    allowAlcoholCatalog: false,
+    allowFieldTripSubmission: Boolean(hasGuardianConsent),
+    reasonVi: hasGuardianConsent
+      ? "Chế độ học sinh có đồng thuận phụ huynh: ẩn đồ uống có cồn, giao dịch mua bán độc lập và chat công khai."
+      : "Chưa có xác nhận đồng thuận phụ huynh: tạm khóa nộp hoạt động ngoại khóa thực địa.",
+    reasonEn: hasGuardianConsent
+      ? "Supervised minor account (consent verified): public commerce, adult items, and stranger chat disabled."
+      : "Pending guardian consent: external field trips and submissions are blocked.",
+  };
+}
 
 export function evaluateCapability(
   workspaceId: WorkspaceId,

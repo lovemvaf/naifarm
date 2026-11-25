@@ -13,7 +13,9 @@
     "test:data": "tsx scripts/validate-mock-data.ts",
     "test:metrics": "tsx scripts/test-metrics.ts",
     "test:quality": "tsx scripts/test-quality.ts",
-    "test:qr": "tsx scripts/verify-qr-decode.ts"
+    "test:qr": "tsx scripts/verify-qr-decode.ts",
+    "test:i18n": "tsx scripts/test-i18n.ts",
+    "test:calendar": "tsx scripts/test-calendar-promo.ts"
   },
   "dependencies": {
     "@turf/distance": "^7.4.0",
@@ -46,6 +48,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "axe-core": "^4.14.1",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "jsqr": "^1.4.0",

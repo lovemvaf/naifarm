@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, MessageSquare, Send, Sparkles, X } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { useLocale } from "@/context/LocaleContext";
+import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
 import { AI_WORKSPACE_CONFIG } from "@/data/demo/ai-scripts";
 import type { WorkspaceId } from "@/types/naifarm";
 
@@ -19,17 +21,29 @@ interface ChatMessage {
 
 function inferWorkspaceFromPath(pathname: string, fallback: WorkspaceId): WorkspaceId {
   if (pathname.startsWith("/farmer")) return "W02";
-  if (pathname.startsWith("/volunteer") || pathname.startsWith("/learn")) return "W03";
+  if (pathname.startsWith("/volunteer")) return "W03";
   if (pathname.startsWith("/coordinator")) return "W04";
   if (pathname.startsWith("/organization")) return "W05";
   if (pathname.startsWith("/admin")) return "W06";
-  if (pathname.startsWith("/account") || pathname === "/" || pathname.startsWith("/marketplace")) return "W01";
+  if (
+    pathname.startsWith("/account") ||
+    pathname === "/" ||
+    pathname.startsWith("/marketplace") ||
+    pathname.startsWith("/learn") ||
+    pathname.startsWith("/live") ||
+    pathname.startsWith("/explore") ||
+    pathname.startsWith("/events")
+  ) {
+    return "W01";
+  }
   return fallback;
 }
 
 export function NaiAIFloatingChat() {
   const pathname = usePathname();
-  const { activeWorkspace, hideAiChatOnSubflow, products } = useDemoStore();
+  const { locale, t } = useLocale();
+  const isEn = locale === "en";
+  const { authUser, activeWorkspace, hideAiChatOnSubflow, products } = useDemoStore();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messagesByWs, setMessagesByWs] = useState<Partial<Record<WorkspaceId, ChatMessage[]>>>({});
@@ -158,9 +172,11 @@ export function NaiAIFloatingChat() {
                 <MessageSquare className="h-5 w-5" aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-sm font-bold leading-tight">NaiAI · Trợ lý NaiFarm ({effectiveWs})</h2>
+                <h2 className="text-sm font-bold leading-tight">
+                  {t.ai.panelTitle} ({effectiveWs})
+                </h2>
                 <p className="text-[11px] text-[#EAF0E5]">
-                  Trợ giúp theo kịch bản · Không lưu dữ liệu riêng
+                  {isEn ? "Scripted local guidance · No external API" : "Trợ giúp theo kịch bản · Không gọi API ngoài"}
                 </p>
               </div>
             </div>
@@ -170,7 +186,7 @@ export function NaiAIFloatingChat() {
                 setOpen(false);
                 launcherRef.current?.focus();
               }}
-              aria-label="Đóng trợ lý NaiAI"
+              aria-label={t.nav.closeButton}
               className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-white/15 cursor-pointer"
             >
               <X className="h-5 w-5" aria-hidden="true" />
@@ -178,7 +194,7 @@ export function NaiAIFloatingChat() {
           </header>
 
           <div className="border-b border-[#D6DED2] bg-[#EAF0E5]/60 px-3 py-2 text-[11px] text-[#52645A]">
-            AI gợi ý theo kịch bản không gian trải nghiệm — vui lòng kiểm tra lại thông tin trước khi quyết định.
+            {authUser?.isMinor ? t.ai.minorRestrictedNotice : t.ai.localNotice}
           </div>
 
           <div className="flex-1 space-y-3 overflow-y-auto p-3.5">
@@ -201,7 +217,7 @@ export function NaiAIFloatingChat() {
                     <p>{m.text}</p>
                     {linkedProd ? (
                       <Link
-                        href={`/products/${linkedProd.slug}`}
+                        href={buildLocalizedHref(`/products/${linkedProd.slug}`, locale)}
                         onClick={() => setOpen(false)}
                         className="flex items-center gap-2.5 rounded-[10px] border border-[#D6DED2] bg-white p-2 hover:bg-[#EAF0E5]"
                       >
@@ -220,7 +236,7 @@ export function NaiAIFloatingChat() {
                       </Link>
                     ) : m.linkHref && m.linkLabel ? (
                       <Link
-                        href={m.linkHref}
+                        href={buildLocalizedHref(m.linkHref, locale)}
                         onClick={() => setOpen(false)}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-[#245B3D] underline"
                       >
@@ -255,19 +271,19 @@ export function NaiAIFloatingChat() {
               className="flex items-center gap-2"
             >
               <label htmlFor="naiai-input" className="sr-only">
-                Nhập câu hỏi cho NaiAI
+                {t.ai.launcherLabel}
               </label>
               <input
                 id="naiai-input"
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Hỏi giá nông sản, mã QR, cách đăng..."
+                placeholder={t.ai.inputPlaceholder}
                 className="min-h-[42px] flex-1 rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm text-[#25352B]"
               />
               <button
                 type="submit"
-                aria-label="Gửi câu hỏi"
+                aria-label={t.ai.sendBtn}
                 className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-[10px] bg-[#245B3D] text-white hover:bg-[#19472E] cursor-pointer"
               >
                 <Send className="h-4 w-4" aria-hidden="true" />

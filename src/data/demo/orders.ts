@@ -1,5 +1,6 @@
 import { INITIAL_FARMS } from "./farms";
 import { INITIAL_PRODUCTS } from "./products";
+import { HTX_TT_NOV_ORDERS, HTX_TT_OCT_ORDERS } from "@/data/fixtures/htx-tan-trieu-scenario";
 import { getAdministrativeUnitByCode } from "@/lib/geography/administrative-lookup";
 import { formatAdministrativeAddress } from "@/lib/geography/normalize-address";
 import type { DeliveryMethod, DemoOrder, OrderStatus } from "@/types/naifarm";
@@ -154,9 +155,10 @@ const EXTRA_ORDERS: DemoOrder[] = Array.from({ length: 166 }, (_, idx) => {
   const unitCode = DELIVERY_UNIT_CODES[idx % DELIVERY_UNIT_CODES.length];
   const unit = getAdministrativeUnitByCode(unitCode);
 
-  const isOct = num <= 82;
-  const monthNum = isOct ? 10 : 11;
-  const maxDay = isOct ? 28 : 24;
+  const isHistoricalEarly = num >= 3 && num <= 20;
+  const isOct = num > 20 && num <= 82;
+  const monthNum = isHistoricalEarly ? 1 + ((num - 3) % 9) : isOct ? 10 : 11;
+  const maxDay = monthNum === 11 ? 24 : 28;
   const dayNum = 1 + (idx % maxDay);
   const dayStr = String(dayNum).padStart(2, "0");
   const monthStr = String(monthNum).padStart(2, "0");
@@ -288,4 +290,9 @@ const EXTRA_ORDERS: DemoOrder[] = Array.from({ length: 166 }, (_, idx) => {
   };
 });
 
-export const INITIAL_ORDERS: DemoOrder[] = [...GOLDEN_ORDERS, ...EXTRA_ORDERS];
+export const INITIAL_ORDERS: DemoOrder[] = [
+  ...GOLDEN_ORDERS,
+  ...EXTRA_ORDERS,
+  ...HTX_TT_NOV_ORDERS,
+  ...HTX_TT_OCT_ORDERS,
+];

@@ -5,12 +5,15 @@ import Link from "next/link";
 import {
   BarChart3,
   Boxes,
+  CalendarDays,
+  Clock,
   Database,
   Download,
   Eye,
   EyeOff,
   FileSearch,
   Lock,
+  Megaphone,
   ShieldAlert,
   ShieldCheck,
   Store,
@@ -26,11 +29,16 @@ import {
   YAxis,
 } from "recharts";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { useLocale } from "@/context/LocaleContext";
 import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
+import { NaiCalendarBoard } from "@/components/calendar/NaiCalendarBoard";
+import { AccessDeniedCard } from "@/components/permissions/AccessDeniedCard";
 import { PermissionMatrix } from "@/components/permissions/PermissionMatrix";
 import { ScopeSelector } from "@/components/permissions/ScopeSelector";
 import { QualityCenterPanel } from "@/components/quality/QualityCenterPanel";
 import { AdministrativeBoundaryLayer } from "@/components/map/AdministrativeBoundaryLayer";
+import { resolveCampaignRuntimeState } from "@/lib/commerce/promotion-engine";
+import { formatVnDateTime } from "@/lib/clock/vn-clock";
 import { PERIOD_WINDOWS, computeBusinessMetrics } from "@/lib/metrics/business-metrics";
 import { impactAnalysisForRecall } from "@/lib/quality/recall-engine";
 import { buildScopedCsvContent, triggerCsvDownload } from "@/lib/export/csv-export";
@@ -47,13 +55,20 @@ type AdminTab =
   | "orders"
   | "quality"
   | "finance"
+  | "campaigns"
+  | "calendar"
   | "permissions"
   | "support_gis";
 
 export default function AdminWorkspacePage() {
+  const { locale, t } = useLocale();
+  const isEn = locale === "en";
   const {
     hydrated,
     setActiveWorkspace,
+    authUser,
+    activeClockIso,
+    setClockOverrideIso,
     activeScopeUnitCode,
     farms,
     products,
@@ -67,6 +82,7 @@ export default function AdminWorkspacePage() {
     receivablesPayables,
     missions,
     volunteerHours,
+    campaigns,
     auditLogs,
     tickets,
     toggleProductVisibility,
@@ -75,6 +91,7 @@ export default function AdminWorkspacePage() {
     renewCredentialRecord,
     holdOrRecallBatch,
     updateTicketStatus,
+    advanceCampaignStatus,
   } = useDemoStore();
 
   const [tab, setTab] = useState<AdminTab>("overview");
@@ -207,6 +224,20 @@ export default function AdminWorkspacePage() {
           active: tab === "finance",
           onClick: () => setTab("finance"),
           icon: <Wallet className="h-4 w-4" aria-hidden="true" />,
+        },
+        {
+          label: `Chiến dịch & Đồng hồ (${campaigns.length})`,
+          href: "#campaigns",
+          active: tab === "campaigns",
+          onClick: () => setTab("campaigns"),
+          icon: <Megaphone className="h-4 w-4" aria-hidden="true" />,
+        },
+        {
+          label: "Lịch Hệ thống (NaiCalendar)",
+          href: "#calendar",
+          active: tab === "calendar",
+          onClick: () => setTab("calendar"),
+          icon: <CalendarDays className="h-4 w-4" aria-hidden="true" />,
         },
         {
           label: `Phân quyền & Kiểm toán (${auditLogs.length})`,
@@ -775,6 +806,114 @@ export default function AdminWorkspacePage() {
               </div>
             </Card>
           </div>
+        ) : null}
+
+        {tab === "campaigns" ? (
+          <div className="space-y-5">
+            <Card className="space-y-3 p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="flex items-center gap-2 text-lg font-bold text-[#25352B]">
+                    <Clock className="h-5 w-5 text-[#245B3D]" aria-hidden="true" />
+                    <span>
+                      {isEn
+                        ? "Asia/Ho_Chi_Minh Campaign Clock Test Switcher"
+                        : "Kiểm thử Đồng hồ Hệ thống (Asia/Ho_Chi_Minh)"}
+                    </span>
+                  </h2>
+                  <p className="text-xs text-[#52645A]">
+                    {isEn ? "Active clock:" : "Đồng hồ hiện tại:"}{" "}
+                    <strong>{formatVnDateTime(activeClockIso, locale)}</strong>
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: "25/11/2026 (Default Active)", iso: "2026-11-25T12:00:00+07:00" },
+                    { label: "24/11/2026 (Culture Day)", iso: "2026-11-24T12:00:00+07:00" },
+                    { label: "05/12/2026 (Soil & Youth)", iso: "2026-12-05T09:00:00+07:00" },
+                  ].map((preset) => (
+                    <Button
+                      key={preset.iso}
+                      size="sm"
+                      variant={activeClockIso === preset.iso ? "primary" : "secondary"}
+                      onClick={() => {
+                        setClockOverrideIso(
+                          preset.iso === "2026-11-25T12:00:00+07:00" ? null : preset.iso,
+                        );
+                        notifySuccess(`${isEn ? "Clock set:" : "Đã chuyển mốc đồng hồ:"} ${preset.label}`);
+                      }}
+                    >
+                      {preset.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </Card>
+
+            <Card className="space-y-3 p-5">
+              <h3 className="text-base font-bold text-[#25352B]">
+                {isEn ? "Campaign Approval & Governance (Maker ≠ Checker)" : "Quản trị Chiến dịch & Phê duyệt (Maker ≠ Checker)"}
+              </h3>
+              <div className="space-y-2.5 text-xs">
+                {campaigns.slice(0, 10).map((c) => {
+                  const rt = resolveCampaignRuntimeState(c, activeClockIso);
+                  return (
+                    <div
+                      key={c.id}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] p-3"
+                    >
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge tone={rt === "active" ? "success" : "info"}>{rt}</Badge>
+                          <span className="font-bold text-[#25352B]">{isEn ? c.titleEn : c.titleVi}</span>
+                        </div>
+                        <p className="mt-0.5 text-[#52645A]">
+                          Maker: {c.makerName} · Approver: {c.approverName ?? "Pending"}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {c.status === "submitted" ? (
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={() => {
+                              const res = advanceCampaignStatus(c.id, "approved", "Quản trị viên W06");
+                              if (res.ok) notifySuccess(res.message);
+                              else notifyError(res.message);
+                            }}
+                          >
+                            {isEn ? "Approve" : "Duyệt"}
+                          </Button>
+                        ) : null}
+                        {c.status === "active" ? (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => {
+                              const res = advanceCampaignStatus(c.id, "paused", "Quản trị viên W06");
+                              if (res.ok) notifyInfo(res.message);
+                              else notifyError(res.message);
+                            }}
+                          >
+                            {isEn ? "Pause" : "Tạm dừng"}
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          </div>
+        ) : null}
+
+        {tab === "calendar" ? <NaiCalendarBoard scope="W06" allowCreate /> : null}
+
+        {tab === "permissions" && authUser && authUser.workspaceId !== "W06" ? (
+          <AccessDeniedCard
+            title={t.workspaces.accessDeniedTitle}
+            reason={`${t.workspaces.accessDeniedBody} (${authUser.workspaceId} -> W06)`}
+          />
         ) : null}
       </div>
     </WorkspaceShell>

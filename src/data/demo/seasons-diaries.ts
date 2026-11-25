@@ -70,8 +70,8 @@ export const INITIAL_SEASONS: ProductionSeason[] = [
       isDemo: true as const,
     };
   }),
-  ...INITIAL_FARMS.slice(0, 6).map((farm, index) => {
-    const num = String(31 + index).padStart(2, "0");
+  ...INITIAL_FARMS.slice(0, 24).map((farm, index) => {
+    const num = String(41 + index).padStart(2, "0");
     return {
       id: `SEASON-${num}`,
       farmId: farm.id,
@@ -79,7 +79,7 @@ export const INITIAL_SEASONS: ProductionSeason[] = [
       administrativeUnitCode: farm.administrativeUnitCode,
       administrativeUnitName: farm.administrativeUnitName,
       cropName: farm.mainCrops[0] ?? "Nông sản địa phương",
-      variety: "Lứa đón vụ Tết 2027",
+      variety: "Lứa đón vụ Tết & Trải nghiệm 2027",
       seasonName: `Vụ Đông Xuân 2026–2027 · ${farm.name}`,
       startDate: "10/11/2026",
       expectedHarvestDate: "20/01/2027",
@@ -87,7 +87,7 @@ export const INITIAL_SEASONS: ProductionSeason[] = [
       growingZoneCode: farm.growingZoneCode ?? `MAU-MSVT-${farm.administrativeUnitCode}-02`,
       status: "đang chăm sóc" as const,
       summary: `Chuẩn bị lứa trái vụ Đông Xuân phục vụ giỏ quà Tết Thanh niên tại ${farm.administrativeUnitName}.`,
-      batchCodes: [`NF-DN-${String(31 + index).padStart(3, "0")}`],
+      batchCodes: [`NF-DN-${String(41 + index).padStart(3, "0")}`],
       expectedYieldKg: Math.round(farm.areaHa * 750),
       estimatedCostVnd: Math.round(farm.areaHa * 12000000),
       isDemo: true as const,
@@ -99,7 +99,7 @@ const BUILT_DIARIES: DiaryEntry[] = [];
 let seq = 1;
 
 for (const season of INITIAL_SEASONS) {
-  const count = Number(season.id.replace("SEASON-", "")) <= 30 ? 10 : 8;
+  const count = Number(season.id.replace("SEASON-", "")) <= 40 ? 9 : 8;
   for (let step = 0; step < count; step += 1) {
     const id = `DIARY-${String(seq).padStart(3, "0")}`;
     seq += 1;

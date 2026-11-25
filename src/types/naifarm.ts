@@ -1,4 +1,37 @@
+export type Locale = "vi" | "en";
+
+export type CurrencyDisplayMode = "vnd" | "vnd_usd_est";
+
 export type WorkspaceId = "W01" | "W02" | "W03" | "W04" | "W05" | "W06";
+
+export type PermissionBundleId =
+  | "buyer"
+  | "international_guest"
+  | "guardian"
+  | "farm_owner"
+  | "coop_board"
+  | "coop_sales"
+  | "coop_accountant"
+  | "coop_warehouse_qc"
+  | "volunteer_adult"
+  | "student_minor_consented"
+  | "student_minor_unconsented"
+  | "coordinator"
+  | "school_teacher"
+  | "b2b_buyer"
+  | "logistics_dispatcher"
+  | "authority_verifier"
+  | "platform_admin"
+  | "auditor_readonly";
+
+export type ScopeRoleTag =
+  | "own"
+  | "farm"
+  | "organization"
+  | "program"
+  | "unit"
+  | "assigned"
+  | "platform";
 
 export type SourceKind = "public_reference" | "synthetic";
 
@@ -172,7 +205,9 @@ export type ProductCategory =
   | "Nông sản chế biến & Mứt"
   | "Rau củ & Nấm sạch"
   | "Tiêu & Gia vị vùng đồi"
-  | "Quà tặng OCOP & Combo";
+  | "Quà tặng OCOP & Combo"
+  | "Thảo mộc & Gia vị hữu cơ mẫu"
+  | "Đặc sản du lịch & Hộp quà";
 
 export type AnatomyKind = "pomelo" | "rambutan" | "cashew" | "durian";
 
@@ -201,6 +236,8 @@ export interface Farm {
   id: string;
   slug: string;
   name: string;
+  enName?: string;
+  organizationId?: string;
   ownerName: string;
   ownerAgeLabel: string;
   administrativeUnitCode: string;
@@ -216,7 +253,9 @@ export interface Farm {
   ocopNote: string;
   growingZoneCode?: string;
   storyHeadline: string;
+  enStoryHeadline?: string;
   storySummary: string;
+  enStorySummary?: string;
   bannerImage: string;
   ownerPortrait: string;
   galleryImages: string[];
@@ -232,14 +271,17 @@ export interface Product {
   slug: string;
   skuCode?: string;
   name: string;
+  enName?: string;
   category: ProductCategory;
   farmId: string;
   farmName: string;
+  organizationId?: string;
   administrativeUnitCode: string;
   administrativeUnitName: string;
   region: string;
   unitLabel: string;
   priceVnd: number;
+  compareAtPriceVnd?: number;
   costVnd?: number;
   stockKg: number;
   seasonStatus: ProductSeasonStatus;
@@ -254,8 +296,13 @@ export interface Product {
   originNote?: string;
   isRescue?: boolean;
   isNaiBox?: boolean;
+  adultOnly?: boolean;
+  allergens?: string[];
+  exportShippingNote?: string;
+  eligibleForPreorder?: boolean;
   preOrderEtaLabel?: string;
   shortDescription: string;
+  enShortDescription?: string;
   storyNote: string;
   image: string;
   gallery: string[];
@@ -395,6 +442,8 @@ export interface DemoOrderItem {
 export interface DemoOrder {
   id: string;
   parentOrderId?: string;
+  organizationId?: string;
+  channel?: ChannelKind;
   customerId?: string;
   customerName: string;
   customerPhoneDemo: string;
@@ -433,12 +482,22 @@ export interface DemoOrder {
 export interface VolunteerMission {
   id: string;
   title: string;
+  titleEn?: string;
   farmId: string;
   farmName: string;
   administrativeUnitCode?: string;
   location: string;
   mode: "Trực tiếp tại vườn" | "Hỗ trợ từ xa (Online)";
-  skillTag: "Chụp ảnh & AI đăng bán" | "Thiết lập QR & Nhật ký" | "Livestream bán hàng";
+  skillTag:
+    | "Chụp ảnh & AI đăng bán"
+    | "Thiết lập QR & Nhật ký"
+    | "Livestream bán hàng"
+    | "Đại sứ Song ngữ & Đón khách"
+    | "Truyền thông & Văn hóa";
+  audienceAge?: "adult" | "minor_supervised";
+  guardianConsentRequired?: boolean;
+  linkedCampaignId?: string;
+  languageRequired?: "vi" | "en" | "bilingual";
   assigneeName?: string;
   expectedHours: number;
   submittedHours: number;
@@ -480,48 +539,82 @@ export interface SupportRequest {
 export interface LivestreamSession {
   id: string;
   title: string;
+  titleEn?: string;
   farmId: string;
   farmName: string;
   hostYouth: string;
   farmerName: string;
   scheduleLabel: string;
+  startIso?: string;
   status: LiveStatus;
   pinnedProductIds: string[];
-  angles: { id: string; label: string; image: string; caption: string }[];
+  linkedTourSlug?: string;
+  linkedCampaignId?: string;
+  linkedLessonSlug?: string;
+  angles: { id: string; label: string; labelEn?: string; image: string; caption: string; captionEn?: string }[];
   summary: string;
+  summaryEn?: string;
   isDemo: true;
 }
 
 export interface ExperienceBooking {
   id: string;
+  tourSlug?: string;
+  slotId?: string;
   farmId: string;
   farmName: string;
   packageTitle: string;
+  packageTitleEn?: string;
   guestName: string;
   guestCount: number;
+  adultCount?: number;
+  childCount?: number;
+  language?: Locale;
   dateLabel: string;
+  allergenNote?: string;
+  schoolGroup?: boolean;
+  schoolConsentVerified?: boolean;
+  totalEstimateVnd?: number;
   note: string;
-  status: "Chờ nhà vườn xác nhận";
+  status: "Chờ nhà vườn xác nhận" | "Đã xác nhận" | "Đã check-in" | "Đề nghị đổi ca" | "Đã hủy";
+  reviewComment?: string;
+  reviewRating?: number;
 }
 
 export interface LearningLesson {
   id: string;
   slug: string;
   title: string;
+  titleEn?: string;
+  ambassadorLevel?: AmbassadorLevel;
   topicTag: string;
+  topicTagEn?: string;
   durationLabel: string;
+  durationLabelEn?: string;
   levelLabel: string;
+  levelLabelEn?: string;
   regionCode: string;
   regionName: string;
   summary: string;
+  summaryEn?: string;
+  learningObjectiveEn?: string;
   image: string;
   anatomyTarget: AnatomyKind;
-  sections: { heading: string; body: string; image: string }[];
+  sections: {
+    heading: string;
+    headingEn?: string;
+    body: string;
+    bodyEn?: string;
+    image: string;
+  }[];
   quizQuestion: {
     prompt: string;
+    promptEn?: string;
     options: string[];
+    optionsEn?: string[];
     correctIndex: number;
     explanation: string;
+    explanationEn?: string;
   };
 }
 
@@ -540,11 +633,15 @@ export interface PartnerOrganization {
 export interface UserNotification {
   id: string;
   title: string;
+  titleEn?: string;
   message: string;
-  category: "order" | "season" | "mission" | "system";
+  messageEn?: string;
+  category: "order" | "season" | "mission" | "system" | "calendar" | "campaign";
   createdAtLabel: string;
   read: boolean;
   href: string;
+  dedupeKey?: string;
+  roleScope?: WorkspaceId;
 }
 
 export interface SupportTicket {
@@ -566,13 +663,21 @@ export interface DemoAuthAccount {
   name: string;
   emailDemo: string;
   roleLabel: string;
+  roleLabelEn?: string;
+  bundleId?: PermissionBundleId;
   workspaceId: WorkspaceId;
+  organizationId?: string;
+  organizationKind?: OrganizationKind;
+  isMinor?: boolean;
+  hasGuardianConsent?: boolean;
+  preferredLocale?: Locale;
   farmId?: string;
   avatarText: string;
   avatarBg: string;
   unitCode: string;
   unitName: string;
   bio: string;
+  bioEn?: string;
   canPublicSignUp: boolean;
 }
 
@@ -818,4 +923,345 @@ export interface SponsorCampaign {
   outputsAcceptedCount: number;
 }
 
-export type PeriodKey = "current_month" | "previous_month" | "last_7d" | "last_30d" | "all";
+export type PeriodKey =
+  | "current_month"
+  | "previous_month"
+  | "org_tt_nov_1_24"
+  | "last_7d"
+  | "last_30d"
+  | "all";
+
+// --- V4 DOMAIN INTERFACES (HTX SCOPED BI, AGRITOURISM, AMBASSADOR, CALENDAR, CAMPAIGNS) ---
+
+export type ChannelKind = "online_market" | "wholesale_b2b" | "farm_outlet";
+
+export interface OrganizationUnit {
+  id: string;
+  name: string;
+  enName: string;
+  kind: OrganizationKind;
+  administrativeUnitCode: string;
+  administrativeUnitName: string;
+  memberFarmIds: string[];
+  warehouseIds: string[];
+  channels: ChannelKind[];
+  collectionZones: string[];
+  isSampleScenario: true;
+  summary: string;
+  enSummary: string;
+}
+
+export type ArApAgingBucket = "current" | "1_30" | "31_60" | "61_90" | "over_90";
+
+export interface TourItineraryStop {
+  timeLabel: string;
+  titleVi: string;
+  titleEn: string;
+  detailVi: string;
+  detailEn: string;
+}
+
+export interface TourSlot {
+  id: string;
+  dateIso: string;
+  startTime: string;
+  endTime: string;
+  capacity: number;
+  bookedCount: number;
+  guideId: string;
+  guideName: string;
+  language: "vi" | "en" | "bilingual";
+  status: "open" | "almost_full" | "full" | "cancelled";
+}
+
+export interface TourPackage {
+  id: string;
+  slug: string;
+  farmId: string;
+  farmName: string;
+  administrativeUnitCode: string;
+  administrativeUnitName: string;
+  zoneLabel: DongNaiZone;
+  experienceKind:
+    | "harvest"
+    | "storytelling"
+    | "processing"
+    | "family"
+    | "school_trip"
+    | "qr_workshop"
+    | "bilingual_tour"
+    | "farm_to_table"
+    | "festival";
+  titleVi: string;
+  titleEn: string;
+  summaryVi: string;
+  summaryEn: string;
+  seasonNoteVi: string;
+  seasonNoteEn: string;
+  durationHours: number;
+  adultPriceVnd: number;
+  childPriceVnd: number;
+  minGuests: number;
+  maxGuests: number;
+  languages: ("vi" | "en")[];
+  ageSuitability: "all_ages" | "family_6_plus" | "school_supervised" | "adult_18_plus";
+  accessibilityNoteVi: string;
+  accessibilityNoteEn: string;
+  allergenNoteVi: string;
+  allergenNoteEn: string;
+  safetyNoteVi: string;
+  safetyNoteEn: string;
+  weatherContingencyVi: string;
+  weatherContingencyEn: string;
+  meetingPointVi: string;
+  meetingPointEn: string;
+  coordinateVerified: boolean;
+  includesVi: string[];
+  includesEn: string[];
+  itinerary: TourItineraryStop[];
+  slots: TourSlot[];
+  linkedProductIds: string[];
+  linkedLiveIds: string[];
+  image: string;
+  gallery: string[];
+  ratingFixture: number;
+  reviewCountFixture: number;
+}
+
+export type AmbassadorLevel = "A1" | "A2" | "B1" | "FieldLab" | "LocalAgri";
+
+export interface PhraseCard {
+  id: string;
+  lessonId: string;
+  level: AmbassadorLevel;
+  enText: string;
+  viText: string;
+  pronunciationHint: string;
+  contextVi: string;
+  contextEn: string;
+  cautionVi?: string;
+  cautionEn?: string;
+}
+
+export interface QuestionBankItem {
+  id: string;
+  lessonId: string;
+  level: AmbassadorLevel;
+  kind: "multiple_choice" | "photo_qr" | "order_steps";
+  promptVi: string;
+  promptEn: string;
+  optionsVi: string[];
+  optionsEn: string[];
+  correctIndex: number;
+  explanationVi: string;
+  explanationEn: string;
+  learningObjective: string;
+  difficulty: "basic" | "intermediate" | "applied";
+  image?: string;
+}
+
+export interface RoleplayOption {
+  id: string;
+  textVi: string;
+  textEn: string;
+  isRecommended: boolean;
+  feedbackVi: string;
+  feedbackEn: string;
+  rubricDimension: "accuracy" | "clarity" | "courtesy" | "safety" | "provenance" | "deliverable";
+  scoreDelta: number;
+}
+
+export interface RoleplayScenario {
+  id: string;
+  lessonId: string;
+  level: AmbassadorLevel;
+  titleVi: string;
+  titleEn: string;
+  customerPromptVi: string;
+  customerPromptEn: string;
+  contextDataNote: string;
+  options: RoleplayOption[];
+}
+
+export interface LearningProgressRecord {
+  completedLessonIds: string[];
+  quizAnswers: Record<string, number>;
+  masteredPhraseIds: string[];
+  matchedPairIds: string[];
+  roleplayChoices: Record<string, string>;
+  practicePoints: number;
+  submittedArtifactNotes: Record<string, string>;
+}
+
+export interface ObservanceRecord {
+  id: string;
+  titleVi: string;
+  titleEn: string;
+  dateLabelVi: string;
+  monthDay: string; // MM-DD or variable-lunar
+  isLunarVariable?: boolean;
+  yearVerified: number;
+  legalOrOfficialSource: string;
+  sourceUrl: string;
+  category: "vietnam_official" | "un_fao" | "traditional_lunar" | "seasonal_agri";
+  noteVi: string;
+  noteEn: string;
+  isReadOnlyOfficial: true;
+}
+
+export type CalendarEventKind =
+  | "observance"
+  | "harvest"
+  | "live"
+  | "tour"
+  | "promotion"
+  | "training"
+  | "mission"
+  | "school_assignment"
+  | "supplier_delivery"
+  | "cert_expiry"
+  | "inventory_count"
+  | "settlement"
+  | "meeting"
+  | "reminder"
+  | "volunteer_shift";
+
+export type CalendarVisibility = "public" | "w02" | "w03" | "w04" | "w05" | "w06";
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  titleEn: string;
+  description: string;
+  descriptionEn: string;
+  eventKind: CalendarEventKind;
+  classification: "official_observance" | "platform_initiative" | "commercial" | "internal";
+  organizer: string;
+  status: "scheduled" | "active" | "completed" | "cancelled";
+  startIso: string;
+  endIso: string;
+  allDay: boolean;
+  timezone: "Asia/Ho_Chi_Minh";
+  recurrenceRule?: string;
+  priority: "low" | "normal" | "high";
+  visibility: CalendarVisibility;
+  administrativeUnitCode?: string;
+  farmId?: string;
+  organizationId?: string;
+  assignedTo?: string;
+  linkedRoute?: string;
+  linkedEntityId?: string;
+  locationLabel?: string;
+  isOfficialReadOnly?: boolean;
+}
+
+export type CampaignStatus =
+  | "draft"
+  | "submitted"
+  | "approved"
+  | "scheduled"
+  | "active"
+  | "ended"
+  | "paused"
+  | "cancelled";
+
+export interface CampaignRecord {
+  id: string;
+  slug: string;
+  titleVi: string;
+  titleEn: string;
+  subtitleVi: string;
+  subtitleEn: string;
+  objectiveVi: string;
+  objectiveEn: string;
+  classification: "platform_initiative" | "commercial" | "cultural_recap";
+  organizer: string;
+  targetAudience: ("domestic_customer" | "international_guest" | "adult_member" | "organization")[];
+  status: CampaignStatus;
+  startIso: string;
+  endIso: string;
+  timezone: "Asia/Ho_Chi_Minh";
+  priority: number;
+  showNationalFlagAccent: boolean;
+  bannerImage: string;
+  bannerAltVi: string;
+  bannerAltEn: string;
+  primaryCtaLabelVi: string;
+  primaryCtaLabelEn: string;
+  primaryCtaHref: string;
+  makerName: string;
+  approverName?: string;
+  productIds: string[];
+  farmIds: string[];
+  experienceSlugs: string[];
+  liveIds: string[];
+  lessonSlugs: string[];
+  promotionIds: string[];
+  budgetPlannedVnd: number;
+  budgetSpentVnd: number;
+  fixtureSessionsCount: number;
+  fixtureOrdersCount: number;
+  fixtureRevenueVnd: number;
+  agendaItems: { time: string; titleVi: string; titleEn: string; route: string }[];
+  recapStoryVi?: string;
+  recapStoryEn?: string;
+}
+
+export type PromotionKind =
+  | "percent"
+  | "fixed_amount"
+  | "min_cart"
+  | "bundle"
+  | "shipping_discount"
+  | "preorder"
+  | "flash_sale";
+
+export interface PromotionRecord {
+  id: string;
+  code: string;
+  campaignId?: string;
+  titleVi: string;
+  titleEn: string;
+  kind: PromotionKind;
+  discountPercent?: number;
+  discountFixedVnd?: number;
+  shippingDiscountVnd?: number;
+  minSpendVnd: number;
+  maxDiscountVnd: number;
+  maxRedemptionsTotal: number;
+  redeemedCount: number;
+  stockAllocatedUnits?: number;
+  stockUsedUnits?: number;
+  stackable: boolean;
+  eligibleLocales: Locale[];
+  eligibleCategories?: ProductCategory[];
+  eligibleProductIds?: string[];
+  targetSellerId?: string;
+  startIso: string;
+  endIso: string;
+  active: boolean;
+  approvedBy?: string;
+  makerName: string;
+  budgetCapVnd: number;
+  budgetUsedVnd: number;
+  excludeMinors: boolean;
+}
+
+export interface InternationalInquiry {
+  id: string;
+  productId?: string;
+  productName?: string;
+  farmId: string;
+  farmName: string;
+  buyerName: string;
+  country: string;
+  preferredLanguage: Locale;
+  quantityNote: string;
+  packagingNote: string;
+  sampleRequested: boolean;
+  message: string;
+  createdAtIso: string;
+  status: "submitted_local" | "seller_responded";
+  responseNote?: string;
+}
+

@@ -18,10 +18,12 @@ import {
   YAxis,
 } from "recharts";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { useLocale } from "@/context/LocaleContext";
+import { getManagerStrategyCards } from "@/lib/commerce/promotion-engine";
 import { PERIOD_WINDOWS, computeBusinessMetrics } from "@/lib/metrics/business-metrics";
 import { formatVnd } from "@/lib/format";
 import { Badge, Card } from "@/components/ui/Primitives";
-import type { PeriodKey } from "@/types/naifarm";
+import type { ChannelKind, PeriodKey } from "@/types/naifarm";
 
 export function FarmerOverviewAnalytics({
   farmIdFilter,
@@ -30,6 +32,8 @@ export function FarmerOverviewAnalytics({
   farmIdFilter?: string;
   farmName: string;
 }) {
+  const { locale } = useLocale();
+  const isEn = locale === "en";
   const {
     hydrated,
     orders,
@@ -40,9 +44,12 @@ export function FarmerOverviewAnalytics({
     missions,
     volunteerHours,
     refundRequests,
+    campaigns,
   } = useDemoStore();
 
-  const [periodKey, setPeriodKey] = useState<PeriodKey>("current_month");
+  const [scopeMode, setScopeMode] = useState<"org_tt_scenario" | "farm">("org_tt_scenario");
+  const [channelFilter, setChannelFilter] = useState<"all" | ChannelKind>("all");
+  const [periodKey, setPeriodKey] = useState<PeriodKey>("org_tt_nov_1_24");
 
   const report = useMemo(
     () =>
@@ -55,7 +62,9 @@ export function FarmerOverviewAnalytics({
         missions,
         hourRecords: volunteerHours,
         periodKey,
-        farmIdFilter,
+        farmIdFilter: scopeMode === "farm" ? farmIdFilter : undefined,
+        organizationIdFilter: scopeMode === "org_tt_scenario" ? "org-tt-scenario" : undefined,
+        channelFilter: channelFilter === "all" ? undefined : channelFilter,
         refDateIso: "2026-11-25",
       }),
     [
@@ -68,7 +77,17 @@ export function FarmerOverviewAnalytics({
       volunteerHours,
       periodKey,
       farmIdFilter,
+      scopeMode,
+      channelFilter,
     ],
+  );
+
+  const pendingApprovals = campaigns.filter(
+    (c) => c.status === "draft" || c.status === "submitted",
+  ).length;
+  const strategyCards = useMemo(
+    () => getManagerStrategyCards(report, pendingApprovals, locale),
+    [report, pendingApprovals, locale],
   );
 
   const chartData = useMemo(
@@ -93,18 +112,53 @@ export function FarmerOverviewAnalytics({
 
   return (
     <div className="space-y-5">
-      {/* Period Selector & Honest Scope Notice */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-[#D6DED2] bg-white p-4">
-        <div>
-          <h2 className="text-lg font-bold text-[#25352B]">
-            Tổng quan hiệu quả vận hành — {farmName}
-          </h2>
-          <p className="text-xs text-[#52645A]">
-            Kỳ đối chiếu: <strong>{report.period.label}</strong> (Múi giờ Việt Nam)
-          </p>
+      {/* Period & Scenario / Channel Selectors */}
+      <div className="flex flex-col gap-3 rounded-[14px] border border-[#D6DED2] bg-white p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-[#25352B]">
+              {scopeMode === "org_tt_scenario"
+                ? isEn
+                  ? "Cooperative BI Dashboard — HTX Nông nghiệp Tân Triều (20 Members)"
+                  : "Bảng chỉ số Quản trị HTX Nông nghiệp Tân Triều (20 hộ xã viên)"
+                : `${isEn ? "Orchard Operating Overview" : "Tổng quan hiệu quả vận hành"} — ${farmName}`}
+            </h2>
+            <p className="text-xs text-[#52645A]">
+              {isEn ? "Period:" : "Kỳ đối chiếu:"}{" "}
+              <strong>{isEn ? report.period.labelEn : report.period.label}</strong> (Asia/Ho_Chi_Minh)
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              aria-label={isEn ? "Scope selector" : "Phạm vi số liệu"}
+              value={scopeMode}
+              onChange={(e) => setScopeMode(e.target.value as "org_tt_scenario" | "farm")}
+              className="min-h-[36px] rounded-[10px] border border-[#788A7B] bg-[#FAF8F1] px-2.5 text-xs font-semibold"
+            >
+              <option value="org_tt_scenario">
+                {isEn ? "HTX Tân Triều (Reconciled Bi)" : "HTX Nông nghiệp Tân Triều (Số liệu đối chiếu)"}
+              </option>
+              <option value="farm">
+                {isEn ? `Selected farm: ${farmName}` : `Nhà vườn đang chọn: ${farmName}`}
+              </option>
+            </select>
+            <select
+              aria-label={isEn ? "Channel filter" : "Lọc kênh bán"}
+              value={channelFilter}
+              onChange={(e) => setChannelFilter(e.target.value as "all" | ChannelKind)}
+              className="min-h-[36px] rounded-[10px] border border-[#788A7B] bg-white px-2.5 text-xs font-semibold"
+            >
+              <option value="all">{isEn ? "All channels" : "Mọi kênh bán"}</option>
+              <option value="marketplace">Marketplace</option>
+              <option value="direct_orchard">{isEn ? "Direct orchard" : "Tại vườn"}</option>
+              <option value="group_tour">{isEn ? "Tour booking" : "Đoàn tham quan"}</option>
+              <option value="b2b_inquiry">B2B / Wholesale</option>
+            </select>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 border-t border-[#EAEFE6] pt-3">
           {(Object.keys(PERIOD_WINDOWS) as PeriodKey[]).map((key) => {
             const active = periodKey === key;
             return (
@@ -112,26 +166,33 @@ export function FarmerOverviewAnalytics({
                 key={key}
                 type="button"
                 onClick={() => setPeriodKey(key)}
-                className={`min-h-[36px] cursor-pointer rounded-full px-3.5 text-xs font-semibold transition ${
+                className={`min-h-[34px] cursor-pointer rounded-full px-3 text-xs font-semibold transition ${
                   active
                     ? "bg-[#245B3D] text-white"
                     : "border border-[#D6DED2] bg-[#FAF8F1] text-[#25352B] hover:bg-[#EAF0E5]"
                 }`}
               >
-                {key === "current_month"
-                  ? "Tháng 11/2026"
-                  : key === "previous_month"
-                  ? "Tháng 10/2026"
-                  : key === "last_7d"
-                  ? "7 ngày"
-                  : key === "last_30d"
-                  ? "30 ngày"
-                  : "Tất cả"}
+                {isEn ? PERIOD_WINDOWS[key].labelEn : PERIOD_WINDOWS[key].label}
               </button>
             );
           })}
         </div>
       </div>
+
+      {/* Deterministic Strategy Suggestions */}
+      {strategyCards.length > 0 ? (
+        <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 lg:grid-cols-3">
+          {strategyCards.slice(0, 3).map((st) => (
+            <div
+              key={st.id}
+              className="rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] p-3 text-xs"
+            >
+              <p className="font-bold text-[#245B3D]">{isEn ? st.titleEn : st.titleVi}</p>
+              <p className="mt-1 text-[#52645A]">{isEn ? st.rationaleEn : st.rationaleVi}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       {/* Warning banner when COGS lines missing */}
       {report.missingCostLinesCount > 0 ? (

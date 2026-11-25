@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, ShieldAlert, Sparkles, UserCheck } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { useLocale } from "@/context/LocaleContext";
+import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
 import { notifyAccountSwitch, notifySignOut } from "@/lib/toast";
 import { Badge, Card, DemoBanner } from "@/components/ui/Primitives";
 import type { WorkspaceId } from "@/types/naifarm";
@@ -20,15 +22,22 @@ const WORKSPACE_HOME: Record<WorkspaceId, string> = {
 
 export default function SignInPage() {
   const router = useRouter();
-  const { demoAccounts, authUser, signInDemoAccount, signOutDemo } = useDemoStore();
+  const { locale, t } = useLocale();
+  const isEn = locale === "en";
+  const { demoAccounts, roleBundleAccounts, authUser, signInDemoAccount, signOutDemo } =
+    useDemoStore();
   const [selectedId, setSelectedId] = useState<string>(authUser?.id ?? demoAccounts[0]?.id ?? "");
   const [simulatedEmail, setSimulatedEmail] = useState("");
+  const [showBundles, setShowBundles] = useState(false);
 
   const handleQuickSignIn = (accountId: string) => {
     const logged = signInDemoAccount(accountId);
     if (!logged) return;
-    notifyAccountSwitch(`${logged.name} (${logged.roleLabel})`);
-    router.push(WORKSPACE_HOME[logged.workspaceId]);
+    notifyAccountSwitch(
+      `${logged.name} (${isEn && logged.roleLabelEn ? logged.roleLabelEn : logged.roleLabel})`,
+      locale,
+    );
+    router.push(buildLocalizedHref(WORKSPACE_HOME[logged.workspaceId], locale));
   };
 
   const handleSimulatedSubmit = (e: React.FormEvent) => {
@@ -93,7 +102,7 @@ export default function SignInPage() {
               type="button"
               onClick={() => {
                 signOutDemo();
-                notifySignOut();
+                notifySignOut(locale);
               }}
               className="min-h-[42px] rounded-[10px] border border-[#D6DED2] bg-white px-4 text-xs font-semibold text-[#25352B] hover:bg-[#F5F3E9] cursor-pointer"
             >
@@ -213,21 +222,98 @@ export default function SignInPage() {
           </form>
 
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#D6DED2] pt-3 text-xs">
-            <Link href="/forgot-password" className="font-semibold text-[#245B3D] hover:underline">
-              Quên thông tin truy cập?
+            <Link href={buildLocalizedHref("/forgot-password", locale)} className="font-semibold text-[#245B3D] hover:underline">
+              {isEn ? "Access help?" : "Quên thông tin truy cập?"}
             </Link>
-            <Link href="/sign-up" className="font-semibold text-[#245B3D] hover:underline">
-              Đăng ký tài khoản mới →
+            <Link href={buildLocalizedHref("/sign-up", locale)} className="font-semibold text-[#245B3D] hover:underline">
+              {t.nav.signUp} →
             </Link>
           </div>
+          {authUser ? (
+            <button
+              type="button"
+              onClick={() => {
+                signOutDemo();
+                notifySignOut(locale);
+              }}
+              className="w-full rounded-[10px] bg-[#FDECEC] px-3 py-2 text-xs font-semibold text-[#A32D2D] hover:bg-[#FAD6D6] cursor-pointer"
+            >
+              {t.nav.signOut}
+            </button>
+          ) : null}
           <p className="flex items-start gap-1.5 text-[11px] text-[#52645A]">
             <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#80520C]" aria-hidden="true" />
             <span>
-              Các vai trò Điều phối (W04), Tổ chức (W05) và Quản trị (W06) không cấp từ form đăng ký công khai.
+              {isEn
+                ? "Coordinator (W04), Organization (W05), and Admin (W06) scopes are never granted via public self-signup."
+                : "Các vai trò Điều phối (W04), Tổ chức (W05) và Quản trị (W06) không cấp từ form đăng ký công khai."}
             </span>
           </p>
         </Card>
       </div>
+
+      {/* Expandable 15 Permission Role Bundles (inside W01-W06, incl. Minor Safeguarding account) */}
+      <Card className="space-y-4 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-base font-bold text-[#25352B]">
+              {isEn
+                ? `15 Granular Permission Role Bundles (inside W01–W06)`
+                : `15 Hồ sơ Phân quyền chi tiết theo 6 Không gian (W01–W06)`}
+            </h2>
+            <p className="text-xs text-[#52645A]">
+              {isEn
+                ? "Includes Coop Accountant, Warehouse Lead, Tour Guide, School Teacher, Supervised Minor (<18), and Platform Governance."
+                : "Bao gồm Kế toán HTX, Thủ kho FEFO, Hướng dẫn viên tour, Giáo viên trường học, Học sinh dưới 18 tuổi và Kiểm soát viên."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowBundles((v) => !v)}
+            className="min-h-[38px] rounded-[10px] border border-[#245B3D] bg-[#EAF0E5] px-3 text-xs font-semibold text-[#245B3D] cursor-pointer"
+          >
+            {showBundles
+              ? t.nav.closeButton
+              : isEn
+              ? `Show ${roleBundleAccounts.length} role bundles`
+              : `Mở ${roleBundleAccounts.length} hồ sơ quyền`}
+          </button>
+        </div>
+
+        {showBundles ? (
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+            {roleBundleAccounts.map((acc) => (
+              <div
+                key={acc.id}
+                className="flex flex-col justify-between rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] p-3 text-xs"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1.5">
+                    <Badge tone={acc.isMinor ? "warning" : "neutral"}>{acc.workspaceId}</Badge>
+                    <span className="font-mono text-[11px] text-[#52645A]">
+                      {acc.bundleId ?? "role"}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 font-bold text-[#25352B]">{acc.name}</p>
+                  <p className="font-semibold text-[#245B3D]">
+                    {isEn && acc.roleLabelEn ? acc.roleLabelEn : acc.roleLabel}
+                  </p>
+                  <p className="mt-1 text-[11px] text-[#52645A]">
+                    {isEn && acc.bioEn ? acc.bioEn : acc.bio}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleQuickSignIn(acc.id)}
+                  className="mt-3 min-h-[36px] rounded-[8px] bg-[#245B3D] px-3 font-semibold text-white hover:bg-[#19472E] cursor-pointer"
+                >
+                  {isEn ? "Switch to this bundle" : "Dùng hồ sơ quyền này"}
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </Card>
     </div>
   );
 }

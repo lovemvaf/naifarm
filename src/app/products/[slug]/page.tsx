@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   Bell,
   GitCompare,
+  Globe2,
   Heart,
   HelpCircle,
   MapPin,
@@ -19,6 +20,10 @@ import {
   Star,
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { useLocale } from "@/context/LocaleContext";
+import { localizeProductName, localizeUnit } from "@/lib/i18n/domain-en";
+import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
+import { evaluateMinorSafeguarding } from "@/lib/permissions/access-control";
 import { ProductGallery2D } from "@/components/products/ProductGallery2D";
 import { ProduceAnatomy2D } from "@/components/products/ProduceAnatomy2D";
 import { QrPassportCard } from "@/components/traceability/QrPassportCard";
@@ -40,8 +45,12 @@ export default function ProductDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = use(params);
+  const { locale, t, currencyMode } = useLocale();
+  const isEn = locale === "en";
+  const showUsd = currencyMode === "vnd_usd_est";
   const {
     hydrated,
+    authUser,
     products,
     farms,
     batches,
@@ -57,6 +66,7 @@ export default function ProductDetailPage({
     compareProductIds,
     markRecentlyViewed,
     submitProductReview,
+    submitInternationalInquiry,
   } = useDemoStore();
 
   const product = products.find((p) => p.slug === decodeURIComponent(slug));
@@ -65,6 +75,13 @@ export default function ProductDetailPage({
   const [selectedCred, setSelectedCred] = useState<CredentialRecord | null>(null);
   const [reviewRating, setReviewRating] = useState<1 | 2 | 3 | 4 | 5>(5);
   const [reviewComment, setReviewComment] = useState("");
+  const [rfqOpen, setRfqOpen] = useState(false);
+  const [rfqBuyerName, setRfqBuyerName] = useState(authUser?.name ?? "");
+  const [rfqCountry, setRfqCountry] = useState("Singapore");
+  const [rfqQuantityNote, setRfqQuantityNote] = useState("50 boxes sample lot");
+  const [rfqPackagingNote, setRfqPackagingNote] = useState("English allergen & traceability sheet");
+  const [rfqMessage, setRfqMessage] = useState("");
+  const [rfqSentId, setRfqSentId] = useState<string | null>(null);
 
   useEffect(() => {
     if (hydrated && product?.id) {
@@ -221,12 +238,12 @@ export default function ProductDetailPage({
 
           <div>
             <h1 className="font-editorial text-2xl font-bold text-[#25352B] md:text-3xl">
-              {product.name}
+              {localizeProductName(product, locale)}
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-[#52645A]">
               {farm ? (
                 <Link
-                  href={`/farms/${farm.slug}`}
+                  href={buildLocalizedHref(`/farms/${farm.slug}`, locale)}
                   className="inline-flex items-center gap-1 font-semibold text-[#245B3D] hover:underline"
                 >
                   <MapPin className="h-4 w-4" aria-hidden="true" />
@@ -240,31 +257,156 @@ export default function ProductDetailPage({
                 </span>
               )}
               <Link
-                href={`/trace/${product.batchCode}`}
+                href={buildLocalizedHref(`/trace/${product.batchCode}`, locale)}
                 className="inline-flex items-center gap-1 rounded-full bg-[#EAF0E5] px-2.5 py-0.5 text-xs font-bold text-[#245B3D] hover:underline"
               >
                 <QrCode className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>Lô {product.batchCode}</span>
+                <span>
+                  {isEn ? "Batch" : "Lô"} {product.batchCode}
+                </span>
               </Link>
             </div>
           </div>
 
           <div className="rounded-[16px] border border-[#D6DED2] bg-[#FAF8F1] p-4">
             <p className="tabular-nums text-2xl font-bold text-[#245B3D] md:text-3xl">
-              {formatVnd(activePriceVnd)}
-              <span className="ml-1 text-sm font-medium text-[#52645A]">/ {activeUnitLabel}</span>
+              {formatVnd(activePriceVnd, locale, showUsd)}
+              <span className="ml-1 text-sm font-medium text-[#52645A]">
+                / {localizeUnit(activeUnitLabel, locale)}
+              </span>
             </p>
             <p className="mt-1 text-xs text-[#52645A]">
               {isLotBlocked
-                ? "Tạm dừng xuất bán theo cảnh báo lô."
+                ? isEn
+                  ? "Sales paused due to active lot hold/recall alert."
+                  : "Tạm dừng xuất bán theo cảnh báo lô."
                 : product.stockKg > 0
-                ? `Tồn khả dụng tại vườn: ${product.stockKg} ${product.unitLabel}`
+                ? `${t.commerce.remainingStock}: ${product.stockKg} ${localizeUnit(product.unitLabel, locale)}`
+                : isEn
+                ? "Current harvest lot sold out — follow for next seasonal release."
                 : "Đã hết đợt thu hái hiện tại — bật theo dõi để nhận thông báo vụ mới."}
-              {product.preOrderEtaLabel ? ` · Dự kiến thu hái: ${product.preOrderEtaLabel}` : ""}
+              {product.preOrderEtaLabel ? ` · ${product.preOrderEtaLabel}` : ""}
             </p>
+            {product.allergens && product.allergens.length > 0 ? (
+              <p className="mt-1.5 text-xs font-medium text-[#80520C]">
+                {t.commerce.allergenPrefix} {product.allergens.join(", ")}
+              </p>
+            ) : null}
+            {product.adultOnly ? (
+              <p className="mt-1.5 text-xs font-semibold text-[#A32D2D]">
+                {t.commerce.adultOnlyWarning}
+              </p>
+            ) : null}
           </div>
 
-          <p className="text-sm leading-relaxed text-[#25352B]">{product.shortDescription}</p>
+          <p className="text-sm leading-relaxed text-[#25352B]">
+            {isEn && product.enShortDescription ? product.enShortDescription : product.shortDescription}
+          </p>
+
+          {/* International Buyer / Wholesale Availability Inquiry (Honest RFQ) */}
+          <div className="rounded-[14px] border border-[#D6DED2] bg-white p-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-xs">
+                <p className="flex items-center gap-1.5 font-bold text-[#25352B]">
+                  <Globe2 className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
+                  <span>{t.commerce.askAvailability}</span>
+                </p>
+                <p className="text-[#52645A]">
+                  {product.exportShippingNote ??
+                    (isEn
+                      ? "Domestic Vietnam delivery via cart; submit local RFQ inquiry for overseas/wholesale quotes."
+                      : "Giao nội địa qua giỏ hàng; gửi yêu cầu nếu cần hỏi nguồn hàng xuất khẩu/B2B.")}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={!evaluateMinorSafeguarding(authUser?.isMinor, authUser?.hasGuardianConsent).allowPublicCommerce}
+                onClick={() => setRfqOpen((v) => !v)}
+              >
+                {rfqOpen ? t.nav.closeButton : t.commerce.askAvailability}
+              </Button>
+            </div>
+
+            {rfqOpen ? (
+              <form
+                className="mt-3 space-y-2.5 border-t border-[#EAEFE6] pt-3 text-xs"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const created = submitInternationalInquiry({
+                    productId: product.id,
+                    productName: product.name,
+                    farmId: product.farmId,
+                    farmName: product.farmName,
+                    buyerName: rfqBuyerName.trim() || "International Visitor",
+                    country: rfqCountry.trim() || "Singapore",
+                    preferredLanguage: locale,
+                    quantityNote: rfqQuantityNote.trim() || "Sample batch",
+                    packagingNote: rfqPackagingNote.trim() || "Standard export carton",
+                    sampleRequested: true,
+                    message:
+                      rfqMessage.trim() ||
+                      "Requesting batch inspection certificate & wholesale MOQ details.",
+                  });
+                  setRfqSentId(created.id);
+                  setRfqOpen(false);
+                  notifySuccess(`${t.toasts.inquirySent} (${created.id})`);
+                }}
+              >
+                <p className="text-[11px] font-medium text-[#80520C]">
+                  {t.commerce.internationalInquiryNote}
+                </p>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <input
+                    type="text"
+                    required
+                    value={rfqBuyerName}
+                    onChange={(e) => setRfqBuyerName(e.target.value)}
+                    placeholder={isEn ? "Your name / Organization" : "Tên người liên hệ / Công ty"}
+                    className="min-h-[38px] rounded-[8px] border border-[#788A7B] px-2.5"
+                  />
+                  <input
+                    type="text"
+                    required
+                    value={rfqCountry}
+                    onChange={(e) => setRfqCountry(e.target.value)}
+                    placeholder={isEn ? "Destination country" : "Quốc gia / Thị trường"}
+                    className="min-h-[38px] rounded-[8px] border border-[#788A7B] px-2.5"
+                  />
+                  <input
+                    type="text"
+                    value={rfqQuantityNote}
+                    onChange={(e) => setRfqQuantityNote(e.target.value)}
+                    placeholder={isEn ? "Estimated quantity / MOQ" : "Sản lượng dự kiến"}
+                    className="min-h-[38px] rounded-[8px] border border-[#788A7B] px-2.5"
+                  />
+                  <input
+                    type="text"
+                    value={rfqPackagingNote}
+                    onChange={(e) => setRfqPackagingNote(e.target.value)}
+                    placeholder={isEn ? "Packaging / Language spec" : "Quy cách & ngôn ngữ nhãn"}
+                    className="min-h-[38px] rounded-[8px] border border-[#788A7B] px-2.5"
+                  />
+                </div>
+                <input
+                  type="text"
+                  value={rfqMessage}
+                  onChange={(e) => setRfqMessage(e.target.value)}
+                  placeholder={isEn ? "Questions for orchard/cooperative..." : "Nội dung trao đổi với cơ sở..."}
+                  className="min-h-[38px] w-full rounded-[8px] border border-[#788A7B] px-2.5"
+                />
+                <Button type="submit" size="sm" variant="primary">
+                  {t.commerce.internationalInquiryTitle}
+                </Button>
+              </form>
+            ) : rfqSentId ? (
+              <p className="mt-2 text-[11px] font-semibold text-[#24603B]">
+                {isEn
+                  ? `Recorded local RFQ ${rfqSentId} for ${product.farmName} review.`
+                  : `Đã lưu yêu cầu ${rfqSentId} cho ${product.farmName} phản hồi trong không gian W02/W05.`}
+              </p>
+            ) : null}
+          </div>
 
           {/* Weight / Pack Variants */}
           {options.length > 0 ? (

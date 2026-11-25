@@ -17,6 +17,9 @@ import {
   X,
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { useLocale } from "@/context/LocaleContext";
+import { localizeCategory } from "@/lib/i18n/domain-en";
+import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
 import { ProductCard } from "@/components/marketplace/ProductCard";
 import { OCOP_PUBLIC_REFERENCE_CATALOG } from "@/data/reference/ocop-public-reference";
 import { CREDENTIAL_TYPE_MAP, evaluateCredentialDisplay } from "@/lib/quality/credential-registry";
@@ -48,6 +51,8 @@ const CATEGORIES: ProductCategory[] = [
   "Rau củ & Nấm sạch",
   "Tiêu & Gia vị vùng đồi",
   "Quà tặng OCOP & Combo",
+  "Thảo mộc & Gia vị hữu cơ mẫu",
+  "Đặc sản du lịch & Hộp quà",
 ];
 
 const ZONES: DongNaiZone[] = [
@@ -61,6 +66,8 @@ const ZONES: DongNaiZone[] = [
 function MarketplaceContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { locale, t, currencyMode, setCurrencyMode } = useLocale();
+  const isEn = locale === "en";
   const {
     products,
     farms,
@@ -110,7 +117,7 @@ function MarketplaceContent() {
       if (selectedZone !== "all" && farmZoneById.get(p.farmId) !== selectedZone) return false;
       if (!q) return true;
       return normalizeSearchText(
-        `${p.name} ${p.farmName} ${p.administrativeUnitName} ${p.batchCode} ${p.category} ${p.tags?.join(" ") ?? ""}`,
+        `${p.name} ${p.enName ?? ""} ${p.farmName} ${p.administrativeUnitName} ${p.batchCode} ${p.category} ${p.tags?.join(" ") ?? ""}`,
       ).includes(q);
     });
 
@@ -158,23 +165,48 @@ function MarketplaceContent() {
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-[#EAF0E5] px-3 py-1 text-xs font-semibold text-[#245B3D]">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>Chợ nông sản OCOP Đồng Nai · {products.length} mặt hàng · {farms.length} nhà vườn</span>
+            <span>
+              {isEn
+                ? `Dong Nai OCOP Market · ${products.length} listings · ${farms.length} orchards`
+                : `Chợ nông sản OCOP Đồng Nai · ${products.length} mặt hàng · ${farms.length} nhà vườn`}
+            </span>
           </div>
           <h1 className="mt-2 font-editorial text-2xl font-bold text-[#25352B] md:text-3xl">
-            Chợ nông sản &amp; Đặc sản Đồng Nai
+            {isEn ? "Dong Nai Produce & OCOP Market" : "Chợ nông sản & Đặc sản Đồng Nai"}
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-[#52645A]">
-            {products.length} mặt hàng từ {farms.length} nhà vườn tại Đồng Nai gắn mã QR truy xuất từng lô, tách bạch với{" "}
-            {OCOP_PUBLIC_REFERENCE_CATALOG.length} hồ sơ công bố chính thức trong danh mục tham khảo.
+            {isEn
+              ? `${products.length} listings from ${farms.length} Dong Nai orchards with QR batch passports, strictly separated from ${OCOP_PUBLIC_REFERENCE_CATALOG.length} public reference records.`
+              : `${products.length} mặt hàng từ ${farms.length} nhà vườn tại Đồng Nai gắn mã QR truy xuất từng lô, tách bạch với ${OCOP_PUBLIC_REFERENCE_CATALOG.length} hồ sơ công bố chính thức trong danh mục tham khảo.`}
           </p>
+          {currencyMode === "vnd_usd_est" ? (
+            <p className="mt-1.5 text-[11px] font-medium text-[#80520C]">
+              {t.commerce.usdEstimateNote}
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              setCurrencyMode(currencyMode === "vnd" ? "vnd_usd_est" : "vnd")
+            }
+            aria-pressed={currencyMode === "vnd_usd_est"}
+            className={cn(
+              "inline-flex min-h-[44px] items-center rounded-[12px] border px-3.5 text-xs font-semibold cursor-pointer",
+              currencyMode === "vnd_usd_est"
+                ? "border-[#245B3D] bg-[#EAF0E5] text-[#245B3D]"
+                : "border-[#D6DED2] bg-white text-[#25352B]",
+            )}
+          >
+            {t.commerce.showUsdEstimateToggle}
+          </button>
           <Link
-            href="/quality"
+            href={buildLocalizedHref("/quality", locale)}
             className="inline-flex min-h-[44px] items-center gap-2 rounded-[12px] border border-[#245B3D] bg-white px-4 text-sm font-semibold text-[#245B3D] hover:bg-[#EAF0E5]"
           >
             <Layers className="h-4 w-4" aria-hidden="true" />
-            <span>Tra cứu 26 chuẩn chất lượng</span>
+            <span>{t.nav.quality}</span>
           </Link>
         </div>
       </div>
@@ -316,7 +348,7 @@ function MarketplaceContent() {
                       : "bg-[#F5F3E9] text-[#25352B] hover:bg-[#EAF0E5]",
                   )}
                 >
-                  {cat} ({count})
+                  {localizeCategory(cat, locale)} ({count})
                 </button>
               );
             })}

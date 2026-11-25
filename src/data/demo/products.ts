@@ -11,6 +11,7 @@ function farmMeta(farmId: string) {
   return {
     farmId: f.id,
     farmName: f.name,
+    organizationId: f.organizationId,
     administrativeUnitCode: f.administrativeUnitCode,
     administrativeUnitName: f.administrativeUnitName,
     region: f.administrativeUnitName,
@@ -23,6 +24,7 @@ const GOLDEN_AND_CORE_PRODUCTS: Product[] = [
     id: "P01",
     slug: "chom-chom-java-long-khanh",
     name: "Chôm chôm Java Long Khánh",
+    enName: "Long Khanh Java Rambutan",
     category: "Trái cây tươi",
     ...farmMeta("farm-ba-tu-demo"),
     unitLabel: "kg",
@@ -35,6 +37,8 @@ const GOLDEN_AND_CORE_PRODUCTS: Product[] = [
     brixNote: "Độ ngọt tự nhiên ~16–18° Brix",
     shortDescription:
       "Chôm chôm Java hái tại vườn Ba Tư (2,5 ha đất đỏ bazan Long Khánh), trái giòn, ráo nước, đóng giỏ rơm sạch giao trong ngày.",
+    enShortDescription:
+      "Crisp red-skin Java rambutan harvested at dawn from Uncle Ba Tu's 2.5 ha basalt orchard in Long Khanh Ward.",
     storyNote:
       "Lô NF-DEMO-001 do chú Ba Tư và đoàn viên Minh Anh chụp ảnh, cân đo và ghi nhật ký mùa vụ.",
     image: "/images/stitch/stitch-07.jpg",
@@ -239,19 +243,23 @@ const GOLDEN_AND_CORE_PRODUCTS: Product[] = [
     id: "P10",
     slug: "ruou-buoi-tan-trieu-chum-sanh",
     name: "Rượu bưởi Tân Triều chum sành",
+    enName: "Tan Trieu Craft Pomelo Wine Jar (18+)",
     category: "Mật ong & Rượu trái cây",
     ...farmMeta("farm-ba-minh-tan-trieu"),
     unitLabel: "chum 750ml",
     priceVnd: 165000,
     stockKg: 14,
+    adultOnly: true,
     seasonStatus: "in_season",
     batchCode: "NF-TT-2026-01",
     seasonId: "SEASON-01",
     shortDescription:
-      "Đặc sản lên men từ nước ép bưởi đường lá cam Tân Triều đựng trong chum sành mộc thủ công (dành cho người đủ tuổi hợp pháp).",
+      "Đặc sản lên men từ nước ép bưởi đường lá cam Tân Triều đựng trong chum sành mộc thủ công (dành cho người từ 18 tuổi trở lên).",
+    enShortDescription:
+      "Traditional fermented sweet pomelo craft wine in ceramic jar (18+ only; domestic pickup/verified adult delivery only).",
     storyNote: "Sản phẩm truyền thống làng bưởi Tân Triều, minh họa trong hồ sơ vườn Chú Ba Minh.",
-    image: "/images/stitch/stitch-17.jpg",
-    gallery: ["/images/stitch/stitch-17.jpg", "/images/stitch/stitch-47.jpg"],
+    image: "/images/stitch/stitch-25.jpg",
+    gallery: ["/images/stitch/stitch-25.jpg", "/images/stitch/stitch-45.jpg"],
     tags: ["rượu bưởi", "tân triều", "đặc sản"],
     isDemo: true,
   },
@@ -301,6 +309,7 @@ const GOLDEN_AND_CORE_PRODUCTS: Product[] = [
 interface ExtraProductSeed {
   slugBase: string;
   name: string;
+  enName?: string;
   category: ProductCategory;
   farmId: string;
   unitLabel: string;
@@ -312,6 +321,8 @@ interface ExtraProductSeed {
   anatomyType?: AnatomyKind;
   isRescue?: boolean;
   isNaiBox?: boolean;
+  adultOnly?: boolean;
+  allergens?: string[];
   preOrderEtaLabel?: string;
   shortDescription: string;
 }
@@ -385,7 +396,7 @@ const EXTRA_SEEDS: ExtraProductSeed[] = [
   { slugBase: "mit-nghe-bo-mui-bao-vinh", name: "Mít nghệ bỏ hạt đóng khay Bảo Vinh", category: "Trái cây tươi", farmId: "farm-bao-vinh-mit", unitLabel: "khay 600g", priceVnd: 48000, stockKg: 35, image: "/images/stitch/stitch-14.jpg", shortDescription: "Tách múi bỏ hạt sạch sẽ, đóng hộp mát giao trong ngày." },
   { slugBase: "dau-ca-cao-tuoi-nam-cat-tien", name: "Trái ca cao tươi chín cây Nam Cát Tiên", category: "Trái cây tươi", farmId: "farm-nam-cat-tien-cacao", unitLabel: "kg", priceVnd: 36000, stockKg: 25, image: "/images/stitch/stitch-08.jpg", shortDescription: "Cơm thịt trắng chua ngọt dịu giàu chất chống oxy hóa, thu hái cuối tuần." },
   { slugBase: "tra-la-oi-xuan-loc", name: "Trà búp ổi non rang thơm Xuân Lộc", category: "Nông sản chế biến & Mứt", farmId: "farm-htx-xuan-loc", unitLabel: "hộp 200g", priceVnd: 62000, stockKg: 30, image: "/images/stitch/stitch-55.jpg", shortDescription: "Búp ổi non hái sáng sớm, sao mộc không hương liệu." },
-  { slugBase: "nuoc-ep-buoi-len-men-tan-an", name: "Nước bưởi lên men nhẹ Tân An", category: "Mật ong & Rượu trái cây", farmId: "farm-tan-an-buoi", unitLabel: "chai 500ml", priceVnd: 95000, stockKg: 20, anatomyType: "pomelo", image: "/images/stitch/stitch-17.jpg", shortDescription: "Thức uống lên men tự nhiên nồng độ thấp vị thanh mát." },
+  { slugBase: "nuoc-ep-buoi-len-men-tan-an", name: "Nước bưởi lên men nhẹ Tân An (18+)", category: "Mật ong & Rượu trái cây", farmId: "farm-tan-an-buoi", unitLabel: "chai 500ml", priceVnd: 95000, stockKg: 20, anatomyType: "pomelo", adultOnly: true, image: "/images/stitch/stitch-16.jpg", shortDescription: "Thức uống lên men tự nhiên nồng độ thấp vị thanh mát (chỉ dành cho người lớn từ 18 tuổi)." },
   { slugBase: "chuoi-su-tuoi-thanh-son", name: "Chuối sứ già cây Thanh Sơn", category: "Trái cây tươi", farmId: "farm-thanh-son-chuoi", unitLabel: "nải ~2 kg", priceVnd: 44000, stockKg: 40, image: "/images/stitch/stitch-41.jpg", shortDescription: "Già cây chín tự nhiên không ngâm ủ hóa chất, ngọt dẻo thơm." },
   { slugBase: "xoai-ba-mau-la-nga", name: "Xoài Ba Màu giòn ngọt La Ngà", category: "Trái cây tươi", farmId: "farm-la-nga-xoai", unitLabel: "kg", priceVnd: 42000, stockKg: 45, image: "/images/stitch/stitch-09.jpg", shortDescription: "Vỏ ửng hồng tím nắng đẹp mắt, thịt vàng thơm giòn." },
   { slugBase: "banh-phong-sen-dak-lua", name: "Bánh phồng gạo ST25 hạt sen Đak Lua", category: "Nông sản chế biến & Mứt", farmId: "farm-dak-lua-lua-sen", unitLabel: "gói 300g", priceVnd: 54000, stockKg: 36, image: "/images/stitch/stitch-33.jpg", shortDescription: "Tráng mỏng phơi nắng gió đồng, giòn tan khi chiên hoặc nướng." },
@@ -421,6 +432,101 @@ const EXTRA_SEEDS: ExtraProductSeed[] = [
   { slugBase: "sau-rieng-monthong-dak-o", name: "Sầu riêng Monthong đồi Bù Gia Đắk Ơ", category: "Chôm chôm & Sầu riêng", farmId: "farm-dak-o-bu-gia", unitLabel: "kg", priceVnd: 98000, stockKg: 26, anatomyType: "durian", image: "/images/stitch/stitch-38.jpg", shortDescription: "Thịt quả dày khô ráo, thu cắt đúng độ tuổi trái tại Xã Đắk Ơ." },
   { slugBase: "tieu-den-dak-o", name: "Tiêu đen phơi giàn Đắk Ơ", category: "Tiêu & Gia vị vùng đồi", farmId: "farm-dak-o-bu-gia", unitLabel: "hũ 400g", priceVnd: 132000, stockKg: 30, image: "/images/stitch/stitch-62.jpg", shortDescription: "Hạt tiêu đều chắc cay nồng, sàng lọc sạch tạp chất tại vùng đồi phía Bắc." },
   { slugBase: "rau-rung-tho-son-theo-mua", name: "Rau rừng tổng hợp theo mùa Thọ Sơn", category: "Rau củ & Nấm sạch", farmId: "farm-tho-son-non", unitLabel: "túi 400g", priceVnd: 35000, stockKg: 22, image: "/images/stitch/stitch-35.jpg", shortDescription: "Rau lá non bản địa thu hái sáng sớm và gói lá chuối giữ ẩm." },
+  // --- V4 EXPANSION (+52 SKUs -> 168 total SKUs across 12 categories) ---
+  { slugBase: "sa-chanh-huu-co-trang-bom", name: "Sả chanh & Lá dứa tươi hữu cơ Trảng Bom", enName: "Lemongrass & Pandan Leaf Bundle", category: "Thảo mộc & Gia vị hữu cơ mẫu", farmId: "farm-tt-ho-09", unitLabel: "bó 500g", priceVnd: 26000, stockKg: 42, image: "/images/stitch/stitch-29.jpg", shortDescription: "Hái buổi sáng theo lịch vườn không phun thuốc hóa học tổng hợp." },
+  { slugBase: "tra-hoa-cuc-mat-ong-tan-trieu", name: "Trà hoa cúc sấy lạnh & Mật nhãn Tân Triều", enName: "Chrysanthemum & Longan Honey Herbal Tea", category: "Thảo mộc & Gia vị hữu cơ mẫu", farmId: "farm-tt-ho-05", unitLabel: "hộp 180g", priceVnd: 112000, stockKg: 28, image: "/images/stitch/stitch-55.jpg", shortDescription: "Thảo mộc dịu nhẹ dùng ấm hoặc lạnh, không phẩm màu." },
+  { slugBase: "tia-to-hung-que-nha-mang", name: "Rau gia vị tía tô & Húng quế nhà màng", enName: "Fresh Perilla & Thai Basil Trio", category: "Thảo mộc & Gia vị hữu cơ mẫu", farmId: "farm-tran-bien-rau", unitLabel: "hộp 250g", priceVnd: 28000, stockKg: 35, image: "/images/stitch/stitch-37.jpg", shortDescription: "Cắt gốc giữ ẩm giao nhanh nội tỉnh Đồng Nai trong ngày." },
+  { slugBase: "bo-qua-du-lich-vuon-ba-tu", name: "Hộp quà Du lịch Vườn Ba Tư (Chôm chôm + Mứt)", enName: "Ba Tu Orchard Tour Gift Set", category: "Đặc sản du lịch & Hộp quà", farmId: "farm-ba-tu-demo", unitLabel: "hộp 2 kg", priceVnd: 145000, stockKg: 24, anatomyType: "rambutan", image: "/images/stitch/stitch-31.jpg", shortDescription: "Thiết kế gọn có quai xách cho khách tham quan cuối tuần và gia đình." },
+  { slugBase: "tui-luu-niem-buoi-tan-trieu", name: "Bộ quà Du lịch Làng bưởi Tân Triều (3 món)", enName: "Tan Trieu Village Tour Souvenir Pack", category: "Đặc sản du lịch & Hộp quà", farmId: "farm-ba-minh-tan-trieu", unitLabel: "túi quà", priceVnd: 198000, stockKg: 30, anatomyType: "pomelo", image: "/images/stitch/stitch-25.jpg", shortDescription: "Gồm Bưởi tươi 1,5 kg, Mứt vỏ bưởi hũ nhỏ và Sổ tay câu chuyện cù lao song ngữ." },
+  { slugBase: "hop-qua-cuoi-nam-xuan-loc", name: "Hộp Quà Cuối năm Hạt điều – Cà phê – Ca cao", enName: "Year-End Dong Nai Cashew & Coffee Keepsake Box", category: "Đặc sản du lịch & Hộp quà", farmId: "farm-htx-xuan-loc", unitLabel: "hộp 3 món", priceVnd: 325000, stockKg: 26, anatomyType: "cashew", allergens: ["Hạt điều (Tree nuts)"], image: "/images/stitch/stitch-50.jpg", shortDescription: "Thích hợp làm quà lưu niệm cho khách du lịch và đoàn trường học, gắn mã QR từng xưởng." },
+  ...Array.from({ length: 46 }, (_, vIdx) => {
+    const htxFarms = [
+      "farm-tt-ho-01",
+      "farm-tt-ho-02",
+      "farm-tt-ho-03",
+      "farm-tt-ho-04",
+      "farm-tt-ho-05",
+      "farm-tt-ho-06",
+      "farm-tt-ho-07",
+      "farm-tt-ho-08",
+      "farm-tt-ho-09",
+      "farm-tt-ho-10",
+      "farm-ba-tu-demo",
+      "farm-dak-nhau-dieu",
+      "farm-phuoc-long-bo",
+      "farm-dau-giay-nam",
+      "farm-tri-an-xoai",
+    ];
+    const cats: ProductCategory[] = [
+      "Bưởi & Cây có múi",
+      "Chôm chôm & Sầu riêng",
+      "Hạt điều & Rang củi",
+      "Cà phê & Ca cao",
+      "Nông sản chế biến & Mứt",
+      "Thảo mộc & Gia vị hữu cơ mẫu",
+      "Đặc sản du lịch & Hộp quà",
+      "Quà tặng OCOP & Combo",
+    ];
+    const imgs = [
+      "/images/stitch/stitch-24.jpg",
+      "/images/stitch/stitch-07.jpg",
+      "/images/stitch/stitch-34.jpg",
+      "/images/stitch/stitch-08.jpg",
+      "/images/stitch/stitch-18.jpg",
+      "/images/stitch/stitch-29.jpg",
+      "/images/stitch/stitch-25.jpg",
+      "/images/stitch/stitch-31.jpg",
+    ];
+    const fId = htxFarms[vIdx % htxFarms.length];
+    const cat = cats[vIdx % cats.length];
+    const numLabel = String(vIdx + 1).padStart(2, "0");
+    const isPreorder = vIdx % 9 === 0;
+    const isRescue = !isPreorder && vIdx % 11 === 0;
+    const isNaiBox = !isPreorder && vIdx % 13 === 0;
+    const hasNuts = cat === "Hạt điều & Rang củi";
+    return {
+      slugBase: `dac-san-dong-nai-v4-${numLabel}`,
+      name:
+        cat === "Bưởi & Cây có múi"
+          ? `Bưởi da xanh tuyển lứa ${numLabel} Tân Triều`
+          : cat === "Hạt điều & Rang củi"
+          ? `Hạt điều rang mộc lô ${numLabel} Đồng Nai`
+          : cat === "Đặc sản du lịch & Hộp quà"
+          ? `Túi quà trải nghiệm Đồng Nai #${numLabel}`
+          : cat === "Thảo mộc & Gia vị hữu cơ mẫu"
+          ? `Thảo mộc & Gia vị vườn đồi #${numLabel}`
+          : `Nông sản mùa vụ Đồng Nai #${numLabel}`,
+      enName:
+        cat === "Bưởi & Cây có múi"
+          ? `Tan Trieu Green-Skin Pomelo Lot #${numLabel}`
+          : cat === "Hạt điều & Rang củi"
+          ? `Dong Nai Wood-Roasted Cashews #${numLabel}`
+          : cat === "Đặc sản du lịch & Hộp quà"
+          ? `Dong Nai Orchard Tour Keepsake #${numLabel}`
+          : `Dong Nai Seasonal Produce Lot #${numLabel}`,
+      category: cat,
+      farmId: fId,
+      unitLabel: cat === "Bưởi & Cây có múi" ? "kg" : cat === "Đặc sản du lịch & Hộp quà" ? "hộp quà" : "hộp 400g",
+      priceVnd: 45000 + (vIdx % 8) * 18000,
+      stockKg: isPreorder ? 0 : 22 + (vIdx % 25),
+      seasonStatus: isPreorder ? ("pre_order" as const) : ("in_season" as const),
+      isRescue,
+      isNaiBox,
+      allergens: hasNuts ? ["Hạt điều (Tree nuts)"] : undefined,
+      preOrderEtaLabel: isPreorder ? "Dự kiến thu hoạch 12/12/2026" : undefined,
+      image: imgs[vIdx % imgs.length],
+      anatomyType:
+        cat === "Bưởi & Cây có múi"
+          ? ("pomelo" as const)
+          : cat === "Hạt điều & Rang củi"
+          ? ("cashew" as const)
+          : cat === "Chôm chôm & Sầu riêng"
+          ? ("durian" as const)
+          : undefined,
+      shortDescription:
+        "Sản phẩm nằm trong danh mục mở rộng mùa lễ hội & du lịch nông nghiệp Đồng Nai, có tem QR nhật ký theo lô.",
+    };
+  }),
 ];
 
 const EXTRA_PRODUCTS: Product[] = EXTRA_SEEDS.map((seed, idx) => {
@@ -435,6 +541,7 @@ const EXTRA_PRODUCTS: Product[] = EXTRA_SEEDS.map((seed, idx) => {
     skuCode: `NF-SKU-${codeNumber}`,
     slug: seed.slugBase,
     name: seed.name,
+    enName: seed.enName,
     category: seed.category,
     ...farmMeta(seed.farmId),
     unitLabel: seed.unitLabel,
@@ -447,6 +554,8 @@ const EXTRA_PRODUCTS: Product[] = EXTRA_SEEDS.map((seed, idx) => {
     anatomyType: seed.anatomyType,
     isNaiBox: seed.isNaiBox,
     isRescue: seed.isRescue,
+    adultOnly: seed.adultOnly,
+    allergens: seed.allergens,
     preOrderEtaLabel: seed.preOrderEtaLabel,
     expiryDays: seed.category === "Trái cây tươi" || seed.category === "Rau củ & Nấm sạch" ? 5 : 180,
     storageNote:

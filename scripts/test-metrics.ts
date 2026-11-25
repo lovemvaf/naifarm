@@ -7,7 +7,14 @@ import {
   INITIAL_WAREHOUSE_STOCKS,
 } from "../src/data/fixtures/erp-operations";
 import { INITIAL_MISSIONS, INITIAL_VOLUNTEER_HOURS } from "../src/data/demo/missions";
-import { calcDeltaPct, computeBusinessMetrics } from "../src/lib/metrics/business-metrics";
+import { INITIAL_FARMS } from "../src/data/demo/farms";
+import {
+  calcDeltaPct,
+  computeArApAging,
+  computeBusinessMetrics,
+  computeMemberDrilldown,
+  computeStockLedgerSummary,
+} from "../src/lib/metrics/business-metrics";
 import { buildScopedCsvContent, sanitizeCsvCell } from "../src/lib/export/csv-export";
 import type { InventoryMovement } from "../src/types/naifarm";
 
@@ -108,6 +115,56 @@ function main() {
   assert(csv.startsWith("\uFEFF"), "CSV export must start with UTF-8 BOM");
   assert(csv.includes(`"'=1+1"`), "CSV export must neutralize formula triggers");
 
+  // 7. HTX Tân Triều Reconciled Nov (01–24/11) vs Oct (01–24/10) BI Checks
+  const ttReport = computeBusinessMetrics({
+    orders: INITIAL_ORDERS,
+    stocks: INITIAL_WAREHOUSE_STOCKS,
+    movements: INITIAL_INVENTORY_MOVEMENTS,
+    expenses: INITIAL_EXPENSES,
+    debts: INITIAL_RECEIVABLES_PAYABLES,
+    missions: INITIAL_MISSIONS,
+    hourRecords: INITIAL_VOLUNTEER_HOURS,
+    periodKey: "org_tt_nov_1_24",
+    organizationIdFilter: "org-tt-scenario",
+    refDateIso: "2026-11-25",
+  });
+  assert.equal(ttReport.gmvVnd, 180_000_000, "TT Nov GMV must equal 180M");
+  assert.equal(ttReport.netMerchandiseSalesVnd, 170_000_000, "TT Nov Net must equal 170M");
+  assert.equal(ttReport.cogsVnd, 119_000_000, "TT Nov COGS must equal 119M");
+  assert.equal(ttReport.grossProfitVnd, 51_000_000, "TT Nov GP must equal 51M");
+  assert.equal(ttReport.grossMarginPct, 30, "TT Nov Margin must equal 30%");
+  assert.equal(ttReport.operatingExpensesVnd, 21_000_000, "TT Nov Opex must equal 21M");
+  assert.equal(ttReport.internalOperatingResultVnd, 30_000_000, "TT Nov Internal Result must equal 30M");
+  assert.equal(ttReport.aovVnd, 708_333, "TT Nov AOV must equal 708,333");
+  assert.equal(ttReport.previousNetMerchandiseSalesVnd, 142_000_000, "TT Oct Net must equal 142M");
+  assert.equal(ttReport.previousGrossProfitVnd, 40_000_000, "TT Oct GP must equal 40M");
+
+  // 8. Pomelo Stock Ledger Reconciliation (2000 opening + 3800 in - 4100 out - 50 loss = 1650 on-hand / 1250 available)
+  const ttStocks = INITIAL_WAREHOUSE_STOCKS.filter((s) => s.id.startsWith("STK-TT-"));
+  const ttMovements = INITIAL_INVENTORY_MOVEMENTS.filter((m) => m.id.startsWith("MOV-TT-"));
+  const ledger = computeStockLedgerSummary(2000, ttStocks, ttMovements);
+  assert.equal(ledger.openingQty, 2000);
+  assert.equal(ledger.inboundQty, 3800);
+  assert.equal(ledger.outboundQty, 4100);
+  assert.equal(ledger.lossQty, 50);
+  assert.equal(ledger.computedOnHandQty, 1650);
+  assert.equal(ledger.snapshotOnHandQty, 1650);
+  assert.equal(ledger.reservedQty, 300);
+  assert.equal(ledger.quarantineQty, 100);
+  assert.equal(ledger.availableQty, 1250);
+  assert.equal(ledger.reconciled, true);
+
+  // 9. 5-Bucket AR/AP Aging & Member Drilldown
+  const aging = computeArApAging(INITIAL_RECEIVABLES_PAYABLES, "2026-11-25");
+  assert.equal(aging.length, 5, "AR/AP aging must return 5 buckets");
+  const drilldown = computeMemberDrilldown(
+    INITIAL_ORDERS.filter((o) => o.organizationId === "org-tt-scenario"),
+    INITIAL_FARMS,
+    "2026-11-01",
+    "2026-11-24",
+  );
+  assert(drilldown.length >= 10, `Expected >=10 TT member farms in drilldown, got ${drilldown.length}`);
+
   console.log(
     JSON.stringify(
       {
@@ -118,6 +175,9 @@ function main() {
         missingCostLinesCount: allReport.missingCostLinesCount,
         confirmedVolunteerHours: novReport.confirmedVolunteerHours,
         sellThroughUnits: novReport.sellThroughByUnit.map((u) => u.unitLabel),
+        ttNovNetVnd: ttReport.netMerchandiseSalesVnd,
+        ttPomeloAvailableKg: ledger.availableQty,
+        ttMemberHouseholds: drilldown.length,
       },
       null,
       2,

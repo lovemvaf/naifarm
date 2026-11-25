@@ -3,7 +3,7 @@ export const VERIFIED_STITCH_MEDIA = {
   logo: "/images/stitch/stitch-01.jpg",
   pomelo: [
     "/images/stitch/stitch-03.jpg",
-    "/images/stitch/stitch-15.jpg",
+    "/images/stitch/stitch-16.jpg",
     "/images/stitch/stitch-24.jpg",
     "/images/stitch/stitch-25.jpg",
     "/images/stitch/stitch-26.jpg",
@@ -34,9 +34,8 @@ export const VERIFIED_STITCH_MEDIA = {
   ],
   specialtyProcessed: [
     "/images/stitch/stitch-06.jpg",
-    "/images/stitch/stitch-17.jpg",
     "/images/stitch/stitch-18.jpg",
-    "/images/stitch/stitch-47.jpg",
+    "/images/stitch/stitch-25.jpg",
     "/images/stitch/stitch-48.jpg",
   ],
   orchardPeople: [
@@ -63,7 +62,6 @@ export const VERIFIED_STITCH_MEDIA = {
     "/images/stitch/stitch-37.jpg",
     "/images/stitch/stitch-41.jpg",
     "/images/stitch/stitch-42.jpg",
-    "/images/stitch/stitch-43.jpg",
     "/images/stitch/stitch-52.jpg",
     "/images/stitch/stitch-55.jpg",
     "/images/stitch/stitch-56.jpg",

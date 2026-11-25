@@ -6,11 +6,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   BarChart3,
   Boxes,
+  CalendarDays,
   Camera,
   CheckCircle2,
   FilePlus2,
   HandHelping,
   LayoutGrid,
+  Megaphone,
   PackageCheck,
   QrCode,
   ShieldCheck,
@@ -24,6 +26,8 @@ import { FarmerOverviewAnalytics } from "@/components/farmer/FarmerOverviewAnaly
 import { FarmerCommercePanel } from "@/components/farmer/FarmerCommercePanel";
 import { FarmerInventoryProcurementPanel } from "@/components/farmer/FarmerInventoryProcurementPanel";
 import { FarmerCoopFinancePanel } from "@/components/farmer/FarmerCoopFinancePanel";
+import { FarmerMarketingToursPanel } from "@/components/farmer/FarmerMarketingToursPanel";
+import { NaiCalendarBoard } from "@/components/calendar/NaiCalendarBoard";
 import { QualityCenterPanel } from "@/components/quality/QualityCenterPanel";
 import { ProductionDiaryTimeline } from "@/components/traceability/ProductionDiaryTimeline";
 import { CertificationCard } from "@/components/traceability/CertificationCard";
@@ -34,7 +38,16 @@ import { notifyError, notifySuccess } from "@/lib/toast";
 import type { CertificationStatus, DiaryEntry, FarmCertification, OrderStatus } from "@/types/naifarm";
 
 type SimpleTab = "orders" | "diary" | "quality" | "support";
-type ErpTab = "overview" | "commerce" | "inventory" | "coop" | "quality" | "seasons" | "support";
+type ErpTab =
+  | "overview"
+  | "commerce"
+  | "inventory"
+  | "coop"
+  | "marketing"
+  | "calendar"
+  | "quality"
+  | "seasons"
+  | "support";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   pending_confirm: "Chờ xác nhận",
@@ -78,7 +91,7 @@ function FarmerWorkspaceContent() {
   const [mode, setMode] = useState<"simple" | "erp">(urlMode);
   const [simpleTab, setSimpleTab] = useState<SimpleTab>("orders");
   const [erpTab, setErpTab] = useState<ErpTab>(
-    (["overview", "commerce", "inventory", "coop", "quality", "seasons", "support"] as ErpTab[]).includes(
+    (["overview", "commerce", "inventory", "coop", "marketing", "calendar", "quality", "seasons", "support"] as ErpTab[]).includes(
       urlTab as ErpTab,
     )
       ? (urlTab as ErpTab)
@@ -238,6 +251,26 @@ function FarmerWorkspaceContent() {
               syncModeUrl("erp", "coop");
             },
             icon: <Wallet className="h-4 w-4" aria-hidden="true" />,
+          },
+          {
+            label: "Chiến dịch, Tour & RFQ",
+            href: "#marketing",
+            active: erpTab === "marketing",
+            onClick: () => {
+              setErpTab("marketing");
+              syncModeUrl("erp", "marketing");
+            },
+            icon: <Megaphone className="h-4 w-4" aria-hidden="true" />,
+          },
+          {
+            label: "Lịch HTX (NaiCalendar)",
+            href: "#calendar",
+            active: erpTab === "calendar",
+            onClick: () => {
+              setErpTab("calendar");
+              syncModeUrl("erp", "calendar");
+            },
+            icon: <CalendarDays className="h-4 w-4" aria-hidden="true" />,
           },
           {
             label: "Chất lượng (26 chuẩn)",
@@ -812,6 +845,18 @@ function FarmerWorkspaceContent() {
 
             {erpTab === "coop" ? (
               <FarmerCoopFinancePanel farmId={activeFarm.id} farmName={activeFarm.name} />
+            ) : null}
+
+            {erpTab === "marketing" ? (
+              <FarmerMarketingToursPanel
+                farmId={activeFarm.id}
+                farmName={activeFarm.name}
+                actorName={authUser?.name ?? activeFarm.ownerName}
+              />
+            ) : null}
+
+            {erpTab === "calendar" ? (
+              <NaiCalendarBoard scope="W02" farmIdFilter={activeFarm.id} allowCreate />
             ) : null}
 
             {erpTab === "quality" ? (

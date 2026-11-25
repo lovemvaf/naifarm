@@ -1,4 +1,12 @@
 import { INITIAL_FARMS } from "@/data/demo/farms";
+import { INITIAL_PRODUCTS } from "@/data/demo/products";
+import {
+  HTX_TT_AR_AP_AGING_ITEMS,
+  HTX_TT_EXPENSES,
+  HTX_TT_EXTRA_WAREHOUSE,
+  HTX_TT_POMELO_MOVEMENTS,
+  HTX_TT_POMELO_STOCKS,
+} from "@/data/fixtures/htx-tan-trieu-scenario";
 import type {
   CoopPool,
   ExpenseEntry,
@@ -54,6 +62,52 @@ export const INITIAL_WAREHOUSES: Warehouse[] = [
     administrativeUnitName: "Xã Xuân Đường",
     storageType: "kho_mat",
     bins: ["CM-C1 (Mật ong)", "CM-C2 (Sầu riêng)"],
+  },
+  HTX_TT_EXTRA_WAREHOUSE,
+  {
+    id: "WH-BP-01",
+    name: "Kho Hạt điều Bazan Bình Phước",
+    farmId: "farm-binh-phuoc-dieu",
+    administrativeUnitCode: "25195",
+    administrativeUnitName: "Phường Bình Phước",
+    storageType: "kho_kho",
+    bins: ["BP-D1 (W240)", "BP-D2 (Bơ điều)"],
+  },
+  {
+    id: "WH-TA-01",
+    name: "Kho Mát Cây Có Múi Tân An",
+    farmId: "farm-tan-an-buoi",
+    administrativeUnitCode: "26179",
+    administrativeUnitName: "Xã Tân An",
+    storageType: "kho_mat",
+    bins: ["TA-A1 (Bưởi)", "TA-A2 (Cam xoàn)"],
+  },
+  {
+    id: "WH-DG-01",
+    name: "Kho Lạnh Nấm Sạch Dầu Giây",
+    farmId: "farm-dau-giay-nam",
+    administrativeUnitCode: "26326",
+    administrativeUnitName: "Phường Dầu Giây",
+    storageType: "kho_mat",
+    bins: ["DG-N1 (Nấm tươi)", "DG-N2 (Nấm khô)"],
+  },
+  {
+    id: "WH-PL-01",
+    name: "Kho Nông sản Đồi Bù Gia – Phước Long",
+    farmId: "farm-phuoc-long-bo",
+    administrativeUnitCode: "25217",
+    administrativeUnitName: "Phường Phước Long",
+    storageType: "diem_gom_htx",
+    bins: ["PL-C1 (Cà phê)", "PL-B1 (Bơ sáp)"],
+  },
+  {
+    id: "WH-TN-01",
+    name: "Điểm Gom Xoài & Thảo mộc Thống Nhất",
+    farmId: "farm-thong-nhat-xoai",
+    administrativeUnitCode: "26299",
+    administrativeUnitName: "Xã Thống Nhất",
+    storageType: "kho_kho",
+    bins: ["TN-X1 (Xoài sấy)", "TN-X2 (Thảo mộc)"],
   },
 ];
 
@@ -154,6 +208,7 @@ export const INITIAL_WAREHOUSE_STOCKS: WarehouseStock[] = [
     minThreshold: 5,
     maxThreshold: 40,
   },
+  ...HTX_TT_POMELO_STOCKS,
 ];
 
 export const INITIAL_INVENTORY_MOVEMENTS: InventoryMovement[] = [
@@ -206,6 +261,36 @@ export const INITIAL_INVENTORY_MOVEMENTS: InventoryMovement[] = [
     actorName: "Tổ kiểm tra QC",
     reason: "Chuyển trạng thái giữ lô cách ly QC do phát hiện độ ẩm vỏ cao",
   },
+  ...HTX_TT_POMELO_MOVEMENTS,
+  ...Array.from({ length: 420 }, (_, mIdx) => {
+    const whIds = ["WH-LK-01", "WH-XL-01", "WH-CM-01", "WH-BP-01", "WH-TA-01", "WH-DG-01", "WH-PL-01", "WH-TN-01"];
+    const prod = INITIAL_PRODUCTS[mIdx % INITIAL_PRODUCTS.length];
+    const moveTypes: InventoryMovement["type"][] = ["inbound", "outbound", "transfer", "adjustment"];
+    const t = moveTypes[mIdx % moveTypes.length];
+    const isInternal = t === "transfer";
+    const qty = t === "outbound" ? -(4 + (mIdx % 12)) : 8 + (mIdx % 20);
+    const monthStr = String(1 + (mIdx % 11)).padStart(2, "0");
+    const dayStr = String(1 + (mIdx % 25)).padStart(2, "0");
+    return {
+      id: `MOV-EXP-${String(mIdx + 1).padStart(3, "0")}`,
+      warehouseId: whIds[mIdx % whIds.length],
+      productId: prod.id,
+      batchCode: prod.batchCode,
+      type: t,
+      quantityDelta: qty,
+      unitLabel: prod.unitLabel,
+      dateIso: `2026-${monthStr}-${dayStr}`,
+      actorName: mIdx % 2 === 0 ? "Thủ kho địa phương" : "Tổ đóng gói HTX",
+      reason: isInternal
+        ? "Điều chuyển nội bộ giữa các kho (không tính sell-through)"
+        : t === "inbound"
+        ? "Nhập kho thu hái mới theo nhật ký mùa vụ"
+        : t === "outbound"
+        ? "Xuất kho giao đơn hàng chợ số"
+        : "Kiểm kê định kỳ bảo đảm khớp sổ thực tế",
+      isInternalTransfer: isInternal,
+    };
+  }),
 ];
 
 export const INITIAL_SUPPLIERS: Supplier[] = [
@@ -221,8 +306,8 @@ export const INITIAL_SUPPLIERS: Supplier[] = [
     id: "SUP-02",
     name: "Tổ sản xuất Phân hữu cơ Vi sinh Trảng Bom",
     category: "Phân bón hữu cơ & chế phẩm sinh học",
-    administrativeUnitCode: "26179",
-    administrativeUnitName: "Xã Trảng Bom",
+    administrativeUnitCode: "26248",
+    administrativeUnitName: "Phường Trảng Bom",
     ratingNote: "Cung cấp định kỳ cho 14 nhà vườn liên kết",
   },
   {
@@ -241,6 +326,17 @@ export const INITIAL_SUPPLIERS: Supplier[] = [
     administrativeUnitName: "Phường Xuân Lộc",
     ratingNote: "Chiết khấu xã viên HTX 8%",
   },
+  ...Array.from({ length: 24 }, (_, sIdx) => {
+    const farm = INITIAL_FARMS[sIdx % INITIAL_FARMS.length];
+    return {
+      id: `SUP-${String(sIdx + 5).padStart(2, "0")}`,
+      name: `Đơn vị Cung ứng & Sơ chế ${farm.administrativeUnitName} #${sIdx + 1}`,
+      category: sIdx % 2 === 0 ? "Bao bì, rơm lót & nhãn QR" : "Vật tư canh tác sinh học",
+      administrativeUnitCode: farm.administrativeUnitCode,
+      administrativeUnitName: farm.administrativeUnitName,
+      ratingNote: "Hồ sơ đối tác vật tư mẫu theo cụm đơn vị hành chính",
+    };
+  }),
 ];
 
 export const INITIAL_PURCHASE_ORDERS: PurchaseOrder[] = [
@@ -298,6 +394,27 @@ export const INITIAL_PURCHASE_ORDERS: PurchaseOrder[] = [
     status: "qc_rejected",
     qcNote: "Lô giao thiếu 40 túi và đường may miệng túi chưa đạt — đã trả lại nhà cung cấp.",
   },
+  ...Array.from({ length: 84 }, (_, pIdx) => {
+    const farm = INITIAL_FARMS[pIdx % INITIAL_FARMS.length];
+    const poStatuses: PurchaseOrder["status"][] = ["rfq_draft", "po_approved", "received_qc_pass", "qc_rejected"];
+    const status = poStatuses[pIdx % poStatuses.length];
+    const qty = 20 + (pIdx % 60);
+    const unitCost = 15000 + (pIdx % 8) * 5000;
+    return {
+      id: `PO-2026-${String(pIdx + 5).padStart(3, "0")}`,
+      supplierId: `SUP-${String(1 + (pIdx % 28)).padStart(2, "0")}`,
+      supplierName: `Nhà cung cấp Vật tư #${1 + (pIdx % 28)} (${farm.administrativeUnitName})`,
+      farmId: farm.id,
+      itemName: pIdx % 2 === 0 ? "Thùng carton 5 lớp & tem chống ẩm QR" : "Phân hữu cơ vi sinh & túi bao trái",
+      quantity: qty,
+      unitLabel: pIdx % 2 === 0 ? "thùng" : "bộ",
+      unitCostVnd: unitCost,
+      totalVnd: qty * unitCost,
+      expectedDateIso: `2026-11-${String(1 + (pIdx % 28)).padStart(2, "0")}`,
+      status,
+      qcNote: status === "qc_rejected" ? "Không đạt độ khô tiêu chuẩn khi kiểm nhận." : undefined,
+    };
+  }),
 ];
 
 export const INITIAL_COOP_POOLS: CoopPool[] = [
@@ -430,6 +547,19 @@ export const INITIAL_EXPENSES: ExpenseEntry[] = [
     amountVnd: 1450000,
     dateIso: "2026-11-21",
   },
+  ...HTX_TT_EXPENSES,
+  ...Array.from({ length: 92 }, (_, eIdx) => {
+    const farm = INITIAL_FARMS[eIdx % INITIAL_FARMS.length];
+    const cats: ExpenseEntry["category"][] = ["vat_tu", "dong_goi", "van_chuyen_noi_bo", "nhan_cong_thoi_vu"];
+    return {
+      id: `EXP-V4-${String(eIdx + 1).padStart(3, "0")}`,
+      farmId: farm.id,
+      category: cats[eIdx % cats.length],
+      description: `Chi phí vận hành nhà vườn ${farm.name} (${farm.administrativeUnitName})`,
+      amountVnd: 450000 + (eIdx % 10) * 150000,
+      dateIso: `2026-${String(1 + (eIdx % 11)).padStart(2, "0")}-${String(1 + (eIdx % 24)).padStart(2, "0")}`,
+    };
+  }),
 ];
 
 export const INITIAL_RECEIVABLES_PAYABLES: ReceivablePayable[] = [
@@ -463,6 +593,28 @@ export const INITIAL_RECEIVABLES_PAYABLES: ReceivablePayable[] = [
     dueDateIso: "2026-12-05",
     status: "open",
   },
+  ...HTX_TT_AR_AP_AGING_ITEMS,
+  ...Array.from({ length: 16 }, (_, dIdx) => {
+    const farm = INITIAL_FARMS[dIdx % INITIAL_FARMS.length];
+    const kind = dIdx % 2 === 0 ? ("receivable" as const) : ("payable" as const);
+    const statuses: ReceivablePayable["status"][] = ["open", "overdue", "settled"];
+    const status = statuses[dIdx % statuses.length];
+    const original = 2200000 + (dIdx % 5) * 900000;
+    const paid = status === "settled" ? original : status === "open" ? 0 : 800000;
+    return {
+      id: `RP-V4-${String(dIdx + 1).padStart(2, "0")}`,
+      farmId: farm.id,
+      kind,
+      counterpartyName:
+        kind === "receivable"
+          ? `Đối tác thu mua B2B #${dIdx + 1} (${farm.administrativeUnitName})`
+          : `Nhà cung cấp vật tư & xã viên #${dIdx + 1}`,
+      originalVnd: original,
+      paidVnd: paid,
+      dueDateIso: status === "overdue" ? "2026-10-25" : "2026-12-08",
+      status,
+    };
+  }),
 ];
 
 export const INITIAL_REFUND_REQUESTS: RefundRequest[] = [

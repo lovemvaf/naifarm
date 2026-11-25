@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Download, GitMerge, ShieldAlert, Users, Wallet } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { useLocale } from "@/context/LocaleContext";
+import { computeArApAging, computeMemberDrilldown } from "@/lib/metrics/business-metrics";
 import { buildScopedCsvContent, triggerCsvDownload } from "@/lib/export/csv-export";
 import { formatVnd } from "@/lib/format";
 import { notifyError, notifySuccess } from "@/lib/toast";
@@ -16,8 +18,11 @@ export function FarmerCoopFinancePanel({
   farmId: string;
   farmName: string;
 }) {
+  const { locale } = useLocale();
+  const isEn = locale === "en";
   const {
     farms,
+    orders,
     coopPools,
     memberDeliveries,
     expenses,
@@ -26,6 +31,9 @@ export function FarmerCoopFinancePanel({
   } = useDemoStore();
 
   const [checkerIdentity, setCheckerIdentity] = useState("Kế toán trưởng HTX Minh Châu");
+
+  const memberDrilldown = computeMemberDrilldown(orders, farms, "2026-11-01", "2026-11-24");
+  const agingBuckets = computeArApAging(receivablesPayables, "2026-11-25");
 
   const scopedExpenses = expenses.filter((e) => !farmId || e.farmId === farmId || e.farmId === "farm-ba-tu-demo");
   const scopedDebts = receivablesPayables.filter(
@@ -241,6 +249,83 @@ export function FarmerCoopFinancePanel({
               ))}
             </div>
           </div>
+        </div>
+      </Card>
+
+      {/* 5-Bucket AR/AP Aging Summary */}
+      <Card className="space-y-4 p-5">
+        <h3 className="text-base font-bold text-[#25352B]">
+          {isEn ? "AR / AP Aging Breakdown (5 Buckets)" : "Phân tích Tuổi nợ Phải thu / Phải trả (5 nhóm hạn)"}
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[540px] border-collapse text-left text-xs">
+            <thead>
+              <tr className="border-b border-[#D6DED2] text-[#52645A]">
+                <th className="py-2 pr-3 font-semibold">{isEn ? "Aging Bucket" : "Nhóm tuổi nợ"}</th>
+                <th className="py-2 px-3 text-right font-semibold">{isEn ? "Records" : "Số khoản"}</th>
+                <th className="py-2 px-3 text-right font-semibold">{isEn ? "Receivable (AR)" : "Phải thu (AR)"}</th>
+                <th className="py-2 pl-3 text-right font-semibold">{isEn ? "Payable (AP)" : "Phải trả (AP)"}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#EAEFE6]">
+              {agingBuckets.map((row) => (
+                <tr key={row.bucket}>
+                  <td className="py-2 pr-3 font-semibold text-[#25352B]">
+                    {isEn ? row.labelEn : row.labelVi}
+                  </td>
+                  <td className="py-2 px-3 text-right tabular-nums">{row.count}</td>
+                  <td className="py-2 px-3 text-right tabular-nums text-[#245B3D]">
+                    {formatVnd(row.receivableVnd, locale)}
+                  </td>
+                  <td className="py-2 pl-3 text-right tabular-nums text-[#80520C]">
+                    {formatVnd(row.payableVnd, locale)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* 20-Member Household Drill-down (01–24/11/2026) */}
+      <Card className="space-y-4 p-5">
+        <h3 className="text-base font-bold text-[#25352B]">
+          {isEn
+            ? `Member Household Sales & Margin Drill-Down (${memberDrilldown.length})`
+            : `Đối chiếu Doanh số & Biên gộp theo từng Hộ xã viên (${memberDrilldown.length} hộ)`}
+        </h3>
+        <div className="max-h-[320px] overflow-x-auto overflow-y-auto">
+          <table className="w-full min-w-[600px] border-collapse text-left text-xs">
+            <thead>
+              <tr className="border-b border-[#D6DED2] text-[#52645A]">
+                <th className="py-2 pr-3 font-semibold">{isEn ? "Orchard / Member" : "Nhà vườn / Xã viên"}</th>
+                <th className="py-2 px-2 text-right font-semibold">{isEn ? "Orders" : "Số đơn"}</th>
+                <th className="py-2 px-2 text-right font-semibold">Gross</th>
+                <th className="py-2 px-2 text-right font-semibold">Net Sales</th>
+                <th className="py-2 px-2 text-right font-semibold">COGS</th>
+                <th className="py-2 pl-2 text-right font-semibold">{isEn ? "Gross Profit" : "Lãi gộp"}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#EAEFE6]">
+              {memberDrilldown.map((m) => (
+                <tr key={m.farmId}>
+                  <td className="py-2 pr-3">
+                    <p className="font-semibold text-[#25352B]">{m.farmName}</p>
+                    <p className="text-[11px] text-[#52645A]">{m.unitName}</p>
+                  </td>
+                  <td className="py-2 px-2 text-right tabular-nums">{m.ordersCount}</td>
+                  <td className="py-2 px-2 text-right tabular-nums">{formatVnd(m.grossVnd, locale)}</td>
+                  <td className="py-2 px-2 text-right tabular-nums font-bold text-[#245B3D]">
+                    {formatVnd(m.netVnd, locale)}
+                  </td>
+                  <td className="py-2 px-2 text-right tabular-nums">{formatVnd(m.cogsVnd, locale)}</td>
+                  <td className="py-2 pl-2 text-right tabular-nums font-semibold">
+                    {formatVnd(m.grossProfitVnd, locale)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </Card>
     </div>

@@ -91,12 +91,19 @@ export function MapMarkers({
             })
           : null;
 
+        const markerLabel = `${farm.name} (${farm.administrativeUnitName})`;
         return (
           <Marker
             key={farm.id}
             position={[farm.coordinates.lat, farm.coordinates.lng]}
             icon={icon}
+            title={markerLabel}
+            alt={farm.name}
             eventHandlers={{
+              add: (event) => {
+                const el = event.target?.getElement?.();
+                if (el) el.setAttribute("aria-label", markerLabel);
+              },
               click: () => onSelectFarm?.(farm.id),
             }}
           >
@@ -135,7 +142,18 @@ export function MapMarkers({
             radius={Math.min(accuracyMeters ?? 250, 2000)}
             pathOptions={{ color: "#1D4ED8", fillColor: "#3B82F6", fillOpacity: 0.12, weight: 1.5 }}
           />
-          <Marker position={[userCoords.lat, userCoords.lng]} icon={icons.gps}>
+          <Marker
+            position={[userCoords.lat, userCoords.lng]}
+            icon={icons.gps}
+            title="Vị trí hiện tại của bạn"
+            alt="Vị trí hiện tại của bạn"
+            eventHandlers={{
+              add: (event) => {
+                const el = event.target?.getElement?.();
+                if (el) el.setAttribute("aria-label", "Vị trí hiện tại của bạn");
+              },
+            }}
+          >
             <Popup>
               <div className="text-xs text-[#25352B]">
                 <p className="font-bold text-[#1D4ED8]">Vị trí hiện tại của bạn</p>

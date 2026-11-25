@@ -73,6 +73,8 @@ const SKILL_TAGS: VolunteerMission["skillTag"][] = [
   "Chụp ảnh & AI đăng bán",
   "Thiết lập QR & Nhật ký",
   "Livestream bán hàng",
+  "Đại sứ Song ngữ & Đón khách",
+  "Truyền thông & Văn hóa",
 ];
 
 const VOLUNTEER_NAMES = [
@@ -96,13 +98,14 @@ const EXTRA_STATUSES: MissionStatus[] = [
   "revision_requested",
 ];
 
-const EXTRA_MISSIONS: VolunteerMission[] = Array.from({ length: 37 }, (_, idx) => {
+const EXTRA_MISSIONS: VolunteerMission[] = Array.from({ length: 61 }, (_, idx) => {
   const num = idx + 4;
   const missionId = `NF-MIS-${String(num).padStart(2, "0")}`;
   const farm = INITIAL_FARMS[idx % INITIAL_FARMS.length];
   const skillTag = SKILL_TAGS[idx % SKILL_TAGS.length];
   const status = EXTRA_STATUSES[idx % EXTRA_STATUSES.length];
   const online = idx % 3 === 1;
+  const isMinorSafe = online && (skillTag === "Truyền thông & Văn hóa" || skillTag === "Thiết lập QR & Nhật ký") && idx % 4 === 0;
   const assigneeName = status === "open" ? undefined : VOLUNTEER_NAMES[idx % VOLUNTEER_NAMES.length];
   const expectedHours = 2 + (idx % 3);
   const submittedHours =
@@ -114,12 +117,17 @@ const EXTRA_MISSIONS: VolunteerMission[] = Array.from({ length: 37 }, (_, idx) =
   return {
     id: missionId,
     title: `${skillTag} — ${farm.name} (${farm.administrativeUnitName})`,
+    titleEn: `${skillTag === "Đại sứ Song ngữ & Đón khách" ? "Bilingual Ambassador & Tour Welcome" : skillTag === "Truyền thông & Văn hóa" ? "Cultural Banner & Media Guide" : "Digital Orchard Support"} — ${farm.enName || farm.name}`,
     farmId: farm.id,
     farmName: farm.name,
     administrativeUnitCode: farm.administrativeUnitCode,
     location: online ? `Hỗ trợ từ xa (Online) · ${farm.administrativeUnitName}` : `${farm.administrativeUnitName}, Thành phố Đồng Nai`,
     mode: online ? "Hỗ trợ từ xa (Online)" : "Trực tiếp tại vườn",
     skillTag,
+    audienceAge: isMinorSafe ? "minor_supervised" : "adult",
+    guardianConsentRequired: isMinorSafe,
+    languageRequired: skillTag === "Đại sứ Song ngữ & Đón khách" ? "bilingual" : "vi",
+    linkedCampaignId: idx % 5 === 0 ? "CMP-2026-DEC-YOUTH-SOIL" : "CMP-2026-NOV-CONNECT",
     assigneeName,
     expectedHours,
     submittedHours,
@@ -142,8 +150,8 @@ const EXTRA_MISSIONS: VolunteerMission[] = Array.from({ length: 37 }, (_, idx) =
 
 export const INITIAL_MISSIONS: VolunteerMission[] = [...GOLDEN_MISSIONS, ...EXTRA_MISSIONS];
 
-// 120 VolunteerHourRecords across 40 missions for Youth Impact Pass analytics
-export const INITIAL_VOLUNTEER_HOURS: VolunteerHourRecord[] = Array.from({ length: 120 }, (_, idx) => {
+// 168 VolunteerHourRecords across 64 missions for Youth Impact Pass analytics
+export const INITIAL_VOLUNTEER_HOURS: VolunteerHourRecord[] = Array.from({ length: 168 }, (_, idx) => {
   const mission = INITIAL_MISSIONS[idx % INITIAL_MISSIONS.length];
   const statuses: VolunteerHourRecord["status"][] = [
     "approved",

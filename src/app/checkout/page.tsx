@@ -12,6 +12,9 @@ import {
   Truck,
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { useLocale } from "@/context/LocaleContext";
+import { applyPromotionsToCart } from "@/lib/commerce/promotion-engine";
+import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
 import { ADMINISTRATIVE_UNITS } from "@/lib/geography/administrative-lookup";
 import { formatVnd } from "@/lib/format";
 import { notifyError, notifySuccess } from "@/lib/toast";
@@ -25,7 +28,19 @@ const DELIVERY_SLOTS = [
 ];
 
 export default function CheckoutPage() {
-  const { cart, products, addressBook, authUser, placeDemoOrder } = useDemoStore();
+  const { locale, t, currencyMode } = useLocale();
+  const isEn = locale === "en";
+  const showUsd = currencyMode === "vnd_usd_est";
+  const {
+    cart,
+    products,
+    addressBook,
+    authUser,
+    promotions,
+    appliedPromoCodes,
+    activeClockIso,
+    placeDemoOrder,
+  } = useDemoStore();
 
   const [customerName, setCustomerName] = useState(authUser?.name ?? "Ngọc Linh");
   const [customerPhone, setCustomerPhone] = useState("090x xxx 128");
@@ -54,15 +69,22 @@ export default function CheckoutPage() {
     };
   }, [cart, products]);
 
-  const couponNorm = couponCode.trim().toUpperCase();
-  const discountVnd =
-    couponNorm === "NAIFARM10" && lineSummary.subtotalVnd >= 100000
-      ? 10000
-      : couponNorm === "MUAVU20" && lineSummary.subtotalVnd >= 200000
-      ? 20000
-      : 0;
+  const activeCodes = [
+    ...(couponCode.trim() ? [couponCode.trim().toUpperCase()] : []),
+    ...appliedPromoCodes,
+  ];
   const shippingFeeVnd = deliveryMethod === "delivery" ? lineSummary.farmCount * 20000 : 0;
-  const totalVnd = Math.max(0, lineSummary.subtotalVnd - discountVnd + shippingFeeVnd);
+  const promoEvaluation = applyPromotionsToCart(
+    promotions,
+    activeCodes,
+    lineSummary.subtotalVnd,
+    shippingFeeVnd,
+    locale,
+    activeClockIso,
+    Boolean(authUser?.isMinor),
+  );
+  const discountVnd = promoEvaluation.totalMerchDiscountVnd;
+  const totalVnd = promoEvaluation.finalTotalVnd;
 
   const selectedUnit = ADMINISTRATIVE_UNITS.find((u) => u.maDvhc === unitCode);
   const composedAddress =
@@ -366,59 +388,77 @@ export default function CheckoutPage() {
 
           <div className="lg:col-span-4">
             <Card className="sticky top-24 space-y-4 p-5">
-              <h2 className="text-base font-bold text-[#25352B]">Tóm tắt đơn hàng</h2>
+              <h2 className="text-base font-bold text-[#25352B]">
+                {isEn ? "Order Summary" : "Tóm tắt đơn hàng"}
+              </h2>
               <div>
                 <label htmlFor="chk-coupon" className="flex items-center gap-1.5 text-xs font-semibold text-[#25352B]">
                   <Tag className="h-3.5 w-3.5 text-[#245B3D]" aria-hidden="true" />
-                  <span>Mã ưu đãi (NAIFARM10 hoặc MUAVU20)</span>
+                  <span>{t.commerce.promoCodePlaceholder}</span>
                 </label>
                 <input
                   id="chk-coupon"
                   type="text"
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value)}
-                  placeholder="Nhập mã ưu đãi..."
+                  placeholder="DANGBAN25, HTXTANTRIEU, NAIFARM10..."
                   className="mt-1 min-h-[42px] w-full rounded-[10px] border border-[#788A7B] bg-white px-3 text-sm uppercase"
                 />
+                {promoEvaluation.rejected.map((rej) => (
+                  <p key={rej.code} className="mt-1 text-[11px] font-medium text-[#A32D2D]">
+                    {isEn ? rej.reasonEn : rej.reasonVi}
+                  </p>
+                ))}
               </div>
 
               <div className="space-y-2 border-y border-[#EAEFE6] py-3 text-sm">
                 <div className="flex justify-between text-[#52645A]">
-                  <span>Tạm tính nông sản</span>
+                  <span>{t.commerce.subtotalLabel}</span>
                   <span className="tabular-nums font-semibold text-[#25352B]">
-                    {formatVnd(lineSummary.subtotalVnd)}
+                    {formatVnd(lineSummary.subtotalVnd, locale, showUsd)}
                   </span>
                 </div>
                 <div className="flex justify-between text-[#52645A]">
-                  <span>Ưu đãi theo mùa</span>
+                  <span>{t.commerce.discountLabel}</span>
                   <span className="tabular-nums font-semibold text-[#24603B]">
-                    -{formatVnd(discountVnd)}
+                    -{formatVnd(discountVnd, locale)}
                   </span>
                 </div>
                 <div className="flex justify-between text-[#52645A]">
-                  <span>Phí giao ({lineSummary.farmCount} nhà vườn)</span>
+                  <span>{t.commerce.shippingEstimateLabel}</span>
                   <span className="tabular-nums font-semibold text-[#25352B]">
-                    {formatVnd(shippingFeeVnd)}
+                    {formatVnd(Math.max(0, shippingFeeVnd - promoEvaluation.totalShipDiscountVnd), locale)}
                   </span>
                 </div>
                 <div className="flex justify-between pt-2 text-base font-bold text-[#245B3D]">
-                  <span>Tổng cộng</span>
-                  <span className="tabular-nums">{formatVnd(totalVnd)}</span>
+                  <span>{t.commerce.totalLabel}</span>
+                  <span className="tabular-nums">{formatVnd(totalVnd, locale, showUsd)}</span>
                 </div>
               </div>
 
               <div className="rounded-[12px] bg-[#FAF8F1] p-3 text-xs text-[#52645A]">
                 <p className="inline-flex items-center gap-1 font-semibold text-[#25352B]">
                   <Sparkles className="h-3.5 w-3.5 text-[#245B3D]" aria-hidden="true" />
-                  <span>Thanh toán tiền mặt khi nhận nông sản</span>
+                  <span>{t.commerce.checkoutExperienceNotice}</span>
                 </p>
+                {showUsd ? <p className="mt-1 text-[#80520C]">{t.commerce.usdEstimateNote}</p> : null}
                 <p className="mt-1">
-                  Đơn hàng trong không gian trải nghiệm, không phát sinh thanh toán hoặc giao hàng thực tế.
+                  <Link href={buildLocalizedHref("/events?tab=deals", locale)} className="font-semibold text-[#245B3D] underline">
+                    {t.events.tabDeals} →
+                  </Link>
                 </p>
               </div>
 
-              <Button type="submit" variant="primary" size="lg" className="w-full">
-                Xác nhận đặt đơn
+              {authUser?.isMinor ? (
+                <div className="rounded-[10px] border border-[#A32D2D] bg-[#FDECEC] p-3 text-xs font-semibold text-[#A32D2D]">
+                  {isEn
+                    ? "Supervised minor account cannot place independent commercial orders."
+                    : "Tài khoản học sinh dưới 18 tuổi không tự chốt đơn thương mại."}
+                </div>
+              ) : null}
+
+              <Button type="submit" variant="primary" size="lg" className="w-full" disabled={Boolean(authUser?.isMinor)}>
+                {t.commerce.confirmOrderBtn}
               </Button>
             </Card>
           </div>

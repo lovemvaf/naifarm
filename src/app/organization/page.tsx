@@ -7,8 +7,10 @@ import {
   BarChart3,
   Briefcase,
   Building2,
+  CalendarDays,
   CheckCircle2,
   Download,
+  Globe2,
   GraduationCap,
   HeartHandshake,
   ShieldCheck,
@@ -17,7 +19,9 @@ import {
   Users,
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { useLocale } from "@/context/LocaleContext";
 import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
+import { NaiCalendarBoard } from "@/components/calendar/NaiCalendarBoard";
 import { ScopeSelector } from "@/components/permissions/ScopeSelector";
 import { QualityCenterPanel } from "@/components/quality/QualityCenterPanel";
 import { OCOP_PUBLIC_REFERENCE_CATALOG } from "@/data/reference/ocop-public-reference";
@@ -27,7 +31,7 @@ import { notifyError, notifySuccess } from "@/lib/toast";
 import { Badge, Button, Card } from "@/components/ui/Primitives";
 import type { OrganizationKind } from "@/types/naifarm";
 
-type OrgTab = "overview" | "work" | "members" | "approvals" | "reports";
+type OrgTab = "overview" | "work" | "members" | "approvals" | "calendar" | "reports";
 
 const ORG_KINDS: { id: OrganizationKind; label: string; badge: string }[] = [
   { id: "coop", label: "Hợp tác xã / Hội Nông dân", badge: "Gom lô & Xã viên" },
@@ -42,6 +46,8 @@ const ORG_KINDS: { id: OrganizationKind; label: string; badge: string }[] = [
 function OrganizationWorkspaceContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { locale } = useLocale();
+  const isEn = locale === "en";
   const {
     hydrated,
     setActiveWorkspace,
@@ -58,6 +64,8 @@ function OrganizationWorkspaceContent() {
     sponsorCampaigns,
     products,
     credentialRecords,
+    internationalInquiries,
+    respondInternationalInquiry,
     settleMemberDelivery,
     gradeStudentSubmission,
     updateLogisticsTripStatus,
@@ -139,6 +147,13 @@ function OrganizationWorkspaceContent() {
           active: tab === "approvals",
           onClick: () => setTab("approvals"),
           icon: <ShieldCheck className="h-4 w-4" aria-hidden="true" />,
+        },
+        {
+          label: isEn ? "Organization Calendar" : "Lịch Tổ chức (NaiCalendar)",
+          href: "#calendar",
+          active: tab === "calendar",
+          onClick: () => setTab("calendar"),
+          icon: <CalendarDays className="h-4 w-4" aria-hidden="true" />,
         },
         {
           label: "Báo cáo & Xuất CSV",
@@ -500,20 +515,73 @@ function OrganizationWorkspaceContent() {
           </Card>
         ) : null}
 
+        {tab === "calendar" ? <NaiCalendarBoard scope="W05" allowCreate /> : null}
+
         {/* Tab 5: Scoped Reports */}
         {tab === "reports" ? (
-          <Card className="space-y-4 p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="text-base font-bold text-[#25352B]">Báo cáo theo phạm vi tổ chức: {activeOrgMeta.label}</h3>
-                <p className="text-xs text-[#52645A]">Xuất tệp CSV chuẩn UTF-8 BOM an toàn công thức bảng tính.</p>
+          <div className="space-y-5">
+            <Card className="space-y-4 p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-bold text-[#25352B]">
+                    Báo cáo theo phạm vi tổ chức: {activeOrgMeta.label}
+                  </h3>
+                  <p className="text-xs text-[#52645A]">
+                    Xuất tệp CSV chuẩn UTF-8 BOM an toàn công thức bảng tính.
+                  </p>
+                </div>
+                <Button size="sm" variant="primary" onClick={exportOrgCsv}>
+                  <Download className="h-4 w-4" aria-hidden="true" />
+                  <span>Xuất CSV tổ chức</span>
+                </Button>
               </div>
-              <Button size="sm" variant="primary" onClick={exportOrgCsv}>
-                <Download className="h-4 w-4" aria-hidden="true" />
-                <span>Xuất CSV tổ chức</span>
-              </Button>
-            </div>
-          </Card>
+            </Card>
+
+            <Card className="space-y-3 p-5">
+              <h3 className="flex items-center gap-2 text-base font-bold text-[#25352B]">
+                <Globe2 className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
+                <span>
+                  {isEn
+                    ? `B2B & International Buyer RFQs (${internationalInquiries.length})`
+                    : `Yêu cầu B2B & Nguồn hàng Quốc tế (${internationalInquiries.length})`}
+                </span>
+              </h3>
+              <div className="space-y-2 text-xs">
+                {internationalInquiries.map((inq) => (
+                  <div
+                    key={inq.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-[#EAEFE6] bg-[#FAF8F1] p-3"
+                  >
+                    <div>
+                      <p className="font-bold text-[#25352B]">
+                        {inq.id} · {inq.buyerName} ({inq.country})
+                      </p>
+                      <p className="text-[#52645A]">
+                        {inq.productName ?? inq.farmName} · {inq.quantityNote}
+                      </p>
+                    </div>
+                    {inq.responseNote ? (
+                      <Badge tone="success">{isEn ? "Responded" : "Đã phản hồi"}</Badge>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                          respondInternationalInquiry(
+                            inq.id,
+                            "Tổ chức W05 đã tiếp nhận RFQ và chuyển tổ kiểm định MSVT rà soát.",
+                          );
+                          notifySuccess(`${inq.id}: ${isEn ? "Reply recorded" : "Đã phản hồi RFQ"}`);
+                        }}
+                      >
+                        {isEn ? "Acknowledge RFQ" : "Ghi nhận phản hồi B2B"}
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
         ) : null}
       </div>
     </WorkspaceShell>

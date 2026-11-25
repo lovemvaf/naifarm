@@ -3,6 +3,8 @@
 import React, { useMemo, useState } from "react";
 import { Boxes, ClipboardCheck, Truck } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { useLocale } from "@/context/LocaleContext";
+import { computeStockLedgerSummary } from "@/lib/metrics/business-metrics";
 import { formatVnd } from "@/lib/format";
 import { notifyError, notifySuccess } from "@/lib/toast";
 import { Badge, Button, Card } from "@/components/ui/Primitives";
@@ -15,6 +17,8 @@ export function FarmerInventoryProcurementPanel({
   farmId: string;
   actorName: string;
 }) {
+  const { locale } = useLocale();
+  const isEn = locale === "en";
   const {
     warehouses,
     warehouseStocks,
@@ -25,6 +29,19 @@ export function FarmerInventoryProcurementPanel({
     recordInventoryMovement,
     advancePurchaseOrder,
   } = useDemoStore();
+
+  const pomeloStocks = useMemo(
+    () => warehouseStocks.filter((s) => s.id.startsWith("STK-TT-")),
+    [warehouseStocks],
+  );
+  const pomeloMovements = useMemo(
+    () => inventoryMovements.filter((m) => m.id.startsWith("MOV-TT-")),
+    [inventoryMovements],
+  );
+  const pomeloLedger = useMemo(
+    () => computeStockLedgerSummary(2000, pomeloStocks, pomeloMovements),
+    [pomeloStocks, pomeloMovements],
+  );
 
   const farmWarehouses = useMemo(
     () => warehouses.filter((w) => w.farmId === farmId || w.id === "WH-HTX-01"),
@@ -45,6 +62,68 @@ export function FarmerInventoryProcurementPanel({
 
   return (
     <div className="space-y-6">
+      {/* Reconciled HTX Tân Triều Pomelo Stock Ledger */}
+      <Card className="space-y-3 border-[#245B3D]/30 bg-[#FAF8F1] p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-base font-bold text-[#25352B]">
+              {isEn
+                ? "Reconciled Pomelo Stock Ledger — HTX Tân Triều"
+                : "Đối chiếu Sổ kho Bưởi Tân Triều (Đầu kỳ + Nhập − Xuất − Hao hụt)"}
+            </h2>
+            <p className="text-xs text-[#52645A]">
+              {isEn
+                ? "Transfers inside cooperative hubs never inflate net inbound volume."
+                : "Chuyển kho nội bộ được tách riêng để không làm tăng ảo sản lượng nhập kho."}
+            </p>
+          </div>
+          <Badge tone={pomeloLedger.reconciled ? "success" : "warning"}>
+            {pomeloLedger.reconciled
+              ? isEn
+                ? "Ledger Reconciled"
+                : "Khớp sổ thực tế"
+              : isEn
+              ? "Check Variance"
+              : "Chênh lệch kiểm kê"}
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2.5 text-xs sm:grid-cols-4 lg:grid-cols-7">
+          <div className="rounded-[10px] border border-[#D6DED2] bg-white p-2.5">
+            <p className="text-[#52645A]">{isEn ? "Opening" : "Tồn đầu kỳ"}</p>
+            <p className="mt-0.5 tabular-nums font-bold">{pomeloLedger.openingQty} kg</p>
+          </div>
+          <div className="rounded-[10px] border border-[#D6DED2] bg-white p-2.5">
+            <p className="text-[#52645A]">{isEn ? "Inbound" : "Nhập vườn"}</p>
+            <p className="mt-0.5 tabular-nums font-bold text-[#24603B]">+{pomeloLedger.inboundQty} kg</p>
+          </div>
+          <div className="rounded-[10px] border border-[#D6DED2] bg-white p-2.5">
+            <p className="text-[#52645A]">{isEn ? "Outbound" : "Xuất bán"}</p>
+            <p className="mt-0.5 tabular-nums font-bold text-[#25352B]">-{pomeloLedger.outboundQty} kg</p>
+          </div>
+          <div className="rounded-[10px] border border-[#D6DED2] bg-white p-2.5">
+            <p className="text-[#52645A]">{isEn ? "Shrinkage/Loss" : "Hao hụt"}</p>
+            <p className="mt-0.5 tabular-nums font-bold text-[#A32D2D]">-{pomeloLedger.lossQty} kg</p>
+          </div>
+          <div className="rounded-[10px] border border-[#D6DED2] bg-white p-2.5">
+            <p className="text-[#52645A]">{isEn ? "On-Hand" : "Thực tế kho"}</p>
+            <p className="mt-0.5 tabular-nums font-bold text-[#25352B]">{pomeloLedger.snapshotOnHandQty} kg</p>
+          </div>
+          <div className="rounded-[10px] border border-[#D6DED2] bg-white p-2.5">
+            <p className="text-[#52645A]">{isEn ? "Reserved / Hold" : "Đặt giữ / Cách ly"}</p>
+            <p className="mt-0.5 tabular-nums font-bold text-[#80520C]">
+              {pomeloLedger.reservedQty} / {pomeloLedger.quarantineQty} kg
+            </p>
+          </div>
+          <div className="rounded-[10px] border border-[#245B3D] bg-[#EAF0E5] p-2.5">
+            <p className="font-semibold text-[#245B3D]">{isEn ? "Available to Sell" : "Khả dụng bán"}</p>
+            <p className="mt-0.5 tabular-nums text-sm font-bold text-[#245B3D]">
+              {pomeloLedger.availableQty} kg
+            </p>
+          </div>
+        </div>
+      </Card>
+
       {/* Warehouses & Stock Buckets + FEFO */}
       <Card className="space-y-4 p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">

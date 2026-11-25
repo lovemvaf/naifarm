@@ -28,13 +28,26 @@ import {
   INITIAL_NOTIFICATIONS,
   INITIAL_PARTNER_ORGS,
   INITIAL_TICKETS,
+  ROLE_BUNDLE_QUICK_ACCOUNTS,
 } from "@/data/demo/partners-tickets";
 import {
   INITIAL_ADMIN_GRANTS,
   INITIAL_AUDIT_LOGS,
   INITIAL_DOC_CASES,
-  INITIAL_EXPERIENCE_BOOKINGS,
 } from "@/data/demo/community";
+import {
+  INITIAL_TOUR_PACKAGES,
+  INITIAL_V4_BOOKINGS,
+} from "@/data/fixtures/agritourism-experiences";
+import {
+  INITIAL_CALENDAR_EVENTS,
+  INITIAL_CAMPAIGNS,
+  INITIAL_PROMOTIONS,
+} from "@/data/fixtures/calendar-campaigns";
+import { DEFAULT_CLOCK_ISO, getActiveClockIso } from "@/lib/clock/vn-clock";
+import { applyPromotionsToCart } from "@/lib/commerce/promotion-engine";
+import { detectCalendarOverlap } from "@/lib/calendar/calendar-engine";
+import { checkMakerChecker } from "@/lib/permissions/access-control";
 import { INITIAL_CREDENTIAL_RECORDS } from "@/data/fixtures/quality-credentials";
 import {
   INITIAL_COOP_POOLS,
@@ -62,6 +75,9 @@ import type {
   AdminGrant,
   AuditLogEntry,
   BatchEvent,
+  CalendarEvent,
+  CampaignRecord,
+  CampaignStatus,
   CartItem,
   CertificationStatus,
   CoopPool,
@@ -76,9 +92,12 @@ import type {
   ExperienceBooking,
   Farm,
   FarmCertification,
+  InternationalInquiry,
   InventoryMovement,
   LearningLesson,
+  LearningProgressRecord,
   LivestreamSession,
+  Locale,
   LogisticsTrip,
   MemberDelivery,
   MentorCase,
@@ -88,6 +107,7 @@ import type {
   Product,
   ProductReviewEntry,
   ProductionSeason,
+  PromotionRecord,
   PurchaseOrder,
   ReceivablePayable,
   RefundRequest,
@@ -97,6 +117,7 @@ import type {
   Supplier,
   SupportRequest,
   SupportTicket,
+  TourPackage,
   TraceBatch,
   UserNotification,
   VolunteerHourRecord,
@@ -106,14 +127,16 @@ import type {
   WorkspaceId,
 } from "@/types/naifarm";
 
-const STORAGE_KEY = "naifarm_demo_state_v3";
+const STORAGE_KEY = "naifarm_demo_state_v4";
 
 interface DemoState {
+  clockOverrideIso: string | null;
   activeWorkspace: WorkspaceId;
   activeOrgKind: OrganizationKind;
   activeScopeUnitCode: string;
   authUser: DemoAuthAccount | null;
   demoAccounts: DemoAuthAccount[];
+  roleBundleAccounts: DemoAuthAccount[];
   farms: Farm[];
   products: Product[];
   batches: TraceBatch[];
@@ -122,7 +145,9 @@ interface DemoState {
   seasons: ProductionSeason[];
   diaryEntries: DiaryEntry[];
   lessons: LearningLesson[];
+  learningProgress: LearningProgressRecord;
   cart: CartItem[];
+  appliedPromoCodes: string[];
   followedProductIds: string[];
   favoriteProductIds: string[];
   recentlyViewedIds: string[];
@@ -143,7 +168,13 @@ interface DemoState {
   volunteerHours: VolunteerHourRecord[];
   supportRequests: SupportRequest[];
   livestreams: LivestreamSession[];
+  tourPackages: TourPackage[];
   experienceBookings: ExperienceBooking[];
+  calendarEvents: CalendarEvent[];
+  campaigns: CampaignRecord[];
+  promotions: PromotionRecord[];
+  internationalInquiries: InternationalInquiry[];
+  dismissedReminderKeys: string[];
   schoolClasses: SchoolClass[];
   studentSubmissions: StudentSubmission[];
   logisticsTrips: LogisticsTrip[];
@@ -159,13 +190,51 @@ interface DemoState {
   hideAiChatOnSubflow: boolean;
 }
 
+const INITIAL_INQUIRIES: InternationalInquiry[] = [
+  {
+    id: "INQ-2026-01",
+    productId: "P08",
+    productName: "Hạt điều rang muối vỏ lụa Xuân Lộc",
+    farmId: "farm-htx-xuan-loc",
+    farmName: "HTX Nông nghiệp Xuân Lộc",
+    buyerName: "Elena Lim (Singapore Importer)",
+    country: "Singapore",
+    preferredLanguage: "en",
+    quantityNote: "120 jars (500g wood-roasted sample lot)",
+    packagingNote: "Vacuum sealed glass/PET jar with English nutrition & allergen label",
+    sampleRequested: true,
+    message: "Requesting MOQ and shelf-life verification sheet for specialty food showcase.",
+    createdAtIso: "2026-11-24T10:15:00+07:00",
+    status: "submitted_local",
+  },
+  {
+    id: "INQ-2026-02",
+    productId: "P06",
+    productName: "Bưởi da xanh Tân Triều",
+    farmId: "farm-ba-minh-tan-trieu",
+    farmName: "Vườn Bưởi Chú Ba Minh",
+    buyerName: "Kenji Sato (Osaka Gourmet)",
+    country: "Japan",
+    preferredLanguage: "en",
+    quantityNote: "Weekend hospitality tasting & cooperative orchard sourcing inquiry",
+    packagingNote: "Requires Phytosanitary / MSVT record review prior to formal export quote",
+    sampleRequested: false,
+    message: "Inquiring whether Tan Trieu pomelo lots hold export growing-area codes for Osaka retail.",
+    createdAtIso: "2026-11-25T09:00:00+07:00",
+    status: "seller_responded",
+    responseNote: "HTX Tân Triều replied: Current lot serves domestic/orchard tasting; formal phytosanitary export quote reviewed per shipment.",
+  },
+];
+
 function getInitialState(): DemoState {
   return {
+    clockOverrideIso: null,
     activeWorkspace: "W01",
     activeOrgKind: "coop",
     activeScopeUnitCode: "ALL",
     authUser: null,
     demoAccounts: DEMO_AUTH_ACCOUNTS,
+    roleBundleAccounts: ROLE_BUNDLE_QUICK_ACCOUNTS,
     farms: INITIAL_FARMS,
     products: INITIAL_PRODUCTS,
     batches: INITIAL_BATCHES,
@@ -174,6 +243,15 @@ function getInitialState(): DemoState {
     seasons: INITIAL_SEASONS,
     diaryEntries: INITIAL_DIARY_ENTRIES,
     lessons: INITIAL_LESSONS,
+    learningProgress: {
+      completedLessonIds: ["LESSON-01", "LESSON-13"],
+      quizAnswers: { "LESSON-01": 0, "LESSON-13": 0 },
+      masteredPhraseIds: ["PHR-01", "PHR-02"],
+      matchedPairIds: ["PHR-01"],
+      roleplayChoices: {},
+      practicePoints: 40,
+      submittedArtifactNotes: {},
+    },
     cart: [
       {
         productId: "P01",
@@ -181,6 +259,7 @@ function getInitialState(): DemoState {
         selectedOptionLabel: "2 kg (Giỏ gia đình)",
       },
     ],
+    appliedPromoCodes: [],
     followedProductIds: [],
     favoriteProductIds: ["P06", "P01"],
     recentlyViewedIds: ["P01", "P06"],
@@ -201,7 +280,13 @@ function getInitialState(): DemoState {
     volunteerHours: INITIAL_VOLUNTEER_HOURS,
     supportRequests: INITIAL_SUPPORT_REQUESTS,
     livestreams: INITIAL_LIVESTREAMS,
-    experienceBookings: INITIAL_EXPERIENCE_BOOKINGS,
+    tourPackages: INITIAL_TOUR_PACKAGES,
+    experienceBookings: INITIAL_V4_BOOKINGS,
+    calendarEvents: INITIAL_CALENDAR_EVENTS,
+    campaigns: INITIAL_CAMPAIGNS,
+    promotions: INITIAL_PROMOTIONS,
+    internationalInquiries: INITIAL_INQUIRIES,
+    dismissedReminderKeys: [],
     schoolClasses: INITIAL_SCHOOL_CLASSES,
     studentSubmissions: INITIAL_STUDENT_SUBMISSIONS,
     logisticsTrips: INITIAL_LOGISTICS_TRIPS,
@@ -260,6 +345,8 @@ interface AddSeasonDiaryInput {
 
 interface DemoStoreContextValue extends DemoState {
   hydrated: boolean;
+  activeClockIso: string;
+  setClockOverrideIso: (iso: string | null) => void;
   setActiveWorkspace: (ws: WorkspaceId) => void;
   setActiveOrgKind: (kind: OrganizationKind) => void;
   setActiveScopeUnitCode: (unitCode: string) => void;
@@ -267,6 +354,40 @@ interface DemoStoreContextValue extends DemoState {
   signInDemoAccount: (accountId: string) => DemoAuthAccount | null;
   signUpDemoGuest: (input: SignUpGuestInput) => { ok: boolean; account?: DemoAuthAccount; message: string };
   signOutDemo: () => void;
+  toggleAppliedPromoCode: (code: string) => void;
+  clearAppliedPromoCodes: () => void;
+  bookTourExperience: (input: {
+    tourSlug: string;
+    slotId: string;
+    guestName: string;
+    adultCount: number;
+    childCount: number;
+    language: Locale;
+    allergenNote?: string;
+    schoolGroup?: boolean;
+    schoolConsentVerified?: boolean;
+    note: string;
+  }) => { ok: boolean; booking?: ExperienceBooking; message: string };
+  updateExperienceBookingStatus: (
+    bookingId: string,
+    status: ExperienceBooking["status"],
+    review?: { rating: number; comment: string },
+  ) => void;
+  upsertCalendarEvent: (ev: CalendarEvent) => { ok: boolean; message: string; overlapCount?: number };
+  dismissReminder: (dedupeKey: string) => void;
+  createCampaign: (input: Omit<CampaignRecord, "id" | "status" | "budgetSpentVnd" | "fixtureSessionsCount" | "fixtureOrdersCount" | "fixtureRevenueVnd">) => CampaignRecord;
+  advanceCampaignStatus: (
+    campaignId: string,
+    nextStatus: CampaignStatus,
+    actorName: string,
+  ) => { ok: boolean; message: string };
+  submitInternationalInquiry: (input: Omit<InternationalInquiry, "id" | "createdAtIso" | "status">) => InternationalInquiry;
+  respondInternationalInquiry: (inquiryId: string, responseNote: string) => void;
+  recordLearningQuizAnswer: (lessonId: string, optionIndex: number, isCorrect: boolean) => void;
+  toggleMasteredPhrase: (phraseId: string) => void;
+  recordMatchedPair: (phraseId: string) => void;
+  recordRoleplayChoice: (scenarioId: string, optionId: string, scoreDelta: number) => void;
+  resetLearningProgress: () => void;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
   addAddressEntry: (input: {
@@ -466,14 +587,24 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const activeClockIso = getActiveClockIso(state.clockOverrideIso);
+
+  const setClockOverrideIso = useCallback((iso: string | null) => {
+    setState((prev) => ({ ...prev, clockOverrideIso: iso }));
+  }, []);
+
   const signInDemoAccount = (accountId: string) => {
-    const found = state.demoAccounts.find((a) => a.id === accountId) ?? null;
+    const found =
+      state.demoAccounts.find((a) => a.id === accountId) ??
+      state.roleBundleAccounts.find((a) => a.id === accountId) ??
+      null;
     if (!found) return null;
     workspaceTouchedRef.current = true;
     setState((prev) => ({
       ...prev,
       authUser: found,
       activeWorkspace: found.workspaceId,
+      activeOrgKind: found.organizationKind ?? prev.activeOrgKind,
       activeScopeUnitCode: "ALL",
     }));
     return found;
@@ -728,7 +859,329 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({ ...prev, compareProductIds: [] }));
   };
 
+  const toggleAppliedPromoCode = (code: string) => {
+    const upper = code.trim().toUpperCase();
+    if (!upper) return;
+    setState((prev) => {
+      const exists = prev.appliedPromoCodes.includes(upper);
+      return {
+        ...prev,
+        appliedPromoCodes: exists
+          ? prev.appliedPromoCodes.filter((c) => c !== upper)
+          : [...prev.appliedPromoCodes, upper],
+      };
+    });
+  };
+
+  const clearAppliedPromoCodes = () => {
+    setState((prev) => ({ ...prev, appliedPromoCodes: [] }));
+  };
+
+  const bookTourExperience: DemoStoreContextValue["bookTourExperience"] = (input) => {
+    const tour = state.tourPackages.find((t) => t.slug === input.tourSlug);
+    if (!tour) return { ok: false, message: "Không tìm thấy gói trải nghiệm vườn." };
+    const slot = tour.slots.find((s) => s.id === input.slotId);
+    if (!slot) return { ok: false, message: "Không tìm thấy khung giờ đã chọn." };
+    const totalGuests = Math.max(0, input.adultCount) + Math.max(0, input.childCount);
+    if (totalGuests < 1) return { ok: false, message: "Vui lòng chọn ít nhất 1 khách tham gia." };
+    const remaining = Math.max(0, slot.capacity - slot.bookedCount);
+    if (totalGuests > remaining) {
+      return {
+        ok: false,
+        message: `Khung giờ chỉ còn ${remaining} chỗ trống (bạn đang chọn ${totalGuests} khách).`,
+      };
+    }
+    if (input.schoolGroup && !input.schoolConsentVerified) {
+      return {
+        ok: false,
+        message: "Đoàn trường học / học sinh bắt buộc xác nhận có đồng thuận của phụ huynh & phương án an toàn.",
+      };
+    }
+    const totalEstimateVnd =
+      input.adultCount * tour.adultPriceVnd + input.childCount * tour.childPriceVnd;
+    const booking: ExperienceBooking = {
+      id: `EXP-BOOK-${String(state.experienceBookings.length + 1).padStart(3, "0")}`,
+      tourSlug: tour.slug,
+      slotId: slot.id,
+      farmId: tour.farmId,
+      farmName: tour.farmName,
+      packageTitle: tour.titleVi,
+      packageTitleEn: tour.titleEn,
+      guestName: input.guestName.trim() || state.authUser?.name || "Khách tham quan",
+      guestCount: totalGuests,
+      adultCount: input.adultCount,
+      childCount: input.childCount,
+      language: input.language,
+      dateLabel: `${slot.dateIso.split("-").reverse().join("/")} · ${slot.startTime}`,
+      allergenNote: input.allergenNote?.trim() || undefined,
+      schoolGroup: Boolean(input.schoolGroup),
+      schoolConsentVerified: Boolean(input.schoolConsentVerified),
+      totalEstimateVnd,
+      note: input.note.trim(),
+      status: "Chờ nhà vườn xác nhận",
+    };
+
+    setState((prev) => ({
+      ...prev,
+      experienceBookings: [booking, ...prev.experienceBookings],
+      tourPackages: prev.tourPackages.map((t) =>
+        t.id !== tour.id
+          ? t
+          : {
+              ...t,
+              slots: t.slots.map((s) =>
+                s.id !== slot.id
+                  ? s
+                  : {
+                      ...s,
+                      bookedCount: s.bookedCount + totalGuests,
+                      status:
+                        s.bookedCount + totalGuests >= s.capacity
+                          ? "full"
+                          : s.bookedCount + totalGuests >= s.capacity - 3
+                          ? "almost_full"
+                          : "open",
+                    },
+              ),
+            },
+      ),
+    }));
+
+    return {
+      ok: true,
+      booking,
+      message: `Đã gửi yêu cầu đặt tour ${booking.id} (${totalGuests} khách) chờ ${tour.farmName} xác nhận.`,
+    };
+  };
+
+  const updateExperienceBookingStatus: DemoStoreContextValue["updateExperienceBookingStatus"] = (
+    bookingId,
+    status,
+    review,
+  ) => {
+    setState((prev) => ({
+      ...prev,
+      experienceBookings: prev.experienceBookings.map((b) =>
+        b.id !== bookingId
+          ? b
+          : {
+              ...b,
+              status,
+              reviewRating: review?.rating ?? b.reviewRating,
+              reviewComment: review?.comment ?? b.reviewComment,
+            },
+      ),
+    }));
+  };
+
+  const upsertCalendarEvent: DemoStoreContextValue["upsertCalendarEvent"] = (ev) => {
+    const existing = state.calendarEvents.find((c) => c.id === ev.id);
+    if (existing?.isOfficialReadOnly) {
+      return {
+        ok: false,
+        message: "Mốc ngày lễ/văn hóa chính thức trong Registry ở chế độ Chỉ đọc — không thể sửa đổi.",
+      };
+    }
+    const overlaps = detectCalendarOverlap(state.calendarEvents, ev);
+    setState((prev) => ({
+      ...prev,
+      calendarEvents: existing
+        ? prev.calendarEvents.map((c) => (c.id === ev.id ? ev : c))
+        : [ev, ...prev.calendarEvents],
+    }));
+    return {
+      ok: true,
+      overlapCount: overlaps.length,
+      message:
+        overlaps.length > 0
+          ? `Đã lưu lịch (${overlaps.length} lịch trùng khung giờ cùng vườn/người phụ trách).`
+          : "Đã lưu sự kiện vào NaiCalendar.",
+    };
+  };
+
+  const dismissReminder = (dedupeKey: string) => {
+    setState((prev) =>
+      prev.dismissedReminderKeys.includes(dedupeKey)
+        ? prev
+        : { ...prev, dismissedReminderKeys: [...prev.dismissedReminderKeys, dedupeKey] },
+    );
+  };
+
+  const createCampaign: DemoStoreContextValue["createCampaign"] = (input) => {
+    const created: CampaignRecord = {
+      ...input,
+      id: `CMP-CUSTOM-${Date.now().toString().slice(-5)}`,
+      status: "submitted",
+      budgetSpentVnd: 0,
+      fixtureSessionsCount: 0,
+      fixtureOrdersCount: 0,
+      fixtureRevenueVnd: 0,
+    };
+    setState((prev) => ({
+      ...prev,
+      campaigns: [created, ...prev.campaigns],
+    }));
+    return created;
+  };
+
+  const advanceCampaignStatus: DemoStoreContextValue["advanceCampaignStatus"] = (
+    campaignId,
+    nextStatus,
+    actorName,
+  ) => {
+    const cmp = state.campaigns.find((c) => c.id === campaignId);
+    if (!cmp) return { ok: false, message: "Không tìm thấy chiến dịch." };
+    if (nextStatus === "approved" || nextStatus === "active" || nextStatus === "scheduled") {
+      const check = checkMakerChecker(cmp.makerName, actorName);
+      if (!check.allowed) {
+        return {
+          ok: false,
+          message:
+            check.reason ?? "Người tạo chiến dịch không thể tự phê duyệt phát hành (Maker ≠ Checker).",
+        };
+      }
+    }
+    setState((prev) => ({
+      ...prev,
+      campaigns: prev.campaigns.map((c) =>
+        c.id !== campaignId
+          ? c
+          : {
+              ...c,
+              status: nextStatus,
+              approverName:
+                nextStatus === "approved" || nextStatus === "scheduled" || nextStatus === "active"
+                  ? actorName
+                  : c.approverName,
+            },
+      ),
+      auditLogs: [
+        {
+          id: `AUD-${Date.now()}`,
+          time: "25/11/2026 Hiện tại",
+          actor: actorName,
+          action: "CAMPAIGN_STATE_TRANSITION",
+          target: campaignId,
+          note: `Chuyển trạng thái chiến dịch -> ${nextStatus}`,
+        },
+        ...prev.auditLogs,
+      ],
+    }));
+    return { ok: true, message: `Đã cập nhật trạng thái chiến dịch ${campaignId} → ${nextStatus}.` };
+  };
+
+  const submitInternationalInquiry: DemoStoreContextValue["submitInternationalInquiry"] = (input) => {
+    const created: InternationalInquiry = {
+      ...input,
+      id: `INQ-${Date.now().toString().slice(-6)}`,
+      createdAtIso: activeClockIso,
+      status: "submitted_local",
+    };
+    setState((prev) => ({
+      ...prev,
+      internationalInquiries: [created, ...prev.internationalInquiries],
+    }));
+    return created;
+  };
+
+  const respondInternationalInquiry = (inquiryId: string, responseNote: string) => {
+    setState((prev) => ({
+      ...prev,
+      internationalInquiries: prev.internationalInquiries.map((inq) =>
+        inq.id === inquiryId
+          ? { ...inq, status: "seller_responded", responseNote }
+          : inq,
+      ),
+    }));
+  };
+
+  const recordLearningQuizAnswer = (lessonId: string, optionIndex: number, isCorrect: boolean) => {
+    setState((prev) => {
+      const alreadyCompleted = prev.learningProgress.completedLessonIds.includes(lessonId);
+      const nextCompleted =
+        isCorrect && !alreadyCompleted
+          ? [...prev.learningProgress.completedLessonIds, lessonId]
+          : prev.learningProgress.completedLessonIds;
+      const pointDelta = isCorrect && !alreadyCompleted ? 20 : 0;
+      return {
+        ...prev,
+        learningProgress: {
+          ...prev.learningProgress,
+          quizAnswers: { ...prev.learningProgress.quizAnswers, [lessonId]: optionIndex },
+          completedLessonIds: nextCompleted,
+          practicePoints: prev.learningProgress.practicePoints + pointDelta,
+        },
+      };
+    });
+  };
+
+  const toggleMasteredPhrase = (phraseId: string) => {
+    setState((prev) => {
+      const exists = prev.learningProgress.masteredPhraseIds.includes(phraseId);
+      return {
+        ...prev,
+        learningProgress: {
+          ...prev.learningProgress,
+          masteredPhraseIds: exists
+            ? prev.learningProgress.masteredPhraseIds.filter((id) => id !== phraseId)
+            : [...prev.learningProgress.masteredPhraseIds, phraseId],
+          practicePoints: prev.learningProgress.practicePoints + (exists ? 0 : 10),
+        },
+      };
+    });
+  };
+
+  const recordMatchedPair = (phraseId: string) => {
+    setState((prev) => {
+      if (prev.learningProgress.matchedPairIds.includes(phraseId)) return prev;
+      return {
+        ...prev,
+        learningProgress: {
+          ...prev.learningProgress,
+          matchedPairIds: [...prev.learningProgress.matchedPairIds, phraseId],
+          practicePoints: prev.learningProgress.practicePoints + 10,
+        },
+      };
+    });
+  };
+
+  const recordRoleplayChoice = (scenarioId: string, optionId: string, scoreDelta: number) => {
+    setState((prev) => {
+      const prevPicked = prev.learningProgress.roleplayChoices[scenarioId];
+      return {
+        ...prev,
+        learningProgress: {
+          ...prev.learningProgress,
+          roleplayChoices: { ...prev.learningProgress.roleplayChoices, [scenarioId]: optionId },
+          practicePoints:
+            prev.learningProgress.practicePoints + (!prevPicked && scoreDelta > 0 ? scoreDelta : 0),
+        },
+      };
+    });
+  };
+
+  const resetLearningProgress = () => {
+    setState((prev) => ({
+      ...prev,
+      learningProgress: {
+        completedLessonIds: [],
+        quizAnswers: {},
+        masteredPhraseIds: [],
+        matchedPairIds: [],
+        roleplayChoices: {},
+        practicePoints: 0,
+        submittedArtifactNotes: {},
+      },
+    }));
+  };
+
   const placeDemoOrder = (input: PlaceOrderInput) => {
+    if (state.authUser?.isMinor) {
+      return {
+        ok: false,
+        message: "Tài khoản học sinh dưới 18 tuổi không thực hiện giao dịch mua bán độc lập.",
+      };
+    }
     if (state.cart.length === 0) {
       return { ok: false, message: "Giỏ hàng đang trống." };
     }
@@ -775,19 +1228,41 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     const parentOrderId = `PAR-2026-${String(Date.now()).slice(-6)}`;
-    const couponNorm = input.couponCode?.trim().toUpperCase();
+    const couponList = [
+      ...(input.couponCode?.trim() ? [input.couponCode.trim().toUpperCase()] : []),
+      ...state.appliedPromoCodes,
+    ];
+    const couponNorm = couponList[0];
+    const totalSubtotal = lineItems.reduce((s, i) => s + i.unitPriceVnd * i.quantity, 0);
+    const baseShipping = input.deliveryMethod === "delivery" ? 20000 : 0;
+    const promoEval = applyPromotionsToCart(
+      state.promotions,
+      couponList,
+      totalSubtotal,
+      baseShipping,
+      "vi",
+      activeClockIso || DEFAULT_CLOCK_ISO,
+      Boolean(state.authUser?.isMinor),
+    );
     const createdOrders: DemoOrder[] = [];
     let idxOffset = 0;
 
     for (const [farmId, farmItems] of groupedByFarm.entries()) {
       const subtotalVnd = farmItems.reduce((sum, i) => sum + i.unitPriceVnd * i.quantity, 0);
       const discountVnd =
-        idxOffset === 0 && couponNorm === "NAIFARM10" && subtotalVnd >= 100000
-          ? 10000
-          : idxOffset === 0 && couponNorm === "MUAVU20" && subtotalVnd >= 200000
-          ? 20000
+        idxOffset === 0
+          ? promoEval.totalMerchDiscountVnd > 0
+            ? Math.min(subtotalVnd, promoEval.totalMerchDiscountVnd)
+            : couponNorm === "NAIFARM10" && subtotalVnd >= 100000
+            ? 10000
+            : couponNorm === "MUAVU20" && subtotalVnd >= 200000
+            ? 20000
+            : 0
           : 0;
-      const shippingFeeVnd = input.deliveryMethod === "delivery" ? 20000 : 0;
+      const shippingFeeVnd =
+        input.deliveryMethod === "delivery"
+          ? Math.max(0, 20000 - (idxOffset === 0 ? promoEval.totalShipDiscountVnd : 0))
+          : 0;
       const totalVnd = Math.max(0, subtotalVnd - discountVnd + shippingFeeVnd);
       const newId = `NF-ORD-DEMO-${String(10 + state.orders.length + idxOffset).padStart(2, "0")}`;
       idxOffset += 1;
@@ -833,7 +1308,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         paymentStatus: "unpaid",
         settlementStatus: "pending",
         status: "pending_confirm",
-        orderDateIso: "2026-11-25T10:30:00+07:00",
+        orderDateIso: activeClockIso || DEFAULT_CLOCK_ISO,
         promisedDateIso: "2026-11-26T17:30:00+07:00",
         createdAtLabel: "25/11/2026 · Vừa đặt",
         timeline: [
@@ -853,10 +1328,23 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       });
     }
 
+    const appliedIds = new Set(promoEval.applied.map((a) => a.promo.id));
+
     setState((prev) => ({
       ...prev,
       orders: [...createdOrders, ...prev.orders],
       cart: [],
+      appliedPromoCodes: [],
+      promotions: prev.promotions.map((p) => {
+        if (!appliedIds.has(p.id)) return p;
+        const match = promoEval.applied.find((a) => a.promo.id === p.id);
+        return {
+          ...p,
+          redeemedCount: p.redeemedCount + 1,
+          stockUsedUnits: p.stockUsedUnits != null ? p.stockUsedUnits + 1 : p.stockUsedUnits,
+          budgetUsedVnd: p.budgetUsedVnd + (match?.merchDiscountVnd ?? 0) + (match?.shipDiscountVnd ?? 0),
+        };
+      }),
       products: prev.products.map((p) => {
         const bought = lineItems.find((i) => i.productId === p.id);
         return bought ? { ...p, stockKg: Math.max(0, p.stockKg - bought.quantity) } : p;
@@ -1784,6 +2272,8 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       value={{
         ...state,
         hydrated,
+        activeClockIso,
+        setClockOverrideIso,
         setActiveWorkspace,
         setActiveOrgKind,
         setActiveScopeUnitCode,
@@ -1791,6 +2281,21 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         signInDemoAccount,
         signUpDemoGuest,
         signOutDemo,
+        toggleAppliedPromoCode,
+        clearAppliedPromoCodes,
+        bookTourExperience,
+        updateExperienceBookingStatus,
+        upsertCalendarEvent,
+        dismissReminder,
+        createCampaign,
+        advanceCampaignStatus,
+        submitInternationalInquiry,
+        respondInternationalInquiry,
+        recordLearningQuizAnswer,
+        toggleMasteredPhrase,
+        recordMatchedPair,
+        recordRoleplayChoice,
+        resetLearningProgress,
         markNotificationRead,
         markAllNotificationsRead,
         addAddressEntry,

@@ -14,6 +14,10 @@ import {
   Users,
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { useLocale } from "@/context/LocaleContext";
+import { localizeCategory } from "@/lib/i18n/domain-en";
+import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
+import { CulturalCampaignBanner } from "@/components/events/CulturalCampaignBanner";
 import { EditorialCursorStage } from "@/components/motion/MotionSystem";
 import { ProductCard } from "@/components/marketplace/ProductCard";
 import { Badge, Button, Card, DemoBanner, EmptyState } from "@/components/ui/Primitives";
@@ -34,7 +38,9 @@ const CATEGORIES: ("Tất cả" | ProductCategory)[] = [
 
 export default function HomePage() {
   const router = useRouter();
-  const { products, farms, livestreams } = useDemoStore();
+  const { locale, t } = useLocale();
+  const isEn = locale === "en";
+  const { products, farms, livestreams, lessons } = useDemoStore();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<"Tất cả" | ProductCategory>("Tất cả");
   const [onlyInSeason, setOnlyInSeason] = useState(false);
@@ -47,31 +53,30 @@ export default function HomePage() {
       if (onlyInSeason && (p.seasonStatus !== "in_season" || p.stockKg <= 0)) return false;
       if (!q) return true;
       return normalizeSearchText(
-        `${p.name} ${p.farmName} ${p.administrativeUnitName} ${p.batchCode} ${p.category}`,
+        `${p.name} ${p.enName ?? ""} ${p.farmName} ${p.administrativeUnitName} ${p.batchCode} ${p.category}`,
       ).includes(q);
     });
   }, [products, category, onlyInSeason, search]);
 
   return (
-    <div className="mx-auto max-w-[1280px] space-y-14 px-4 py-6 lg:px-8 lg:py-10">
+    <div className="mx-auto max-w-[1360px] space-y-12 px-4 py-6 lg:px-8 lg:py-10">
       {/* 60/40 Agricultural Editorial Hero — visible above fold at 1280x800 */}
       <section aria-labelledby="hero-heading" className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
         <div className="space-y-5 lg:col-span-7">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#D6DED2] bg-[#EAF0E5] px-3.5 py-1.5 text-xs font-semibold text-[#245B3D]">
             <Sprout className="h-4 w-4" aria-hidden="true" />
-            <span>Chợ OCOP Thanh niên · Thành phố Đồng Nai</span>
+            <span>{t.home.heroBadge}</span>
           </div>
 
           <h1
             id="hero-heading"
-            className="font-editorial text-[30px] font-semibold leading-[1.15] text-[#25352B] sm:text-4xl lg:text-[52px]"
+            className="font-editorial text-[30px] font-semibold leading-[1.15] text-[#25352B] sm:text-4xl lg:text-[50px]"
           >
-            Nông sản Đồng Nai — Minh bạch từ vườn
+            {t.home.heroTitle}
           </h1>
 
           <p className="max-w-xl text-base text-[#25352B]/85 sm:text-lg">
-            Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị. Đồng hành cùng nhà vườn U50+ số hóa
-            sản phẩm, truy xuất mã lô QR đến bàn ăn và kết nối thanh niên tình nguyện địa phương.
+            {t.home.heroSubtitle}
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -79,14 +84,14 @@ export default function HomePage() {
               href="#cho-nong-san"
               className="inline-flex min-h-[50px] items-center gap-2 rounded-[12px] bg-[#245B3D] px-6 text-sm font-semibold text-white hover:bg-[#19472E]"
             >
-              <span>Khám phá nông sản</span>
+              <span>{t.home.exploreProduceCta}</span>
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </a>
             <Link
-              href="/farmer/publish"
+              href={buildLocalizedHref("/farmer/publish", locale)}
               className="inline-flex min-h-[50px] items-center gap-2 rounded-[12px] border-[1.5px] border-[#245B3D] bg-white px-5 text-sm font-semibold text-[#245B3D] hover:bg-[#EAF0E5]"
             >
-              <span>Đăng bán Nhà vườn (3 bước)</span>
+              <span>{t.home.farmerPublishCta}</span>
             </Link>
           </div>
 
@@ -95,51 +100,51 @@ export default function HomePage() {
             onSubmit={(e) => {
               e.preventDefault();
               const code = qrInput.trim() || "NF-DEMO-001";
-              router.push(`/trace/${encodeURIComponent(code)}`);
+              router.push(buildLocalizedHref(`/trace/${encodeURIComponent(code)}`, locale));
             }}
             className="flex flex-wrap items-center gap-2 rounded-[14px] border border-[#D6DED2] bg-white p-2.5 shadow-[0_2px_8px_rgba(37,53,43,0.05)] max-w-2xl"
           >
             <QrCode className="ml-1.5 h-5 w-5 shrink-0 text-[#245B3D]" aria-hidden="true" />
             <label htmlFor="hero-qr-input" className="sr-only">
-              Nhập mã lô nông sản để tra cứu QR
+              {t.home.qrPlaceholder}
             </label>
             <input
               id="hero-qr-input"
               type="text"
               value={qrInput}
               onChange={(e) => setQrInput(e.target.value)}
-              placeholder="Nhập mã lô (ví dụ NF-DEMO-001, NF-TT-2026-01)"
+              placeholder={t.home.qrPlaceholder}
               className="min-h-[44px] flex-1 rounded-[10px] border border-[#788A7B] bg-[#F5F3E9] px-3 text-sm text-[#25352B]"
             />
             <Button type="submit" size="md" variant="gold">
-              Tra cứu Hộ chiếu QR
+              {t.home.qrLookupCta}
             </Button>
             <Link
-              href="/trace/scan"
+              href={buildLocalizedHref("/trace/scan", locale)}
               className="inline-flex min-h-[42px] items-center gap-1 rounded-[10px] border border-[#245B3D]/30 bg-[#EAF0E5] px-3 text-xs font-semibold text-[#245B3D] hover:bg-[#DDE8D6]"
             >
-              Quét ảnh/Cam
+              {t.home.qrScanCta}
             </Link>
           </form>
         </div>
 
         <div className="lg:col-span-5">
           <EditorialCursorStage
-            label="Xem bản đồ vườn Đồng Nai"
+            label={t.explore.viewMapTab}
             className="relative overflow-hidden rounded-[24px] border border-[#D6DED2] bg-[#EAF0E5] shadow-[0_8px_24px_rgba(37,53,43,0.12)]"
           >
-            <Link href="/explore" className="block">
+            <Link href={buildLocalizedHref("/explore", locale)} className="block">
               <img
                 src="/images/stitch/stitch-02.jpg"
-                alt="Vườn bưởi và chôm chôm Đồng Nai trong nắng sớm (ảnh minh họa)"
+                alt={t.home.heroCaptionTitle}
                 className="aspect-[4/3] w-full object-cover lg:aspect-[5/4]"
               />
               <div className="border-t border-[#D6DED2] bg-white/95 px-4 py-3">
                 <p className="text-xs font-semibold text-[#245B3D]">
-                  Ảnh minh họa hệ sinh thái vườn Đồng Nai · Tân Triều & Long Khánh
+                  {t.home.heroCaptionTitle}
                 </p>
                 <p className="text-xs text-[#52645A]">
-                  Kết hợp thương mại OCOP minh bạch, du lịch miệt vườn và tình nguyện số.
+                  {t.home.heroCaptionSub}
                 </p>
               </div>
             </Link>
@@ -147,9 +152,12 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Clock-Aware Cultural Campaign Banner (Nov 25-30 active, Nov 24 honest recap, Dec 5 upcoming) */}
+      <CulturalCampaignBanner />
+
       <DemoBanner
-        title="Không gian trải nghiệm"
-        detail="Thao tác đặt hàng, thanh toán và cập nhật nhật ký diễn ra trong không gian trải nghiệm trên trình duyệt — không phát sinh thanh toán, giao hàng hoặc chứng nhận pháp lý thật."
+        title={t.brand.experienceSpaceBadge}
+        detail={t.brand.experienceSpaceNotice}
       />
 
       {/* Search, Category Filter & 4-col Product Grid */}
@@ -157,24 +165,24 @@ export default function HomePage() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 id="catalog-heading" className="text-2xl font-bold text-[#25352B] md:text-[30px]">
-              Gian hàng Nông sản & Đặc sản Đồng Nai
+              {t.home.catalogHeading}
             </h2>
             <p className="mt-1 text-sm text-[#52645A]">
-              Đồng bộ trực tiếp với Không gian Nhà vườn và Hộ chiếu QR truy xuất nguồn gốc lô hàng.
+              {t.home.catalogSubtitle}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-4">
             <Link
-              href="/quality"
+              href={buildLocalizedHref("/quality", locale)}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#245B3D] hover:underline"
             >
-              <span>Trung tâm chất lượng &amp; OCOP</span>
+              <span>{t.nav.quality}</span>
             </Link>
             <Link
-              href="/marketplace"
+              href={buildLocalizedHref("/marketplace", locale)}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#245B3D] hover:underline"
             >
-              <span>Xem tất cả &amp; Lịch mùa vụ</span>
+              <span>{t.home.viewAllSeasonCta}</span>
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
@@ -194,7 +202,7 @@ export default function HomePage() {
                     : "border border-[#D6DED2] bg-[#F5F3E9] text-[#25352B] hover:bg-[#EAF0E5]"
                 )}
               >
-                {cat}
+                {cat === "Tất cả" ? t.home.allCategories : localizeCategory(cat, locale)}
               </button>
             ))}
             <button
@@ -207,21 +215,21 @@ export default function HomePage() {
                   : "border border-[#D6DED2] bg-white text-[#52645A] hover:bg-[#FFF2D8]"
               )}
             >
-              Chỉ hiện hàng đang vào mùa
+              {t.home.onlyInSeason}
             </button>
           </div>
 
           <div className="relative w-full md:w-80 shrink-0">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#52645A]" aria-hidden="true" />
             <label htmlFor="home-search" className="sr-only">
-              Tìm sản phẩm, nhà vườn hoặc mã lô
+              {t.home.searchFilterPlaceholder}
             </label>
             <input
               id="home-search"
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm nông sản, vườn, mã lô..."
+              placeholder={t.home.searchFilterPlaceholder}
               className="min-h-[44px] w-full rounded-[10px] border border-[#788A7B] bg-white pl-9 pr-3 text-sm text-[#25352B]"
             />
           </div>
@@ -236,8 +244,8 @@ export default function HomePage() {
         ) : (
           <EmptyState
             icon={<Search className="h-6 w-6" />}
-            title="Không tìm thấy nông sản phù hợp"
-            description="Thử xóa bộ lọc mùa vụ hoặc đổi từ khóa khác (ví dụ: Chôm chôm, Bưởi, Hạt điều)."
+            title={t.home.emptyCatalogTitle}
+            description={t.home.emptyCatalogBody}
             action={
               <Button
                 variant="secondary"
@@ -247,7 +255,7 @@ export default function HomePage() {
                   setOnlyInSeason(false);
                 }}
               >
-                Xóa toàn bộ bộ lọc
+                {t.home.clearFilters}
               </Button>
             }
           />
@@ -364,26 +372,27 @@ export default function HomePage() {
             <h2 className="mt-2 font-editorial text-xl font-semibold text-[#25352B]">
               Bản đồ nhà vườn Đồng Nai &amp; Giải phẫu nông sản 2D
             </h2>
-            <p className="mt-2 text-sm text-[#52645A]">
-              Định vị hệ sinh thái {farms.length} nhà vườn tại Đồng Nai, ước tính khoảng cách từ vị
-              trí của bạn và khám phá 12 bài học cấu tạo nông sản 2D rõ nét.
-            </p>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link
-              href="/explore"
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[10px] bg-[#245B3D] px-4 text-xs font-semibold text-white hover:bg-[#19472E]"
-            >
-              <Compass className="h-4 w-4" aria-hidden="true" />
-              <span>Bản đồ nhà vườn</span>
-            </Link>
-            <Link
-              href="/learn"
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[10px] border border-[#245B3D] bg-white px-4 text-xs font-semibold text-[#245B3D] hover:bg-[#F5F3E9]"
-            >
-              <span>Học tập &amp; Giải phẫu 2D</span>
-            </Link>
-          </div>
+              <p className="mt-2 text-sm text-[#52645A]">
+                {isEn
+                  ? `Locate ${farms.length} Dong Nai orchards, reserve bilingual orchard tours, and learn across ${lessons.length} interactive VI/EN & 2D anatomy lessons.`
+                  : `Định vị hệ sinh thái ${farms.length} nhà vườn tại Đồng Nai, đặt tour trải nghiệm miệt vườn và học tập qua ${lessons.length} chuyên đề song ngữ & giải phẫu 2D.`}
+              </p>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                href={buildLocalizedHref("/explore?view=tours", locale)}
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[10px] bg-[#245B3D] px-4 text-xs font-semibold text-white hover:bg-[#19472E]"
+              >
+                <Compass className="h-4 w-4" aria-hidden="true" />
+                <span>{t.explore.viewToursTab}</span>
+              </Link>
+              <Link
+                href={buildLocalizedHref("/learn", locale)}
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[10px] border border-[#245B3D] bg-white px-4 text-xs font-semibold text-[#245B3D] hover:bg-[#F5F3E9]"
+              >
+                <span>{t.nav.learn}</span>
+              </Link>
+            </div>
         </Card>
       </section>
     </div>

@@ -5,25 +5,29 @@ import Link from "next/link";
 import {
   Award,
   BookOpen,
+  CalendarDays,
   CheckCircle2,
   ClipboardList,
   Download,
   Filter,
+  Globe2,
   MapPin,
   Printer,
   ShieldAlert,
   Sparkles,
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { useLocale } from "@/context/LocaleContext";
 import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
+import { NaiCalendarBoard } from "@/components/calendar/NaiCalendarBoard";
 import { ScopeSelector } from "@/components/permissions/ScopeSelector";
 import { buildScopedCsvContent, triggerCsvDownload } from "@/lib/export/csv-export";
-import { hasMinorConsent } from "@/lib/permissions/access-control";
+import { evaluateMinorSafeguarding, hasMinorConsent } from "@/lib/permissions/access-control";
 import { notifyError, notifySuccess } from "@/lib/toast";
-import { Badge, Button, Card, EmptyState } from "@/components/ui/Primitives";
+import { Badge, Button, Card, DemoBanner, EmptyState } from "@/components/ui/Primitives";
 import type { VolunteerMission } from "@/types/naifarm";
 
-type VolunteerTab = "missions" | "pass" | "fieldlab";
+type VolunteerTab = "missions" | "ambassador" | "pass" | "calendar" | "fieldlab";
 
 const MISSION_STATUS_LABEL: Record<
   VolunteerMission["status"],
@@ -44,6 +48,8 @@ const EVIDENCE_SAMPLES = [
 ];
 
 export default function VolunteerWorkspacePage() {
+  const { locale, t } = useLocale();
+  const isEn = locale === "en";
   const {
     hydrated,
     setActiveWorkspace,
@@ -51,11 +57,13 @@ export default function VolunteerWorkspacePage() {
     activeScopeUnitCode,
     missions,
     lessons,
+    learningProgress,
     mentorCases,
     farms,
     acceptMission,
     submitMissionEvidence,
   } = useDemoStore();
+  const minorCheck = evaluateMinorSafeguarding(authUser?.isMinor, authUser?.hasGuardianConsent);
 
   const [tab, setTab] = useState<VolunteerTab>("missions");
   const [skillFilter, setSkillFilter] = useState<string>("all");
@@ -338,11 +346,25 @@ export default function VolunteerWorkspacePage() {
           icon: <ClipboardList className="h-4 w-4" aria-hidden="true" />,
         },
         {
+          label: isEn ? "Global Youth Ambassador" : "Đại sứ Song ngữ",
+          href: "#ambassador",
+          active: tab === "ambassador",
+          onClick: () => setTab("ambassador"),
+          icon: <Globe2 className="h-4 w-4" aria-hidden="true" />,
+        },
+        {
           label: `Hộ chiếu NaiPass (${confirmedHours} giờ)`,
           href: "#pass",
           active: tab === "pass",
           onClick: () => setTab("pass"),
           icon: <Award className="h-4 w-4" aria-hidden="true" />,
+        },
+        {
+          label: isEn ? "Youth Calendar" : "Lịch Thanh niên",
+          href: "#calendar",
+          active: tab === "calendar",
+          onClick: () => setTab("calendar"),
+          icon: <CalendarDays className="h-4 w-4" aria-hidden="true" />,
         },
         {
           label: "Field Lab & Đồng hành vườn",
@@ -580,6 +602,73 @@ export default function VolunteerWorkspacePage() {
             </Card>
           </div>
         ) : null}
+
+        {tab === "ambassador" ? (
+          <div className="space-y-5">
+            {authUser?.isMinor ? (
+              <div className="flex items-start gap-2.5 rounded-[14px] border border-[#D7A34D] bg-[#FFF2D8] p-4 text-xs text-[#80520C]">
+                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>{isEn ? minorCheck.reasonEn : minorCheck.reasonVi}</span>
+              </div>
+            ) : null}
+
+            <DemoBanner title={t.learn.practicePointsLabel} detail={t.learn.volunteerHoursSeparateNote} />
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <Card className="p-4">
+                <p className="text-xs text-[#52645A]">{t.learn.practicePointsLabel}</p>
+                <p className="mt-1 tabular-nums text-2xl font-bold text-[#245B3D]">
+                  {learningProgress.practicePoints} pts
+                </p>
+                <p className="mt-1 text-[11px] text-[#52645A]">
+                  {learningProgress.masteredPhraseIds.length} phrases mastered ·{" "}
+                  {learningProgress.completedLessonIds.length}/{lessons.length} lessons
+                </p>
+              </Card>
+              <Card className="p-4">
+                <p className="text-xs text-[#52645A]">
+                  {isEn ? "Confirmed Volunteer Hours (W02+W04)" : "Giờ tình nguyện đã duyệt (2 lớp)"}
+                </p>
+                <p className="mt-1 tabular-nums text-2xl font-bold text-[#24603B]">
+                  {confirmedHours} h
+                </p>
+                <p className="mt-1 text-[11px] text-[#52645A]">
+                  {isEn ? "Separate from quiz points" : "Tách biệt khỏi điểm luyện tập"}
+                </p>
+              </Card>
+              <Card className="flex flex-col justify-between p-4">
+                <p className="text-xs font-bold text-[#25352B]">
+                  {isEn ? "Open Bilingual Practice" : "Thực hành Song ngữ A1–B1"}
+                </p>
+                <Link
+                  href="/learn"
+                  className="mt-2 inline-flex min-h-[38px] items-center justify-center rounded-[10px] bg-[#245B3D] px-3 text-xs font-semibold text-white"
+                >
+                  {t.nav.learn} →
+                </Link>
+              </Card>
+            </div>
+
+            <div className="space-y-3">
+              <h2 className="text-lg font-bold text-[#25352B]">
+                {isEn
+                  ? "Bilingual Ambassador & Cultural Hospitality Missions"
+                  : "Nhiệm vụ Đại sứ Song ngữ & Đón khách Quốc tế"}
+              </h2>
+              {missions
+                .filter(
+                  (m) =>
+                    m.skillTag === "Đại sứ Song ngữ & Đón khách" ||
+                    m.languageRequired === "bilingual" ||
+                    m.languageRequired === "en",
+                )
+                .slice(0, 6)
+                .map((m) => renderMissionCard(m))}
+            </div>
+          </div>
+        ) : null}
+
+        {tab === "calendar" ? <NaiCalendarBoard scope="W03" allowCreate /> : null}
       </div>
     </WorkspaceShell>
   );

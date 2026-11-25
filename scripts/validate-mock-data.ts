@@ -30,6 +30,21 @@ import {
 } from "../src/data/demo/community";
 import { ASSET_MANIFEST } from "../src/data/reference/asset-manifest";
 import { OCOP_PUBLIC_REFERENCE_CATALOG } from "../src/data/reference/ocop-public-reference";
+import {
+  INITIAL_TOUR_PACKAGES,
+  INITIAL_V4_BOOKINGS,
+} from "../src/data/fixtures/agritourism-experiences";
+import {
+  ACADEMY_QUESTION_BANK,
+  AMBASSADOR_PHRASES,
+  ROLEPLAY_SCENARIOS,
+} from "../src/data/fixtures/youth-ambassador-academy";
+import {
+  INITIAL_CALENDAR_EVENTS,
+  INITIAL_CAMPAIGNS,
+  INITIAL_PROMOTIONS,
+  OFFICIAL_OBSERVANCES,
+} from "../src/data/fixtures/calendar-campaigns";
 
 function assertAssetExists(root: string, imagePath: string | undefined, owner: string) {
   if (!imagePath) return;
@@ -117,6 +132,40 @@ function main() {
   assert(INITIAL_AUDIT_LOGS.length >= 16, "Expected >=16 audit logs");
   assert(INITIAL_SUPPORT_REQUESTS.length >= 10, "Expected >=10 support requests");
 
+  // V4.0 cumulative minimums & image cleanliness
+  assert(INITIAL_FARMS.length >= 36, `Expected >=36 farms in V4, got ${INITIAL_FARMS.length}`);
+  assert(INITIAL_PRODUCTS.length >= 150, `Expected >=150 products in V4, got ${INITIAL_PRODUCTS.length}`);
+  assert(categories.size >= 12, `Expected >=12 product categories in V4, got ${categories.size}`);
+  assert(INITIAL_SEASONS.length >= 50, `Expected >=50 seasons in V4, got ${INITIAL_SEASONS.length}`);
+  assert(INITIAL_DIARY_ENTRIES.length >= 400, `Expected >=400 diaries in V4, got ${INITIAL_DIARY_ENTRIES.length}`);
+  assert(INITIAL_TOUR_PACKAGES.length >= 24, `Expected >=24 agritourism tours, got ${INITIAL_TOUR_PACKAGES.length}`);
+  assert(INITIAL_V4_BOOKINGS.length >= 40, `Expected >=40 V4 bookings, got ${INITIAL_V4_BOOKINGS.length}`);
+  assert(INITIAL_LIVESTREAMS.length >= 20, `Expected >=20 livestreams, got ${INITIAL_LIVESTREAMS.length}`);
+  assert(INITIAL_LESSONS.length >= 20, `Expected >=20 lessons, got ${INITIAL_LESSONS.length}`);
+  assert(AMBASSADOR_PHRASES.length >= 16, `Expected >=16 ambassador phrases, got ${AMBASSADOR_PHRASES.length}`);
+  assert(ACADEMY_QUESTION_BANK.length >= 100, `Expected >=100 quiz bank items, got ${ACADEMY_QUESTION_BANK.length}`);
+  assert(ROLEPLAY_SCENARIOS.length >= 12, `Expected >=12 roleplay scenarios, got ${ROLEPLAY_SCENARIOS.length}`);
+  assert(INITIAL_CAMPAIGNS.length >= 20, `Expected >=20 campaigns, got ${INITIAL_CAMPAIGNS.length}`);
+  assert(INITIAL_PROMOTIONS.length >= 6, `Expected >=6 promotions, got ${INITIAL_PROMOTIONS.length}`);
+  assert(INITIAL_CALENDAR_EVENTS.length >= 60, `Expected >=60 calendar events, got ${INITIAL_CALENDAR_EVENTS.length}`);
+  assert(OFFICIAL_OBSERVANCES.length >= 10, `Expected >=10 official observances, got ${OFFICIAL_OBSERVANCES.length}`);
+
+  const bannedMockupImages = ["stitch-15.jpg", "stitch-17.jpg", "stitch-47.jpg"];
+  for (const prod of INITIAL_PRODUCTS) {
+    assert(
+      !bannedMockupImages.some((b) => prod.image.includes(b)),
+      `Product ${prod.id} uses UI chrome / fake-LIVE image ${prod.image}`,
+    );
+  }
+  for (const lv of INITIAL_LIVESTREAMS) {
+    for (const ang of lv.angles) {
+      assert(
+        !bannedMockupImages.some((b) => ang.image.includes(b)),
+        `Livestream ${lv.id} angle uses banned overlay image ${ang.image}`,
+      );
+    }
+  }
+
   // Golden Dataset Integrity
   const baTu = INITIAL_FARMS.find((f) => f.id === "farm-ba-tu-demo");
   assert(baTu, "Missing Golden farm-ba-tu-demo");
@@ -132,6 +181,14 @@ function main() {
   const batchCodes = new Set(INITIAL_BATCHES.map((b) => b.batchCode));
   const seasonIds = new Set(INITIAL_SEASONS.map((s) => s.id));
   const missionIds = new Set(INITIAL_MISSIONS.map((m) => m.id));
+
+  for (const tp of INITIAL_TOUR_PACKAGES) {
+    assert(farmIds.has(tp.farmId), `Tour ${tp.id} missing farm ${tp.farmId}`);
+    assertAssetExists(root, tp.image, `tour ${tp.id}`);
+  }
+  for (const cmp of INITIAL_CAMPAIGNS) {
+    assertAssetExists(root, cmp.bannerImage, `campaign ${cmp.id}`);
+  }
 
   for (const farm of INITIAL_FARMS) {
     const unit = getAdministrativeUnitByCode(farm.administrativeUnitCode);
@@ -242,6 +299,11 @@ function main() {
         notifications: INITIAL_NOTIFICATIONS.length,
         tickets: INITIAL_TICKETS.length,
         demoAccounts: DEMO_AUTH_ACCOUNTS.length,
+        tours: INITIAL_TOUR_PACKAGES.length,
+        phrases: AMBASSADOR_PHRASES.length,
+        questionBank: ACADEMY_QUESTION_BANK.length,
+        campaigns: INITIAL_CAMPAIGNS.length,
+        calendarEvents: INITIAL_CALENDAR_EVENTS.length,
       },
       null,
       2,

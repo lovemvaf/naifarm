@@ -1,6 +1,9 @@
 import type {
+  ArApAgingBucket,
+  ChannelKind,
   DemoOrder,
   ExpenseEntry,
+  Farm,
   InventoryMovement,
   PeriodKey,
   ReceivablePayable,
@@ -12,6 +15,7 @@ import type {
 export interface PeriodWindow {
   key: PeriodKey;
   label: string;
+  labelEn: string;
   startIso: string; // YYYY-MM-DD (Asia/Ho_Chi_Minh)
   endIso: string;
   prevStartIso: string;
@@ -22,14 +26,25 @@ export const PERIOD_WINDOWS: Record<PeriodKey, PeriodWindow> = {
   current_month: {
     key: "current_month",
     label: "Tháng 11/2026 (01/11 – 25/11)",
+    labelEn: "Nov 2026 (01–25 Nov)",
     startIso: "2026-11-01",
     endIso: "2026-11-25",
     prevStartIso: "2026-10-01",
     prevEndIso: "2026-10-25",
   },
+  org_tt_nov_1_24: {
+    key: "org_tt_nov_1_24",
+    label: "Kỳ đối chiếu HTX 01–24/11 vs 01–24/10",
+    labelEn: "Coop Reconciled 01–24 Nov vs 01–24 Oct",
+    startIso: "2026-11-01",
+    endIso: "2026-11-24",
+    prevStartIso: "2026-10-01",
+    prevEndIso: "2026-10-24",
+  },
   previous_month: {
     key: "previous_month",
     label: "Tháng 10/2026 (01/10 – 31/10)",
+    labelEn: "Oct 2026 (01–31 Oct)",
     startIso: "2026-10-01",
     endIso: "2026-10-31",
     prevStartIso: "2026-09-01",
@@ -38,6 +53,7 @@ export const PERIOD_WINDOWS: Record<PeriodKey, PeriodWindow> = {
   last_7d: {
     key: "last_7d",
     label: "7 ngày gần nhất (19/11 – 25/11)",
+    labelEn: "Last 7 Days (19–25 Nov)",
     startIso: "2026-11-19",
     endIso: "2026-11-25",
     prevStartIso: "2026-11-12",
@@ -46,6 +62,7 @@ export const PERIOD_WINDOWS: Record<PeriodKey, PeriodWindow> = {
   last_30d: {
     key: "last_30d",
     label: "30 ngày gần nhất (27/10 – 25/11)",
+    labelEn: "Last 30 Days (27 Oct – 25 Nov)",
     startIso: "2026-10-27",
     endIso: "2026-11-25",
     prevStartIso: "2026-09-27",
@@ -53,7 +70,8 @@ export const PERIOD_WINDOWS: Record<PeriodKey, PeriodWindow> = {
   },
   all: {
     key: "all",
-    label: "Toàn bộ kỳ ghi nhận (T10–T11/2026)",
+    label: "Toàn bộ kỳ ghi nhận (T1–T12/2026)",
+    labelEn: "Full Year 2026",
     startIso: "2026-01-01",
     endIso: "2026-12-31",
     prevStartIso: "2025-01-01",
@@ -91,6 +109,8 @@ export interface BusinessMetricsReport {
   cancelledOrdersCount: number;
   grossMerchandiseSalesVnd: number;
   gmvVnd: number;
+  totalDiscountsVnd: number;
+  totalRefundsMerchVnd: number;
   netMerchandiseSalesVnd: number;
   totalCustomerCollectedVnd: number;
   cogsVnd: number;
@@ -118,21 +138,34 @@ export interface BusinessMetricsReport {
   confirmedVolunteerHours: number;
   uniqueFarmsSupported: number;
   completedMissionsCount: number;
+  previousCompletedOrdersCount: number;
+  previousGrossMerchandiseVnd: number;
+  previousDiscountsVnd: number;
+  previousRefundsMerchVnd: number;
   previousNetMerchandiseSalesVnd: number;
+  previousCogsVnd: number;
+  previousGrossProfitVnd: number;
+  previousGrossMarginPct: number | null;
+  previousOperatingExpensesVnd: number;
+  previousInternalOperatingResultVnd: number;
+  previousAovVnd: number | null;
   netSalesDeltaPct: number | null;
   ordersDeltaPct: number | null;
+  grossProfitDeltaPct: number | null;
 }
 
 export interface ComputeMetricsInput {
   orders: DemoOrder[];
   stocks: WarehouseStock[];
   movements: InventoryMovement[];
-  expenses: ExpenseEntry[];
+  expenses: (ExpenseEntry & { organizationId?: string })[];
   debts: ReceivablePayable[];
   missions: VolunteerMission[];
   hourRecords?: VolunteerHourRecord[];
   periodKey: PeriodKey;
   farmIdFilter?: string;
+  organizationIdFilter?: string;
+  channelFilter?: "all" | ChannelKind;
   refDateIso?: string;
 }
 
@@ -140,9 +173,14 @@ export function computeBusinessMetrics(input: ComputeMetricsInput): BusinessMetr
   const period = PERIOD_WINDOWS[input.periodKey];
   const refDate = input.refDateIso ?? "2026-11-25";
 
-  const scopedOrders = input.orders.filter((o) =>
-    input.farmIdFilter ? o.farmId === input.farmIdFilter : true,
-  );
+  const scopedOrders = input.orders.filter((o) => {
+    if (input.farmIdFilter && o.farmId !== input.farmIdFilter) return false;
+    if (input.organizationIdFilter && o.organizationId !== input.organizationIdFilter) return false;
+    if (input.channelFilter && input.channelFilter !== "all" && o.channel !== input.channelFilter) {
+      return false;
+    }
+    return true;
+  });
   const currOrders = scopedOrders.filter((o) =>
     inRange(o.orderDateIso, period.startIso, period.endIso),
   );
@@ -167,7 +205,6 @@ export function computeBusinessMetrics(input: ComputeMetricsInput): BusinessMetr
   let platformRevenueVnd = 0;
   let completedDiscounts = 0;
   let completedRefundMerch = 0;
-  let completedRefundShip = 0;
   let completedGrossBeforeRefund = 0;
   let refundedOrderCount = 0;
   let onTimeCount = 0;
@@ -185,7 +222,6 @@ export function computeBusinessMetrics(input: ComputeMetricsInput): BusinessMetr
     completedGrossBeforeRefund += ord.subtotalVnd;
     completedDiscounts += discount;
     completedRefundMerch += refundM;
-    completedRefundShip += refundS;
 
     const orderNetMerch = Math.max(0, ord.subtotalVnd - discount - refundM);
     netMerchandiseSalesVnd += orderNetMerch;
@@ -218,12 +254,13 @@ export function computeBusinessMetrics(input: ComputeMetricsInput): BusinessMetr
   const grossProfitVnd = netMerchandiseSalesVnd - cogsVnd;
   const grossMarginPct =
     netMerchandiseSalesVnd > 0
-      ? Number(((grossProfitVnd / netMerchandiseSalesVnd) * 100).toFixed(1))
+      ? Number(((grossProfitVnd / netMerchandiseSalesVnd) * 100).toFixed(2))
       : null;
 
   const scopedExpenses = input.expenses.filter(
     (e) =>
       (!input.farmIdFilter || e.farmId === input.farmIdFilter) &&
+      (!input.organizationIdFilter || e.organizationId === input.organizationIdFilter) &&
       inRange(e.dateIso, period.startIso, period.endIso),
   );
   const operatingExpensesVnd = scopedExpenses.reduce((sum, e) => sum + e.amountVnd, 0);
@@ -251,15 +288,50 @@ export function computeBusinessMetrics(input: ComputeMetricsInput): BusinessMetr
   const repeatCustomerRatePct =
     uniqueCustomers > 0 ? Number(((repeatCustomers / uniqueCustomers) * 100).toFixed(1)) : null;
 
-  // Previous period comparison
+  // Previous period full reconciliation
   const prevCompleted = prevOrders.filter((o) => o.status === "completed");
-  const previousNetMerchandiseSalesVnd = prevCompleted.reduce(
-    (sum, o) =>
-      sum + Math.max(0, o.subtotalVnd - (o.discountVnd ?? 0) - (o.refundedMerchandiseVnd ?? 0)),
-    0,
+  let previousGrossMerchandiseVnd = 0;
+  let previousDiscountsVnd = 0;
+  let previousRefundsMerchVnd = 0;
+  let previousNetMerchandiseSalesVnd = 0;
+  let previousCogsVnd = 0;
+  let previousPlatformRevenueVnd = 0;
+
+  for (const ord of prevCompleted) {
+    const disc = ord.discountVnd ?? 0;
+    const refM = ord.refundedMerchandiseVnd ?? 0;
+    previousGrossMerchandiseVnd += ord.subtotalVnd;
+    previousDiscountsVnd += disc;
+    previousRefundsMerchVnd += refM;
+    previousNetMerchandiseSalesVnd += Math.max(0, ord.subtotalVnd - disc - refM);
+    previousPlatformRevenueVnd += Math.max(0, (ord.platformFeeVnd ?? 0) - Math.round(refM * 0.05));
+    for (const item of ord.items) {
+      if (item.costSnapshotVnd != null) {
+        const effQty = Math.max(0, item.quantity - (item.restockedQty ?? 0));
+        previousCogsVnd += item.costSnapshotVnd * effQty;
+      }
+    }
+  }
+  const previousGrossProfitVnd = previousNetMerchandiseSalesVnd - previousCogsVnd;
+  const previousGrossMarginPct =
+    previousNetMerchandiseSalesVnd > 0
+      ? Number(((previousGrossProfitVnd / previousNetMerchandiseSalesVnd) * 100).toFixed(2))
+      : null;
+  const prevScopedExpenses = input.expenses.filter(
+    (e) =>
+      (!input.farmIdFilter || e.farmId === input.farmIdFilter) &&
+      (!input.organizationIdFilter || e.organizationId === input.organizationIdFilter) &&
+      inRange(e.dateIso, period.prevStartIso, period.prevEndIso),
   );
+  const previousOperatingExpensesVnd = prevScopedExpenses.reduce((sum, e) => sum + e.amountVnd, 0);
+  const previousInternalOperatingResultVnd =
+    previousGrossProfitVnd - previousOperatingExpensesVnd - previousPlatformRevenueVnd;
+  const previousAovVnd =
+    prevCompleted.length > 0 ? Math.round(previousNetMerchandiseSalesVnd / prevCompleted.length) : null;
+
   const netSalesDeltaPct = calcDeltaPct(netMerchandiseSalesVnd, previousNetMerchandiseSalesVnd);
-  const ordersDeltaPct = calcDeltaPct(nonCancelledCurr.length, prevOrders.filter((o) => o.status !== "cancelled").length);
+  const ordersDeltaPct = calcDeltaPct(completedCurr.length, prevCompleted.length);
+  const grossProfitDeltaPct = calcDeltaPct(grossProfitVnd, previousGrossProfitVnd);
 
   // Inventory metrics (bucket exclusion & FEFO awareness — never mix units)
   const scopedStocks = input.stocks.filter((s) =>
@@ -377,6 +449,8 @@ export function computeBusinessMetrics(input: ComputeMetricsInput): BusinessMetr
     cancelledOrdersCount: cancelledCurr.length,
     grossMerchandiseSalesVnd,
     gmvVnd,
+    totalDiscountsVnd: completedDiscounts,
+    totalRefundsMerchVnd: completedRefundMerch,
     netMerchandiseSalesVnd,
     totalCustomerCollectedVnd,
     cogsVnd,
@@ -404,8 +478,173 @@ export function computeBusinessMetrics(input: ComputeMetricsInput): BusinessMetr
     confirmedVolunteerHours,
     uniqueFarmsSupported,
     completedMissionsCount: approvedMissions.length,
+    previousCompletedOrdersCount: prevCompleted.length,
+    previousGrossMerchandiseVnd,
+    previousDiscountsVnd,
+    previousRefundsMerchVnd,
     previousNetMerchandiseSalesVnd,
+    previousCogsVnd,
+    previousGrossProfitVnd,
+    previousGrossMarginPct,
+    previousOperatingExpensesVnd,
+    previousInternalOperatingResultVnd,
+    previousAovVnd,
     netSalesDeltaPct,
     ordersDeltaPct,
+    grossProfitDeltaPct,
   };
+}
+
+export interface ArApAgingSummaryRow {
+  bucket: ArApAgingBucket;
+  labelVi: string;
+  labelEn: string;
+  receivableVnd: number;
+  payableVnd: number;
+  count: number;
+}
+
+export function computeArApAging(
+  debts: ReceivablePayable[],
+  refDateIso = "2026-11-25",
+): ArApAgingSummaryRow[] {
+  const buckets: Record<ArApAgingBucket, ArApAgingSummaryRow> = {
+    current: { bucket: "current", labelVi: "Trong hạn", labelEn: "Current", receivableVnd: 0, payableVnd: 0, count: 0 },
+    "1_30": { bucket: "1_30", labelVi: "Quá hạn 1–30 ngày", labelEn: "1–30 days", receivableVnd: 0, payableVnd: 0, count: 0 },
+    "31_60": { bucket: "31_60", labelVi: "Quá hạn 31–60 ngày", labelEn: "31–60 days", receivableVnd: 0, payableVnd: 0, count: 0 },
+    "61_90": { bucket: "61_90", labelVi: "Quá hạn 61–90 ngày", labelEn: "61–90 days", receivableVnd: 0, payableVnd: 0, count: 0 },
+    over_90: { bucket: "over_90", labelVi: "Quá hạn >90 ngày", labelEn: ">90 days", receivableVnd: 0, payableVnd: 0, count: 0 },
+  };
+  const refMs = Date.parse(`${refDateIso}T00:00:00Z`);
+
+  for (const d of debts) {
+    const rem = Math.max(0, d.originalVnd - d.paidVnd);
+    if (d.status === "settled" || rem <= 0) continue;
+    const dueMs = Date.parse(`${d.dueDateIso}T00:00:00Z`);
+    const daysOverdue = Math.floor((refMs - dueMs) / (1000 * 60 * 60 * 24));
+    const key: ArApAgingBucket =
+      daysOverdue <= 0
+        ? "current"
+        : daysOverdue <= 30
+        ? "1_30"
+        : daysOverdue <= 60
+        ? "31_60"
+        : daysOverdue <= 90
+        ? "61_90"
+        : "over_90";
+    buckets[key].count += 1;
+    if (d.kind === "receivable") buckets[key].receivableVnd += rem;
+    else buckets[key].payableVnd += rem;
+  }
+
+  return Object.values(buckets);
+}
+
+export interface StockLedgerSummary {
+  openingQty: number;
+  inboundQty: number;
+  outboundQty: number;
+  lossQty: number;
+  computedOnHandQty: number;
+  snapshotOnHandQty: number;
+  reservedQty: number;
+  quarantineQty: number;
+  availableQty: number;
+  reconciled: boolean;
+}
+
+export function computeStockLedgerSummary(
+  openingQty: number,
+  stocks: WarehouseStock[],
+  movements: InventoryMovement[],
+): StockLedgerSummary {
+  let inboundQty = 0;
+  let outboundQty = 0;
+  let lossQty = 0;
+  for (const mv of movements) {
+    if (mv.isInternalTransfer) continue;
+    if (mv.type === "inbound" || mv.type === "return_restock") {
+      inboundQty += Math.abs(mv.quantityDelta);
+    } else if (mv.type === "outbound") {
+      outboundQty += Math.abs(mv.quantityDelta);
+    } else if (mv.type === "loss") {
+      lossQty += Math.abs(mv.quantityDelta);
+    }
+  }
+  const computedOnHandQty = openingQty + inboundQty - outboundQty - lossQty;
+  const snapshotOnHandQty = stocks.reduce((s, st) => s + st.onHandQty, 0);
+  const reservedQty = stocks.reduce((s, st) => s + st.reservedQty, 0);
+  const quarantineQty = stocks.reduce((s, st) => s + st.quarantineQty, 0);
+  const blockedNonOverlap = stocks.reduce(
+    (s, st) => s + Math.max(st.blockedQty, st.quarantineQty),
+    0,
+  );
+  const availableQty = Math.max(0, snapshotOnHandQty - reservedQty - blockedNonOverlap);
+
+  return {
+    openingQty,
+    inboundQty,
+    outboundQty,
+    lossQty,
+    computedOnHandQty,
+    snapshotOnHandQty,
+    reservedQty,
+    quarantineQty,
+    availableQty,
+    reconciled: computedOnHandQty === snapshotOnHandQty,
+  };
+}
+
+export interface MemberDrilldownRow {
+  farmId: string;
+  farmName: string;
+  unitName: string;
+  ordersCount: number;
+  grossVnd: number;
+  netVnd: number;
+  cogsVnd: number;
+  grossProfitVnd: number;
+}
+
+export function computeMemberDrilldown(
+  orders: DemoOrder[],
+  farms: Farm[],
+  periodStartIso: string,
+  periodEndIso: string,
+): MemberDrilldownRow[] {
+  const farmLookup = new Map(farms.map((f) => [f.id, f]));
+  const map = new Map<string, MemberDrilldownRow>();
+
+  for (const ord of orders) {
+    if (ord.status !== "completed" || !inRange(ord.orderDateIso, periodStartIso, periodEndIso)) {
+      continue;
+    }
+    const farm = farmLookup.get(ord.farmId);
+    const existing = map.get(ord.farmId) ?? {
+      farmId: ord.farmId,
+      farmName: farm?.name ?? ord.farmName,
+      unitName: farm?.administrativeUnitName ?? "",
+      ordersCount: 0,
+      grossVnd: 0,
+      netVnd: 0,
+      cogsVnd: 0,
+      grossProfitVnd: 0,
+    };
+    const disc = ord.discountVnd ?? 0;
+    const refM = ord.refundedMerchandiseVnd ?? 0;
+    const net = Math.max(0, ord.subtotalVnd - disc - refM);
+    const cogs = ord.items.reduce((s, it) => {
+      if (it.costSnapshotVnd == null) return s;
+      return s + it.costSnapshotVnd * Math.max(0, it.quantity - (it.restockedQty ?? 0));
+    }, 0);
+
+    existing.ordersCount += 1;
+    existing.grossVnd += ord.subtotalVnd;
+    existing.netVnd += net;
+    existing.cogsVnd += cogs;
+    existing.grossProfitVnd = existing.netVnd - existing.cogsVnd;
+    map.set(ord.farmId, existing);
+  }
+
+  return Array.from(map.values()).sort((a, b) => b.netVnd - a.netVnd);
 }

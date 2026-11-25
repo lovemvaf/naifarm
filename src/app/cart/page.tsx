@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -11,15 +11,36 @@ import {
   QrCode,
   ShoppingBasket,
   Store,
+  Tag,
   Trash2,
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
-import { formatVnd } from "@/lib/format";
-import { notifyInfo } from "@/lib/toast";
+import { useLocale } from "@/context/LocaleContext";
+import { applyPromotionsToCart } from "@/lib/commerce/promotion-engine";
+import { localizeProductName, localizeUnit } from "@/lib/i18n/domain-en";
+import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
+import { cn, formatVnd } from "@/lib/format";
+import { notifyInfo, notifySuccess } from "@/lib/toast";
 import { Badge, Button, Card, EmptyState } from "@/components/ui/Primitives";
 
 export default function CartPage() {
-  const { cart, products, batches, updateCartQty, removeFromCart } = useDemoStore();
+  const { locale, t, currencyMode, setCurrencyMode } = useLocale();
+  const isEn = locale === "en";
+  const showUsd = currencyMode === "vnd_usd_est";
+
+  const {
+    authUser,
+    cart,
+    products,
+    batches,
+    promotions,
+    appliedPromoCodes,
+    activeClockIso,
+    toggleAppliedPromoCode,
+    updateCartQty,
+    removeFromCart,
+  } = useDemoStore();
+  const [promoInput, setPromoInput] = useState("");
 
   const resolvedGroups = useMemo(() => {
     const groups = new Map<
@@ -71,6 +92,16 @@ export default function CartPage() {
   }, [cart, products, batches]);
 
   const totalMerchandiseVnd = resolvedGroups.reduce((s, g) => s + g.subtotalVnd, 0);
+  const estShippingVnd = resolvedGroups.length * 20000;
+  const promoEval = applyPromotionsToCart(
+    promotions,
+    appliedPromoCodes,
+    totalMerchandiseVnd,
+    estShippingVnd,
+    locale,
+    activeClockIso,
+    Boolean(authUser?.isMinor),
+  );
   const hasBlockedLot = resolvedGroups.some((g) => g.items.some((i) => Boolean(i.lotBlockedReason)));
 
   return (
@@ -223,34 +254,117 @@ export default function CartPage() {
 
           <div className="lg:col-span-4">
             <Card className="sticky top-24 space-y-4 p-5">
-              <h2 className="text-lg font-bold text-[#25352B]">Tóm tắt giỏ hàng</h2>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-lg font-bold text-[#25352B]">
+                  {isEn ? "Cart Summary" : "Tóm tắt giỏ hàng"}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setCurrencyMode(showUsd ? "vnd" : "vnd_usd_est")}
+                  className={cn(
+                    "rounded-[8px] border px-2 py-1 text-[11px] font-semibold cursor-pointer",
+                    showUsd ? "border-[#245B3D] bg-[#EAF0E5] text-[#245B3D]" : "border-[#D6DED2] bg-white",
+                  )}
+                >
+                  USD est.
+                </button>
+              </div>
+
+              {/* Promo Code Form */}
+              <form
+                className="flex gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const code = promoInput.trim().toUpperCase();
+                  if (!code) return;
+                  if (!appliedPromoCodes.includes(code)) {
+                    toggleAppliedPromoCode(code);
+                    notifySuccess(`${isEn ? "Checked promo code" : "Đã kiểm tra mã"} ${code}`);
+                  }
+                  setPromoInput("");
+                }}
+              >
+                <input
+                  type="text"
+                  value={promoInput}
+                  onChange={(e) => setPromoInput(e.target.value)}
+                  placeholder={t.commerce.promoCodePlaceholder}
+                  className="min-h-[38px] flex-1 rounded-[10px] border border-[#788A7B] px-2.5 text-xs uppercase"
+                />
+                <Button type="submit" size="sm" variant="secondary">
+                  <Tag className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{t.commerce.applyPromoBtn}</span>
+                </Button>
+              </form>
+
+              {appliedPromoCodes.length > 0 ? (
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex flex-wrap gap-1.5">
+                    {appliedPromoCodes.map((code) => (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={() => toggleAppliedPromoCode(code)}
+                        className="rounded-full bg-[#EAF0E5] px-2.5 py-0.5 font-mono text-[11px] font-bold text-[#245B3D] cursor-pointer"
+                      >
+                        {code} ×
+                      </button>
+                    ))}
+                  </div>
+                  {promoEval.rejected.map((rej) => (
+                    <p key={rej.code} className="text-[11px] text-[#A32D2D]">
+                      {isEn ? rej.reasonEn : rej.reasonVi}
+                    </p>
+                  ))}
+                </div>
+              ) : null}
+
               <div className="space-y-2 border-b border-[#EAEFE6] pb-3 text-sm">
                 <div className="flex justify-between text-[#52645A]">
-                  <span>Số nhà vườn</span>
-                  <Badge tone="neutral">{resolvedGroups.length} nhà vườn</Badge>
+                  <span>{isEn ? "Orchard shipments" : "Số nhà vườn"}</span>
+                  <Badge tone="neutral">{resolvedGroups.length}</Badge>
                 </div>
                 <div className="flex justify-between text-[#52645A]">
-                  <span>Tạm tính nông sản</span>
-                  <span className="tabular-nums font-bold text-[#25352B]">{formatVnd(totalMerchandiseVnd)}</span>
+                  <span>{t.commerce.subtotalLabel}</span>
+                  <span className="tabular-nums font-bold text-[#25352B]">
+                    {formatVnd(totalMerchandiseVnd, locale, showUsd)}
+                  </span>
                 </div>
+                {promoEval.totalMerchDiscountVnd > 0 ? (
+                  <div className="flex justify-between text-[#24603B]">
+                    <span>{t.commerce.discountLabel}</span>
+                    <span className="tabular-nums font-bold">
+                      -{formatVnd(promoEval.totalMerchDiscountVnd, locale)}
+                    </span>
+                  </div>
+                ) : null}
                 <p className="text-xs text-[#52645A]">
-                  Phí vận chuyển và mã ưu đãi được tính ở bước Chọn địa chỉ nhận hàng.
+                  {isEn
+                    ? "Exact domestic shipping / orchard pickup (0 VND) calculated at checkout."
+                    : "Phí giao nội địa hoặc nhận tại vườn (0 đ) xác nhận ở bước Đặt hàng."}
                 </p>
+                {showUsd ? <p className="text-[11px] text-[#80520C]">{t.commerce.usdEstimateNote}</p> : null}
               </div>
 
               {hasBlockedLot ? (
                 <Button variant="primary" size="lg" className="w-full" disabled>
-                  Có lô đang tạm giữ — không thể đặt
+                  {isEn ? "Lot currently quarantined/recalled" : "Có lô đang tạm giữ — không thể đặt"}
                 </Button>
               ) : (
                 <Link
-                  href="/checkout"
+                  href={buildLocalizedHref("/checkout", locale)}
                   className="inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-[12px] bg-[#245B3D] px-5 text-sm font-semibold text-white hover:bg-[#19472E]"
                 >
-                  <span>Tiếp tục đặt hàng</span>
+                  <span>{t.commerce.proceedCheckout}</span>
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               )}
+              <span className="sr-only">
+                {resolvedGroups[0]?.items[0]?.product
+                  ? localizeProductName(resolvedGroups[0].items[0].product, locale) +
+                    localizeUnit(resolvedGroups[0].items[0].product.unitLabel, locale)
+                  : ""}
+              </span>
             </Card>
           </div>
         </div>

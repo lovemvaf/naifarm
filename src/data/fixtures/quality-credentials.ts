@@ -774,3 +774,61 @@ export const INITIAL_CREDENTIAL_RECORDS: CredentialRecord[] = [
     eligibleCategoryHint: "Thủy sản tham khảo",
   },
 ];
+
+// Deterministic V4 expansion: guarantee >= 3 distinct lifecycle cases for EVERY Q01..Q26 type
+const EXISTING_BY_TYPE = new Map<string, number>();
+for (const rec of INITIAL_CREDENTIAL_RECORDS) {
+  EXISTING_BY_TYPE.set(rec.typeId, (EXISTING_BY_TYPE.get(rec.typeId) ?? 0) + 1);
+}
+
+const EXPANDED_CREDENTIAL_FIXTURES: CredentialRecord[] = [...INITIAL_CREDENTIAL_RECORDS];
+
+for (let q = 1; q <= 26; q += 1) {
+  const typeId = `Q${String(q).padStart(2, "0")}`;
+  const currentCount = EXISTING_BY_TYPE.get(typeId) ?? 0;
+  const needed = Math.max(0, 3 - currentCount);
+  const categoryHint =
+    q >= 25
+      ? "Thủy sản tham khảo"
+      : q >= 22
+      ? "Cà phê & Ca cao"
+      : q === 6 || q >= 18
+      ? "Hạt điều & Rang củi"
+      : "Bưởi & Cây có múi";
+
+  for (let k = 0; k < needed; k += 1) {
+    const lifecycle: CredentialRecord["lifecycleStatus"] =
+      k === 0 ? "document_matched" : k === 1 ? "pending_verification" : "expired";
+    const isExpired = lifecycle === "expired";
+    EXPANDED_CREDENTIAL_FIXTURES.push({
+      id: `CR-${typeId}-V4-${k + 1}`,
+      typeId,
+      holderId: q >= 25 ? `ref-aqua-demo-0${k + 1}` : "farm-tt-ho-01",
+      holderLegalName:
+        q >= 25
+          ? `Cơ sở Thủy sản Tham khảo #${k + 1} (${typeId} — tách khỏi chợ trái cây)`
+          : `Hộ thành viên Mẫu ${typeId} #${k + 1} (Hồ sơ thực hành)`,
+      productIds: q >= 25 ? [] : ["P06"],
+      siteIds: [`SITE-${typeId}-${k + 1}`],
+      facilityIds: [`FAC-${typeId}-${k + 1}`],
+      issuer: `Tổ chức Đối chiếu Mẫu (${typeId})`,
+      certificateNumber: `MAU-${typeId}-${String(k + 1).padStart(3, "0")}`,
+      validFrom: isExpired ? "2023-06-01" : "2026-06-01",
+      validTo: isExpired ? "2025-06-01" : "2028-06-01",
+      evidenceIds: lifecycle === "pending_verification" ? [] : ["EVD-SYNTH-01"],
+      verificationLevel: lifecycle === "document_matched" ? "doc_matched" : "self_declared",
+      lifecycleStatus: lifecycle,
+      scopeDescription:
+        lifecycle === "pending_verification"
+          ? `Hồ sơ chờ bổ sung tệp chứng từ cho chuẩn ${typeId} — không hiện badge công khai.`
+          : isExpired
+          ? `Hồ sơ mẫu đã hết hiệu lực cho chuẩn ${typeId} — hệ thống tự ẩn badge.`
+          : `Hồ sơ đối chiếu nội bộ đúng phạm vi ${categoryHint} cho chuẩn ${typeId} (không phải chứng nhận pháp lý).`,
+      origin: "synthetic",
+      permissionToPublish: true,
+      eligibleCategoryHint: categoryHint,
+    });
+  }
+}
+
+INITIAL_CREDENTIAL_RECORDS.splice(0, INITIAL_CREDENTIAL_RECORDS.length, ...EXPANDED_CREDENTIAL_FIXTURES);

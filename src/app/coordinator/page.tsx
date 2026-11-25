@@ -5,9 +5,11 @@ import Link from "next/link";
 import {
   AlertTriangle,
   BarChart3,
+  CalendarDays,
   ClipboardCheck,
   Download,
   FileCheck2,
+  Megaphone,
   ShieldCheck,
   Truck,
 } from "lucide-react";
@@ -21,21 +23,26 @@ import {
   YAxis,
 } from "recharts";
 import { useDemoStore } from "@/context/DemoStoreContext";
+import { useLocale } from "@/context/LocaleContext";
 import { WorkspaceShell } from "@/components/navigation/WorkspaceShell";
+import { NaiCalendarBoard } from "@/components/calendar/NaiCalendarBoard";
 import { ScopeSelector } from "@/components/permissions/ScopeSelector";
 import { QualityCenterPanel } from "@/components/quality/QualityCenterPanel";
 import { buildScopedCsvContent, triggerCsvDownload } from "@/lib/export/csv-export";
 import { notifyError, notifyInfo, notifySuccess } from "@/lib/toast";
 import { Badge, Button, Card, DemoBanner } from "@/components/ui/Primitives";
 
-type CoordTab = "hours" | "documents" | "quality" | "dispatch" | "analytics";
+type CoordTab = "hours" | "documents" | "quality" | "dispatch" | "campaigns" | "calendar" | "analytics";
 
 export default function CoordinatorWorkspacePage() {
+  const { locale } = useLocale();
+  const isEn = locale === "en";
   const {
     hydrated,
     setActiveWorkspace,
     activeScopeUnitCode,
     missions,
+    campaigns,
     docCases,
     supportRequests,
     logisticsTrips,
@@ -43,6 +50,7 @@ export default function CoordinatorWorkspacePage() {
     approveMissionHoursByCoordinator,
     requestMissionRevision,
     reviewDocumentCase,
+    advanceCampaignStatus,
     updateCredentialLifecycle,
     renewCredentialRecord,
     updateLogisticsTripStatus,
@@ -127,6 +135,20 @@ export default function CoordinatorWorkspacePage() {
           active: tab === "dispatch",
           onClick: () => setTab("dispatch"),
           icon: <Truck className="h-4 w-4" aria-hidden="true" />,
+        },
+        {
+          label: `Chiến dịch & Tình nguyện (${campaigns.length})`,
+          href: "#campaigns",
+          active: tab === "campaigns",
+          onClick: () => setTab("campaigns"),
+          icon: <Megaphone className="h-4 w-4" aria-hidden="true" />,
+        },
+        {
+          label: "Lịch Điều phối (NaiCalendar)",
+          href: "#calendar",
+          active: tab === "calendar",
+          onClick: () => setTab("calendar"),
+          icon: <CalendarDays className="h-4 w-4" aria-hidden="true" />,
         },
         {
           label: "Báo cáo tác động & CSV",
@@ -455,6 +477,53 @@ export default function CoordinatorWorkspacePage() {
             </div>
           </Card>
         ) : null}
+
+        {tab === "campaigns" ? (
+          <Card className="space-y-4 p-5">
+            <h2 className="text-lg font-bold text-[#25352B]">
+              {isEn
+                ? "Campaign Volunteer Shifts & Maker–Checker Approvals"
+                : "Điều phối Chiến dịch Văn hóa & Duyệt độc lập"}
+            </h2>
+            <div className="space-y-3 text-xs">
+              {campaigns.slice(0, 8).map((c) => {
+                const linkedMissions = missions.filter((m) => m.linkedCampaignId === c.id);
+                return (
+                  <div
+                    key={c.id}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[#D6DED2] bg-[#FAF8F1] p-3.5"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Badge tone={c.status === "active" ? "success" : "info"}>{c.status}</Badge>
+                        <span className="font-bold text-[#25352B]">{isEn ? c.titleEn : c.titleVi}</span>
+                      </div>
+                      <p className="mt-1 text-[#52645A]">
+                        Maker: {c.makerName} ·{" "}
+                        {isEn ? "Linked volunteer missions:" : "Nhiệm vụ liên kết:"} {linkedMissions.length}
+                      </p>
+                    </div>
+                    {c.status === "submitted" ? (
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => {
+                          const res = advanceCampaignStatus(c.id, "approved", reviewerIdentity);
+                          if (res.ok) notifySuccess(res.message);
+                          else notifyError(res.message);
+                        }}
+                      >
+                        {isEn ? "Approve Campaign" : "Duyệt chiến dịch"}
+                      </Button>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        ) : null}
+
+        {tab === "calendar" ? <NaiCalendarBoard scope="W04" allowCreate /> : null}
       </div>
     </WorkspaceShell>
   );
