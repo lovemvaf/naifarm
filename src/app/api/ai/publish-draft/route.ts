@@ -5,10 +5,24 @@ import {
   parseVietnamesePrice,
   parseVietnameseQuantityAndUnit,
 } from "@/lib/vietnameseNumberParser";
+import type { ProductCategory } from "@/types/naifarm";
+
+const VALID_CATEGORIES: ProductCategory[] = [
+  "Trái cây tươi",
+  "Bưởi & Cây có múi",
+  "Chôm chôm & Sầu riêng",
+  "Hạt điều & Rang củi",
+  "Cà phê & Ca cao",
+  "Mật ong & Rượu trái cây",
+  "Nông sản chế biến & Mứt",
+  "Rau củ & Nấm sạch",
+  "Tiêu & Gia vị vùng đồi",
+  "Quà tặng OCOP & Combo",
+];
 
 interface DraftResult {
   name: string | null;
-  category: "Trái cây tươi" | "Hạt & Cà phê" | "Mật ong & Đặc sản" | null;
+  category: ProductCategory | null;
   price: number | null;
   unit: string | null;
   stock: number | null;
@@ -49,7 +63,7 @@ function fallbackExtract(text: string, sampleId?: string): DraftResult {
 
   // Nhận diện loại nông sản: Ưu tiên TUYỆT ĐỐI nội dung văn bản / lời nói của nông dân
   let name: string | null = null;
-  let category: DraftResult["category"] = null;
+  let category: ProductCategory | null = null;
   let batchCode: string | null = null;
   let description: string | null = text ? `Nông sản thu hoạch tươi mới tại vườn Đồng Nai: "${text}".` : null;
 
@@ -59,59 +73,67 @@ function fallbackExtract(text: string, sampleId?: string): DraftResult {
   // 1. Kiểm tra từ khóa trong văn bản trước
   if (lower.includes("điều") || lower.includes("hạt điều")) {
     name = "Hạt điều rang củi vỏ lụa Long Khánh";
-    category = "Hạt & Cà phê";
+    category = "Hạt điều & Rang củi";
     batchCode = `NF-HD-${currentYear}-${randomSuffix}`;
     description = text
       ? `Hạt điều rang củi nguyên vỏ lụa thơm bùi: "${text}". Chế biến thủ công truyền thống tại Đồng Nai.`
       : "Hạt điều rang củi vỏ lụa Long Khánh giòn rụm béo bùi, chế biến mộc không phụ gia bảo quản.";
   } else if (lower.includes("sầu riêng")) {
     name = "Sầu riêng Ri6 chín cây vườn Ba Tư Long Khánh";
-    category = "Trái cây tươi";
+    category = "Chôm chôm & Sầu riêng";
     batchCode = `NF-SR-${currentYear}-${randomSuffix}`;
     description = text
       ? `Sầu riêng Ri6 thu hoạch trực tiếp tại vườn Long Khánh: "${text}". Cơm vàng hạt lép, chín cây tự nhiên.`
       : "Sầu riêng Ri6 thu hoạch trực tiếp tại vườn Long Khánh, cơm vàng hạt lép, bảo đảm chất lượng OCOP.";
   } else if (lower.includes("chôm chôm")) {
     name = "Chôm chôm Java Long Khánh mới hái";
-    category = "Trái cây tươi";
+    category = "Chôm chôm & Sầu riêng";
     batchCode = `NF-CC-${currentYear}-${randomSuffix}`;
     description = text
       ? `Chôm chôm Java hái sáng nay tại vườn Ba Tư (Long Khánh): "${text}". Trái giòn ngọt, tróc hạt tự nhiên.`
       : "Chôm chôm Java hái sáng nay tại vườn Ba Tư (Long Khánh), cùi dày, tróc hạt, vị ngọt thanh mát.";
   } else if (lower.includes("bưởi")) {
     name = "Bưởi da xanh Cù lao Tân Triều lứa mới";
-    category = "Trái cây tươi";
+    category = "Bưởi & Cây có múi";
     batchCode = `NF-BX-${currentYear}-${randomSuffix}`;
     description = text
       ? `Bưởi da xanh múi hồng mọng nước từ Cù lao Tân Triều: "${text}". Vỏ mỏng, tép giòn không hạt.`
       : "Bưởi da xanh Cù lao Tân Triều lứa mới, múi hồng mọng nước, vị ngọt thanh mát đậm đà phù hợp biếu tặng.";
-  } else if (lower.includes("cà phê") || lower.includes("cafe")) {
+  } else if (lower.includes("cà phê") || lower.includes("cafe") || lower.includes("ca cao")) {
     name = "Cà phê Robusta Đất đỏ Đồng Nai";
-    category = "Hạt & Cà phê";
+    category = "Cà phê & Ca cao";
     batchCode = `NF-CF-${currentYear}-${randomSuffix}`;
-  } else if (lower.includes("mật ong")) {
+  } else if (lower.includes("mật ong") || lower.includes("rượu")) {
     name = "Mật ong hoa rừng Trị An nguyên chất";
-    category = "Mật ong & Đặc sản";
+    category = "Mật ong & Rượu trái cây";
     batchCode = `NF-MO-${currentYear}-${randomSuffix}`;
   } else if (lower.includes("chuối")) {
     name = "Chuối cấy mô Trảng Bom đạt chuẩn xuất khẩu";
     category = "Trái cây tươi";
     batchCode = `NF-CH-${currentYear}-${randomSuffix}`;
+  } else if (lower.includes("tiêu") || lower.includes("ớt")) {
+    name = "Tiêu đen Cẩm Mỹ hạt chắc cay nồng";
+    category = "Tiêu & Gia vị vùng đồi";
+    batchCode = `NF-TG-${currentYear}-${randomSuffix}`;
+  } else if (lower.includes("nấm") || lower.includes("rau")) {
+    name = "Nấm mèo đen Đồng Nai sơ chế";
+    category = "Rau củ & Nấm sạch";
+    batchCode = `NF-RN-${currentYear}-${randomSuffix}`;
   } else if (sampleId === "durian") {
     name = "Sầu riêng Ri6 chín cây vườn Ba Tư Long Khánh";
-    category = "Trái cây tươi";
+    category = "Chôm chôm & Sầu riêng";
     batchCode = `NF-SR-${currentYear}-${randomSuffix}`;
   } else if (sampleId === "rambutan") {
     name = "Chôm chôm Java Long Khánh mới hái";
-    category = "Trái cây tươi";
+    category = "Chôm chôm & Sầu riêng";
     batchCode = `NF-CC-${currentYear}-${randomSuffix}`;
   } else if (sampleId === "pomelo") {
     name = "Bưởi da xanh Cù lao Tân Triều lứa mới";
-    category = "Trái cây tươi";
+    category = "Bưởi & Cây có múi";
     batchCode = `NF-BX-${currentYear}-${randomSuffix}`;
   } else if (sampleId === "cashew") {
     name = "Hạt điều rang củi vỏ lụa Long Khánh";
-    category = "Hạt & Cà phê";
+    category = "Hạt điều & Rang củi";
     batchCode = `NF-HD-${currentYear}-${randomSuffix}`;
   } else if (text.trim().length > 0) {
     name = text.length > 40 ? `${text.slice(0, 40).trim()}...` : text.trim();
@@ -171,7 +193,7 @@ Nhiệm vụ của bạn: Dựa vào lời nói/văn bản mô tả của bác n
 Bắt buộc trả về duy nhất định dạng JSON thuần túy (json_object) với các trường sau:
 {
   "name": string hoặc null (Tên sản phẩm nông sản ngắn gọn, thu hút, nêu rõ nguồn gốc Đồng Nai như Long Khánh, Định Quán, Cù lao Tân Triều, Xuân Lộc... Ví dụ: "Hạt điều rang củi vỏ lụa Long Khánh", "Chôm chôm Java Long Khánh hái mới", "Sầu riêng Ri6 vườn Ba Tư". Nếu không xác định được loại nông sản thì để null),
-  "category": "Trái cây tươi" | "Hạt & Cà phê" | "Mật ong & Đặc sản" hoặc null (Ví dụ: hạt điều, cà phê thuộc "Hạt & Cà phê"; sầu riêng, chôm chôm, bưởi thuộc "Trái cây tươi"; mật ong, rượu bưởi thuộc "Mật ong & Đặc sản"),
+  "category": "Trái cây tươi" | "Bưởi & Cây có múi" | "Chôm chôm & Sầu riêng" | "Hạt điều & Rang củi" | "Cà phê & Ca cao" | "Mật ong & Rượu trái cây" | "Nông sản chế biến & Mứt" | "Rau củ & Nấm sạch" | "Tiêu & Gia vị vùng đồi" | "Quà tặng OCOP & Combo" hoặc null,
   "price": number hoặc null (Số nguyên giá bán VNĐ, ví dụ 35000, 120000. ĐẶC BIỆT: NẾU BÁC NÔNG DÂN KHÔNG NÓI GIÁ HOẶC KHÔNG CÓ THÔNG TIN GIÁ THÌ BẮT BUỘC ĐỂ null. TUYỆT ĐỐI KHÔNG TỰ BỊA GIÁ TIỀN),
   "unit": string hoặc null (Đơn vị tính như "túi", "gói", "bịch", "hộp", "thùng", "hũ", "lon", "kg", "nải", "trái", "bó". Nếu lời nói có đơn vị thì điền chính xác đơn vị đó. Nếu nông dân không nói đơn vị và không có số lượng thì để null),
   "stock": number hoặc null (Số lượng mở bán dạng số nguyên, ví dụ 120, 50, 30. ĐẶC BIỆT: NẾU BÁC NÔNG DÂN KHÔNG NÓI SỐ LƯỢNG THÌ BẮT BUỘC ĐỂ null. TUYỆT ĐỐI KHÔNG TỰ BỊA SỐ LƯỢNG),
@@ -285,7 +307,9 @@ QUY TẮC BẮT BUỘC (TUÂN THỦ 100%):
       ? Math.round(parsed.price)
       : heuristic.price;
 
-    const safeCategory = parsed.category || heuristic.category || "Trái cây tươi";
+    const safeCategory = (parsed.category && VALID_CATEGORIES.includes(parsed.category as ProductCategory))
+      ? (parsed.category as ProductCategory)
+      : (heuristic.category ?? "Trái cây tươi");
     const safeName = parsed.name || heuristic.name || null;
 
     const safeData: DraftResult = {

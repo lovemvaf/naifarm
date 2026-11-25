@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Calendar, CheckCircle2, Users } from "lucide-react";
-import { toast } from "sonner";
+import { notifySuccess } from "@/lib/toast";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { formatVnd } from "@/lib/format";
 import type { Farm } from "@/types/naifarm";
@@ -11,7 +11,7 @@ import { Badge, Button, Card } from "@/components/ui/Primitives";
 export function ExperienceBookingForm({ farm }: { farm: Farm }) {
   const { submitExperienceBooking, experienceBookings } = useDemoStore();
   const pkg = farm.experiences[0];
-  const [guestName, setGuestName] = useState("Ngọc Linh (Demo)");
+  const [guestName, setGuestName] = useState("Ngọc Linh");
   const [guestCount, setGuestCount] = useState(2);
   const [dateLabel, setDateLabel] = useState("2026-12-06");
   const [note, setNote] = useState("");
@@ -25,7 +25,7 @@ export function ExperienceBookingForm({ farm }: { farm: Farm }) {
     <Card className="p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Badge tone="gold">Trải nghiệm sinh thái (Demo)</Badge>
+          <Badge tone="gold">Trải nghiệm sinh thái vườn</Badge>
           <h3 className="mt-2 text-lg font-bold text-[#25352B]">{pkg.title}</h3>
           <p className="mt-1 text-sm text-[#52645A]">
             {pkg.duration} · Tối đa {pkg.maxGuests} khách ·{" "}
@@ -49,19 +49,19 @@ export function ExperienceBookingForm({ farm }: { farm: Farm }) {
             farmId: farm.id,
             farmName: farm.name,
             packageTitle: pkg.title,
-            guestName: guestName.trim() || "Khách tham quan (Demo)",
+            guestName: guestName.trim() || "Khách tham quan",
             guestCount,
             dateLabel,
-            note: note.trim() || "Đăng ký tham quan vườn mẫu",
+            note: note.trim() || "Đăng ký tham quan vườn",
           });
           setSubmittedId(created.id);
           setNote("");
-          toast.success(`Đã gửi yêu cầu ${created.id} — đang chờ ${farm.ownerName} xác nhận.`);
+          notifySuccess(`Đã gửi yêu cầu ${created.id} — đang chờ ${farm.ownerName} xác nhận.`);
         }}
       >
         <div>
           <label htmlFor={`guest-${farm.id}`} className="block text-xs font-semibold text-[#25352B]">
-            Tên người đại diện (Demo)
+            Tên người đại diện
           </label>
           <input
             id={`guest-${farm.id}`}

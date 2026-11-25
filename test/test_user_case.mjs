@@ -80,10 +80,10 @@ async function testEndpoint() {
     allPass = false;
   }
 
-  if (data?.category === "Hạt & Cà phê") {
-    console.log("-> PASS: data.category === 'Hạt & Cà phê'");
+  if (data?.category === "Hạt điều & Rang củi") {
+    console.log("-> PASS: data.category === 'Hạt điều & Rang củi'");
   } else {
-    console.error("-> FAIL: data.category is", data?.category, "expected 'Hạt & Cà phê'");
+    console.error("-> FAIL: data.category is", data?.category, "expected 'Hạt điều & Rang củi'");
     allPass = false;
   }
 
@@ -99,10 +99,11 @@ async function testEndpoint() {
   });
   const jsonPriority = await resPriority.json();
   console.log("Priority Response Data:", JSON.stringify(jsonPriority.data, null, 2));
-  if (jsonPriority.data?.category === "Hạt & Cà phê" && jsonPriority.data?.stock === 120 && jsonPriority.data?.unit === "túi") {
-    console.log("-> PASS: Text priority wins over sample photo (Hạt điều / Hạt & Cà phê / 120 túi)!");
+  if (jsonPriority.data?.category === "Hạt điều & Rang củi" && jsonPriority.data?.stock === 120 && jsonPriority.data?.unit === "túi") {
+    console.log("-> PASS: Text priority wins over sample photo (Hạt điều / Hạt điều & Rang củi / 120 túi)!");
   } else {
     console.error("-> FAIL: Priority test failed");
+    allPass = false;
   }
 
   console.log("\nFINAL VERDICT:", allPass ? "ALL ASSERTIONS PASSED!" : "FAILURES DETECTED!");

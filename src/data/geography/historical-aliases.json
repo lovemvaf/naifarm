@@ -1,0 +1,44 @@
+[
+  {
+    "alias": "H. Vĩnh Cửu",
+    "aliasNormalized": "vinh cuu",
+    "note": "Tên gọi cấp huyện cũ trước sắp xếp. Vùng bưởi Tân Triều nay thuộc Phường Tân Triều và Phường Trị An, Thành phố Đồng Nai.",
+    "candidateCodes": ["26188", "26170", "26173", "26179"]
+  },
+  {
+    "alias": "TP. Biên Hòa",
+    "aliasNormalized": "bien hoa",
+    "note": "Tên địa bàn cũ nay thuộc các phường trung tâm như Trấn Biên, Biên Hòa, Tam Hiệp, Long Bình, Hố Nai, Trảng Dài thuộc Thành phố Đồng Nai.",
+    "candidateCodes": ["26041", "26068", "26017", "26020", "26005", "25993"]
+  },
+  {
+    "alias": "TP. Long Khánh",
+    "aliasNormalized": "long khanh",
+    "note": "Khu vực vùng trái cây trọng điểm nay gồm Phường Long Khánh, Phường Bình Lộc, Phường Bảo Vinh, Phường Xuân Lập, Phường Hàng Gòn.",
+    "candidateCodes": ["26080", "26089", "26098", "26104", "26113"]
+  },
+  {
+    "alias": "H. Xuân Lộc",
+    "aliasNormalized": "xuan loc",
+    "note": "Khu vực phía Đông Nam Thành phố Đồng Nai gồm Phường Xuân Lộc (nâng cấp 2026), Xã Xuân Hòa, Xã Xuân Thành, Xã Xuân Bắc, Xã Xuân Định.",
+    "candidateCodes": ["26425", "26446", "26434", "26428", "26461"]
+  },
+  {
+    "alias": "H. Định Quán",
+    "aliasNormalized": "dinh quan",
+    "note": "Khu vực dọc Quốc lộ 20 gồm Xã Định Quán, Xã La Ngà, Xã Phú Vinh, Xã Phú Hòa, Xã Thanh Sơn.",
+    "candidateCodes": ["26206", "26227", "26215", "26221", "26209"]
+  },
+  {
+    "alias": "H. Cẩm Mỹ",
+    "aliasNormalized": "cam my",
+    "note": "Khu vực sầu riêng và cây ăn trái gồm Xã Cẩm Mỹ, Xã Sông Ray, Xã Xuân Quế, Xã Xuân Đường, Xã Xuân Đông.",
+    "candidateCodes": ["26341", "26362", "26332", "26347", "26359"]
+  },
+  {
+    "alias": "Tỉnh Bình Phước cũ",
+    "aliasNormalized": "binh phuoc",
+    "note": "Các đơn vị hành chính phía Bắc Thành phố Đồng Nai từ mốc hợp nhất, gồm Phường Bình Phước, Phường Đồng Xoài, Phường Phước Long, Phường Lộc Ninh, Xã Bom Bo, Xã Đak Nhau, Xã Phước Sơn...",
+    "candidateCodes": ["25195", "25210", "25217", "25270", "25405", "25399", "25420"]
+  }
+]

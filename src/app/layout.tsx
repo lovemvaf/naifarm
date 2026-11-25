@@ -24,9 +24,9 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "NaiFarm · Chợ OCOP Thanh niên Đồng Nai 2026",
+  title: "NaiFarm · Chợ OCOP Thanh niên Đồng Nai",
   description:
-    "Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị. Nguyên mẫu hệ sinh thái chợ OCOP thanh niên, truy xuất QR, chuyển đổi số nhà nông và tình nguyện số tại Thành phố Đồng Nai.",
+    "Gieo tri thức – Kết nối nhà nông – Lan tỏa giá trị. Hệ sinh thái chợ OCOP thanh niên, truy xuất nguồn gốc QR, chuyển đổi số nhà nông và tình nguyện số tại Thành phố Đồng Nai.",
 };
 
 export default function RootLayout({
@@ -52,7 +52,7 @@ export default function RootLayout({
             <AppFooter />
             <MobileBottomNav />
             <NaiAIFloatingChat />
-            <Toaster position="top-right" richColors />
+            <Toaster position="top-right" richColors closeButton duration={2400} visibleToasts={3} />
           </DemoStoreProvider>
         </MotionProvider>
       </body>

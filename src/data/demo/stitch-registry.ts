@@ -38,7 +38,7 @@ export const STITCH_SCREEN_COVERAGE: StitchMappingEntry[] = [
     workspace: "Public",
     route: "/products/buoi-da-xanh-tan-trieu",
     kind: "verified-stitch",
-    note: "Chọn khối lượng, tem QR SVG thật, timeline 3 mốc, mở 3D Bưởi Tân Triều.",
+    note: "Chọn khối lượng, tem QR SVG/PNG thật, nhật ký mùa vụ, thẻ giải phẫu 2D Bưởi Tân Triều.",
   },
   {
     stitchId: "ST-04",
@@ -152,13 +152,13 @@ export const STITCH_SCREEN_COVERAGE: StitchMappingEntry[] = [
   },
   {
     stitchId: "BP-07",
-    slug: "blueprint_naiacademy_3d",
+    slug: "blueprint_naiacademy_2d",
     blueprintIds: "S20, S21, S22",
-    title: "NaiAcademy (Bài học Hạt điều) & Thư viện 3D Bưởi",
+    title: "NaiAcademy (12 Bài học Nông sản) & Thẻ giải phẫu 2D",
     workspace: "W03 / Public",
     route: "/learn",
     kind: "blueprint-reconstructed",
-    note: "Bài học 15 phút + Quiz 3 câu + Mô hình 3D Three.js Bưởi Tân Triều tương tác.",
+    note: "12 bài học nông sản Đồng Nai + Quiz tương tác + Thẻ giải phẫu 2D dễ đọc trên mọi thiết bị.",
   },
   {
     stitchId: "BP-08",

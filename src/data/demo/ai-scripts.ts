@@ -17,12 +17,12 @@ export const AI_WORKSPACE_CONFIG: Record<
 > = {
   W01: {
     greeting:
-      "Chào Ngọc Linh! Mình là NaiAI (chế độ minh họa theo dữ liệu demo). Bạn muốn tìm nông sản Đồng Nai nào hôm nay?",
+      "Chào Ngọc Linh! Mình là NaiAI (trợ lý tra cứu nội bộ). Bạn muốn tìm nông sản Đồng Nai nào hôm nay?",
     chips: [
       {
         prompt: "Chôm chôm giá bao nhiêu?",
         reply:
-          "Theo dữ liệu demo hiện tại: Chôm chôm Java Long Khánh tại Nhà vườn Ba Tư đang có giá 35.000 đ/kg (lô NF-DEMO-001, tồn 30 kg). Bạn có thể xem chi tiết và quét QR nguồn gốc ngay bên dưới.",
+          "Theo thông tin hiện có: Chôm chôm Java Long Khánh tại Nhà vườn Ba Tư đang có giá 35.000 đ/kg (lô NF-DEMO-001, tồn 30 kg). Bạn có thể xem chi tiết và quét QR nguồn gốc ngay bên dưới.",
         linkLabel: "Xem Chôm chôm Java Ba Tư",
         linkHref: "/products/chom-chom-java-long-khanh",
         productSlug: "chom-chom-java-long-khanh",
@@ -30,14 +30,14 @@ export const AI_WORKSPACE_CONFIG: Record<
       {
         prompt: "Giải thích tem QR trên trái bưởi",
         reply:
-          "Tem QR mở trang Hộ chiếu Nông sản công khai: hiển thị mã lô (ví dụ NF-TT-2026-01), 3 mốc nhật ký canh tác – thu hoạch – đóng gói và phân biệt rõ phần nhà vườn tự khai với hồ sơ đã đối chiếu (Demo).",
+          "Tem QR mở trang Hộ chiếu Nông sản công khai: hiển thị mã lô (ví dụ NF-TT-2026-01), 3 mốc nhật ký canh tác – thu hoạch – đóng gói và phân biệt rõ phần nhà vườn tự khai với hồ sơ đã đối chiếu.",
         linkLabel: "Mở Hộ chiếu QR mẫu",
         linkHref: "/trace/NF-TT-2026-01",
       },
       {
         prompt: "Cách nhận hàng & phí giao thế nào?",
         reply:
-          "Bạn có thể chọn 'Giao tận nơi' (+20.000 đ phí demo tại Đồng Nai/TP.HCM) hoặc 'Nhận tại vườn' (0 đ). Thanh toán ở prototype là COD Demo, không thu tiền thật.",
+          "Bạn có thể chọn 'Giao tận nơi' (+20.000 đ phí vận chuyển dự kiến tại Đồng Nai/TP.HCM) hoặc 'Nhận tại vườn' (0 đ). Thanh toán ở nền tảng là COD khi nhận hàng, không thu tiền thật.",
         linkLabel: "Kiểm tra Giỏ hàng",
         linkHref: "/cart",
       },
@@ -111,7 +111,7 @@ export const AI_WORKSPACE_CONFIG: Record<
       {
         prompt: "Giải thích trạng thái đối chiếu hồ sơ",
         reply:
-          "Nút 'Hồ sơ đã đối chiếu (Demo)' ghi nhận bạn đã kiểm tra bản scan nhà vườn gửi lên. Điều phối viên không cấp sao OCOP chính thức thay cơ quan thẩm quyền.",
+          "Nút 'Hồ sơ đã đối chiếu' ghi nhận bạn đã kiểm tra bản scan nhà vườn gửi lên. Điều phối viên không cấp sao OCOP chính thức thay cơ quan thẩm quyền.",
         linkLabel: "Mở Đối chiếu chứng từ",
         linkHref: "/coordinator?tab=docs",
       },
@@ -119,7 +119,7 @@ export const AI_WORKSPACE_CONFIG: Record<
   },
   W05: {
     greeting:
-      "Chào đơn vị đối tác / HTX (W05). Đây là chế độ xem theo phạm vi tổ chức được cấp quyền trong prototype.",
+      "Chào đơn vị đối tác / HTX (W05). Đây là chế độ xem theo phạm vi tổ chức được cấp quyền trong nền tảng.",
     chips: [
       {
         prompt: "Xem phạm vi Hợp tác xã & Doanh nghiệp",

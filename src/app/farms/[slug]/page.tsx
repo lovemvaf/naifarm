@@ -6,11 +6,14 @@ import { AlertTriangle, ArrowLeft, MapPin, QrCode, Radio, ShieldCheck, Sprout, U
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { ProductCard } from "@/components/marketplace/ProductCard";
 import { ExperienceBookingForm } from "@/components/farms/ExperienceBookingForm";
+import { CertificationCard } from "@/components/traceability/CertificationCard";
+import { ProductionDiaryTimeline } from "@/components/traceability/ProductionDiaryTimeline";
+import { NaiFarmMapHost } from "@/components/map/NaiFarmMapHost";
 import { Badge, Card, EmptyState } from "@/components/ui/Primitives";
 
 export default function FarmDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const { farms, products, batches, livestreams } = useDemoStore();
+  const { farms, products, batches, livestreams, certifications, diaryEntries } = useDemoStore();
   const farm = farms.find((f) => f.slug === slug);
 
   if (!farm) {
@@ -19,7 +22,7 @@ export default function FarmDetailPage({ params }: { params: Promise<{ slug: str
         <EmptyState
           icon={<Sprout className="h-6 w-6" />}
           title="Không tìm thấy hồ sơ nhà vườn"
-          description="Đường dẫn nhà vườn không tồn tại trong danh sách dữ liệu demo hiện tại."
+          description="Đường dẫn nhà vườn không tồn tại trong danh sách vườn hiện tại."
           action={
             <Link
               href="/farms"
@@ -36,6 +39,8 @@ export default function FarmDetailPage({ params }: { params: Promise<{ slug: str
   const farmProducts = products.filter((p) => p.farmId === farm.id);
   const farmBatches = batches.filter((b) => b.farmId === farm.id);
   const farmLives = livestreams.filter((l) => l.farmId === farm.id);
+  const farmCerts = certifications.filter((c) => c.farmId === farm.id);
+  const farmDiaries = diaryEntries.filter((d) => d.farmId === farm.id);
 
   return (
     <div className="mx-auto max-w-[1280px] space-y-10 px-4 py-6 lg:px-8">
@@ -168,6 +173,37 @@ export default function FarmDetailPage({ params }: { params: Promise<{ slug: str
 
       {/* Eco-Experience Booking Request */}
       <ExperienceBookingForm farm={farm} />
+
+      {/* Certifications & Seasons Diary & Map */}
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="space-y-4 lg:col-span-7">
+          <Card className="p-5">
+            <ProductionDiaryTimeline
+              entries={farmDiaries}
+              title={`Nhật ký mùa vụ · ${farm.name}`}
+              limit={6}
+            />
+          </Card>
+        </div>
+
+        <div className="space-y-4 lg:col-span-5">
+          {farmCerts.map((cert) => (
+            <CertificationCard key={cert.id} cert={cert} />
+          ))}
+          <Card className="space-y-3 p-4">
+            <h2 className="flex items-center gap-1.5 text-sm font-bold text-[#25352B]">
+              <MapPin className="h-4 w-4 text-[#245B3D]" aria-hidden="true" />
+              <span>Bản đồ vùng vườn · {farm.administrativeUnitName}</span>
+            </h2>
+            <NaiFarmMapHost
+              farms={[farm]}
+              selectedFarmId={farm.id}
+              heightClassName="h-[260px]"
+              zoom={12}
+            />
+          </Card>
+        </div>
+      </section>
 
       {/* Field Photos Gallery */}
       <section aria-labelledby="farm-gallery-heading" className="space-y-4">

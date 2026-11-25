@@ -36,7 +36,7 @@ export function WorkspaceShell({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
         <aside aria-label={`Menu ${workspaceId}`} className="hidden lg:block">
           <div className="sticky top-24 rounded-[16px] border border-[#D6DED2] bg-white p-3 shadow-[0_2px_8px_rgba(37,53,43,0.05)]">
-            <p className="px-3 pb-2 text-xs font-semibold text-[#52645A]">Điều hướng {workspaceId}</p>
+            <p className="px-3 pb-2 text-xs font-semibold text-[#52645A]">Không gian làm việc</p>
             <nav className="space-y-1">
               {navItems.map((item) => {
                 const isActive = item.active ?? pathname === item.href;

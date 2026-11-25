@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { notifyError, notifyInfo, notifySuccess } from "@/lib/toast";
 import { toast } from "sonner";
 import {
   AlertCircle,
@@ -26,14 +27,14 @@ import {
   parseVietnamesePrice,
   parseVietnameseQuantityAndUnit,
 } from "@/lib/vietnameseNumberParser";
-import type { Product } from "@/types/naifarm";
+import type { Product, ProductCategory } from "@/types/naifarm";
 
 interface SamplePhoto {
   id: string;
   label: string;
   src: string;
   defaultName: string;
-  defaultCategory: Product["category"];
+  defaultCategory: ProductCategory;
   defaultPrice: number;
   defaultStock: number;
   defaultTranscript: string;
@@ -45,7 +46,7 @@ const SAMPLE_PHOTOS: SamplePhoto[] = [
     label: "Chôm chôm Java Long Khánh",
     src: "/images/stitch/stitch-40.jpg",
     defaultName: "Chôm chôm Java Long Khánh mới hái",
-    defaultCategory: "Trái cây tươi",
+    defaultCategory: "Chôm chôm & Sầu riêng",
     defaultPrice: 35000,
     defaultStock: 30,
     defaultTranscript: "Tôi có 30 ký chôm chôm Java hái sáng nay, bán 35 nghìn một ký.",
@@ -55,7 +56,7 @@ const SAMPLE_PHOTOS: SamplePhoto[] = [
     label: "Sầu riêng Ri6 tại vườn",
     src: "/images/stitch/stitch-49.jpg",
     defaultName: "Sầu riêng Ri6 chín cây vườn Ba Tư",
-    defaultCategory: "Trái cây tươi",
+    defaultCategory: "Chôm chôm & Sầu riêng",
     defaultPrice: 120000,
     defaultStock: 25,
     defaultTranscript: "Hôm nay vườn có khoảng 25 ký sầu riêng Ri6 tuyển chọn, bán 120 nghìn một ký.",
@@ -65,7 +66,7 @@ const SAMPLE_PHOTOS: SamplePhoto[] = [
     label: "Bưởi da xanh Tân Triều",
     src: "/images/stitch/stitch-53.jpg",
     defaultName: "Bưởi da xanh Cù lao Tân Triều lứa mới",
-    defaultCategory: "Trái cây tươi",
+    defaultCategory: "Bưởi & Cây có múi",
     defaultPrice: 55000,
     defaultStock: 40,
     defaultTranscript: "Sáng nay tôi cắt 40 ký bưởi da xanh ruột hồng, giá 55 nghìn một ký.",
@@ -75,7 +76,7 @@ const SAMPLE_PHOTOS: SamplePhoto[] = [
     label: "Hạt điều rang củi vỏ lụa",
     src: "/images/stitch/stitch-39.jpg",
     defaultName: "Hạt điều rang củi vỏ lụa đóng gói mới",
-    defaultCategory: "Hạt & Cà phê",
+    defaultCategory: "Hạt điều & Rang củi",
     defaultPrice: 145000,
     defaultStock: 20,
     defaultTranscript: "Tôi vừa rang 20 hộp hạt điều vỏ lụa 500 gam, bán 145 nghìn một hộp.",
@@ -190,7 +191,7 @@ export default function FarmerPublishWizardPage() {
   const [isGeneratingDraft, setIsGeneratingDraft] = useState(false);
   const [aiDraftSource, setAiDraftSource] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
-  const [draftCategory, setDraftCategory] = useState<Product["category"]>("Trái cây tươi");
+  const [draftCategory, setDraftCategory] = useState<ProductCategory>("Trái cây tươi");
   const [draftPrice, setDraftPrice] = useState("");
   const [draftUnit, setDraftUnit] = useState("");
   const [draftStock, setDraftStock] = useState("");
@@ -263,10 +264,10 @@ export default function FarmerPublishWizardPage() {
     setCustomPhotoData(null);
     if (selectedSampleId === sample.id) {
       setSelectedSampleId(null);
-      toast.info(`Đã bỏ chọn ảnh "${sample.label}".`);
+      notifyInfo(`Đã bỏ chọn ảnh "${sample.label}".`);
     } else {
       setSelectedSampleId(sample.id);
-      toast.success(`Đã chọn ảnh "${sample.label}". Bác có thể tiếp tục sang Bước 2.`);
+      notifySuccess(`Đã chọn ảnh "${sample.label}". Bác có thể tiếp tục sang Bước 2.`);
     }
     // TUYỆT ĐỐI KHÔNG TỰ ĐIỀN draftName, draftPrice, draftStock, draftUnit, transcript!
   };
@@ -279,7 +280,7 @@ export default function FarmerPublishWizardPage() {
       if (typeof reader.result === "string") {
         setCustomPhotoData(reader.result);
         setSelectedSampleId(null);
-        toast.success(`Đã chọn ảnh "${file.name}". Bác có thể tiếp tục sang Bước 2.`);
+        notifySuccess(`Đã chọn ảnh "${file.name}". Bác có thể tiếp tục sang Bước 2.`);
       }
     };
     reader.readAsDataURL(file);
@@ -288,10 +289,9 @@ export default function FarmerPublishWizardPage() {
   const handleClearPhoto = () => {
     setSelectedSampleId(null);
     setCustomPhotoData(null);
-    toast.info("Đã bỏ chọn ảnh.");
+    notifyInfo("Đã bỏ chọn ảnh.");
   };
 
-  // Start recording audio from browser microphone with Dual-Engine (Web Speech API + ASR)
   // Start recording audio from browser microphone using Direct PCM Recorder (16-bit PCM WAV 16kHz)
   const handleStartRecording = async () => {
     setMicErrorMessage(null);
@@ -361,7 +361,7 @@ export default function FarmerPublishWizardPage() {
       setIsRecording(true);
       setRecordSeconds(0);
 
-      toast.info("Đang lắng nghe... Bác nói tự nhiên nhé!");
+      notifyInfo("Đang lắng nghe... Bác nói tự nhiên nhé!");
     } catch (err: unknown) {
       console.error("[Record] Start error:", err);
       const isDenied =
@@ -429,7 +429,7 @@ export default function FarmerPublishWizardPage() {
     }
 
     if (totalSamples < 1600) {
-      toast.info("Chưa nghe rõ do thời gian thu âm quá ngắn. Bác bấm và nói lại nhé!");
+      notifyInfo("Chưa nghe rõ do thời gian thu âm quá ngắn. Bác bấm và nói lại nhé!");
       return;
     }
 
@@ -463,7 +463,7 @@ export default function FarmerPublishWizardPage() {
 
   const handleTranscribeAudio = async (wavBlob: Blob) => {
     if (!wavBlob || wavBlob.size < 400) {
-      toast.info("Chưa nghe rõ lời nói do tiếng ồn hoặc nói hơi nhỏ. Bác nói to và gần micro hơn nhé!");
+      notifyInfo("Chưa nghe rõ lời nói do tiếng ồn hoặc nói hơi nhỏ. Bác nói to và gần micro hơn nhé!");
       return;
     }
 
@@ -484,47 +484,47 @@ export default function FarmerPublishWizardPage() {
 
       if (result.success && asrText && !result.isLowVolumeOrNoisy) {
         setTranscript(asrText);
-        toast.success("Đã ghi nhận xong lời nói của bác!");
+        notifySuccess("Đã ghi nhận xong lời nói của bác!");
       } else if (result.success && asrText) {
         setTranscript(asrText);
-        toast.success("Đã ghi nhận xong lời nói của bác!");
+        notifySuccess("Đã ghi nhận xong lời nói của bác!");
       } else if (result.error) {
-        toast.error(`Máy chủ nhận diện giọng nói: ${result.error}`);
+        notifyError(`Máy chủ nhận diện giọng nói: ${result.error}`);
       } else {
-        toast.info("Chưa nghe rõ lời nói do tiếng ồn hoặc nói hơi nhỏ. Bác nói to và gần micro hơn nhé!");
+        notifyInfo("Chưa nghe rõ lời nói do tiếng ồn hoặc nói hơi nhỏ. Bác nói to và gần micro hơn nhé!");
       }
     } catch (err: unknown) {
       console.error("[Transcribe Audio] Error:", err);
       const msg = err instanceof Error ? err.message : "Lỗi kết nối máy chủ";
-      toast.error(`Hệ thống nhận dạng: ${msg}. Bác có thể chọn câu mẫu hoặc gõ vào ô bên dưới nhé.`);
+      notifyError(`Hệ thống nhận dạng: ${msg}. Bác có thể chọn câu mẫu hoặc gõ vào ô bên dưới nhé.`);
     } finally {
       setIsTranscribing(false);
     }
   };
 
-interface BrowserSpeechResultItem {
-  transcript: string;
-}
-interface BrowserSpeechResultList {
-  [index: number]: {
-    [index: number]: BrowserSpeechResultItem;
-  };
-}
-interface BrowserSpeechEvent {
-  results?: BrowserSpeechResultList;
-  error?: string;
-}
-interface BrowserSpeechRecognitionInstance {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  maxAlternatives: number;
-  onresult: ((event: BrowserSpeechEvent) => void) | null;
-  onerror: ((event: BrowserSpeechEvent) => void) | null;
-  start: () => void;
-  stop: () => void;
-}
-type BrowserSpeechConstructor = new () => BrowserSpeechRecognitionInstance;
+  interface BrowserSpeechResultItem {
+    transcript: string;
+  }
+  interface BrowserSpeechResultList {
+    [index: number]: {
+      [index: number]: BrowserSpeechResultItem;
+    };
+  }
+  interface BrowserSpeechEvent {
+    results?: BrowserSpeechResultList;
+    error?: string;
+  }
+  interface BrowserSpeechRecognitionInstance {
+    lang: string;
+    continuous: boolean;
+    interimResults: boolean;
+    maxAlternatives: number;
+    onresult: ((event: BrowserSpeechEvent) => void) | null;
+    onerror: ((event: BrowserSpeechEvent) => void) | null;
+    start: () => void;
+    stop: () => void;
+  }
+  type BrowserSpeechConstructor = new () => BrowserSpeechRecognitionInstance;
 
   // Fallback: Web Speech API độc lập cho trình duyệt hỗ trợ khi không dùng microphone AudioContext
   const handleStartBrowserSpeechRecognition = () => {
@@ -534,7 +534,7 @@ type BrowserSpeechConstructor = new () => BrowserSpeechRecognitionInstance;
       (window as unknown as { webkitSpeechRecognition?: BrowserSpeechConstructor }).webkitSpeechRecognition;
 
     if (!SpeechRecognitionClass) {
-      toast.error("Trình duyệt hiện tại chưa hỗ trợ Web Speech API.");
+      notifyError("Trình duyệt hiện tại chưa hỗ trợ Web Speech API.");
       return;
     }
 
@@ -545,29 +545,29 @@ type BrowserSpeechConstructor = new () => BrowserSpeechRecognitionInstance;
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
 
-      toast.info("Trình duyệt đang lắng nghe... Bác nói đi nhé!");
+      notifyInfo("Trình duyệt đang lắng nghe... Bác nói đi nhé!");
 
       recognition.onresult = (event: BrowserSpeechEvent) => {
         const text = event.results?.[0]?.[0]?.transcript || "";
         if (text) {
           setTranscript(text);
-          toast.success("Đã ghi nhận xong lời nói của bác!");
+          notifySuccess("Đã ghi nhận xong lời nói của bác!");
         }
       };
 
       recognition.onerror = (event: BrowserSpeechEvent) => {
         console.warn("[Web Speech Fallback] Error:", event?.error);
         if (event?.error === "not-allowed") {
-          toast.error("Trình duyệt chưa được cấp quyền micro.");
+          notifyError("Trình duyệt chưa được cấp quyền micro.");
         } else {
-          toast.info("Chưa nhận dạng được giọng nói từ trình duyệt. Bác nói lại nhé!");
+          notifyInfo("Chưa nhận dạng được giọng nói từ trình duyệt. Bác nói lại nhé!");
         }
       };
 
       recognition.start();
     } catch (e: unknown) {
       console.error(e);
-      toast.error("Không thể kích hoạt nhận diện giọng nói trình duyệt.");
+      notifyError("Không thể kích hoạt nhận diện giọng nói trình duyệt.");
     }
   };
 
@@ -583,30 +583,35 @@ type BrowserSpeechConstructor = new () => BrowserSpeechRecognitionInstance;
     setDraftUnit(unit ?? "");
 
     let detectedName = "";
-    let detectedCategory: Product["category"] = "Trái cây tươi";
+    let detectedCategory: ProductCategory = "Trái cây tươi";
 
     // Ưu tiên cao nhất nội dung mô tả của nông dân
     if (lower.includes("điều") || lower.includes("hạt điều")) {
       detectedName = "Hạt điều rang củi vỏ lụa Đồng Nai";
-      detectedCategory = "Hạt & Cà phê";
-    } else if (lower.includes("sầu riêng")) {
-      detectedName = "Sầu riêng Ri6 chín cây vườn Ba Tư Long Khánh";
-      detectedCategory = "Trái cây tươi";
-    } else if (lower.includes("chôm chôm")) {
-      detectedName = "Chôm chôm Java Long Khánh mới hái";
-      detectedCategory = "Trái cây tươi";
+      detectedCategory = "Hạt điều & Rang củi";
+    } else if (lower.includes("sầu riêng") || lower.includes("chôm chôm")) {
+      detectedName = lower.includes("sầu riêng")
+        ? "Sầu riêng Ri6 chín cây vườn Ba Tư Long Khánh"
+        : "Chôm chôm Java Long Khánh mới hái";
+      detectedCategory = "Chôm chôm & Sầu riêng";
     } else if (lower.includes("bưởi")) {
       detectedName = "Bưởi da xanh Cù lao Tân Triều lứa mới";
-      detectedCategory = "Trái cây tươi";
-    } else if (lower.includes("cà phê") || lower.includes("cafe")) {
+      detectedCategory = "Bưởi & Cây có múi";
+    } else if (lower.includes("cà phê") || lower.includes("cafe") || lower.includes("ca cao")) {
       detectedName = "Cà phê Robusta Đất đỏ Đồng Nai";
-      detectedCategory = "Hạt & Cà phê";
-    } else if (lower.includes("mật ong")) {
+      detectedCategory = "Cà phê & Ca cao";
+    } else if (lower.includes("mật ong") || lower.includes("rượu")) {
       detectedName = "Mật ong hoa rừng Trị An nguyên chất";
-      detectedCategory = "Mật ong & Đặc sản";
+      detectedCategory = "Mật ong & Rượu trái cây";
     } else if (lower.includes("chuối")) {
       detectedName = "Chuối cấy mô Trảng Bom đạt chuẩn xuất khẩu";
       detectedCategory = "Trái cây tươi";
+    } else if (lower.includes("tiêu") || lower.includes("ớt")) {
+      detectedName = "Tiêu đen Cẩm Mỹ hạt chắc cay nồng";
+      detectedCategory = "Tiêu & Gia vị vùng đồi";
+    } else if (lower.includes("nấm") || lower.includes("rau")) {
+      detectedName = "Nấm mèo đen Đồng Nai sơ chế";
+      detectedCategory = "Rau củ & Nấm sạch";
     } else if (selectedSampleId) {
       const sample = SAMPLE_PHOTOS.find((p) => p.id === selectedSampleId);
       if (sample) {
@@ -637,7 +642,7 @@ type BrowserSpeechConstructor = new () => BrowserSpeechRecognitionInstance;
 
     const textToAnalyze = (customText ?? transcript ?? "").trim();
     if (!textToAnalyze && !selectedSampleId && !customPhotoData) {
-      toast.info("Bác vui lòng chọn ảnh hoặc nói/gõ đôi lời mô tả nông sản trước nhé!");
+      notifyInfo("Bác vui lòng chọn ảnh hoặc nói/gõ đôi lời mô tả nông sản trước nhé!");
       return;
     }
 
@@ -669,7 +674,7 @@ type BrowserSpeechConstructor = new () => BrowserSpeechRecognitionInstance;
         // Điền vào template bước 3: Trường nào thiếu thì để trống "" đúng quy tắc
         setDraftName(d.name || "");
         if (d.category) {
-          setDraftCategory(d.category as Product["category"]);
+          setDraftCategory(d.category as ProductCategory);
         }
         setDraftPrice(d.price !== null && d.price !== undefined ? String(d.price) : "");
         setDraftStock(d.stock !== null && d.stock !== undefined ? String(d.stock) : "");
@@ -682,18 +687,18 @@ type BrowserSpeechConstructor = new () => BrowserSpeechRecognitionInstance;
 
         const isMissingPriceOrStock = !d.price || !d.stock || !d.unit;
         if (isMissingPriceOrStock) {
-          toast.info(
+          notifyInfo(
             "AI đã tạo bản nháp! Có mục giá bán, số lượng hoặc đơn vị chưa có trong lời nói, bác vui lòng điền bổ sung ở Bước 3 nhé."
           );
         } else {
-          toast.success("AI NAI Farm đã trích xuất thông tin thành công!");
+          notifySuccess("AI NAI Farm đã trích xuất thông tin thành công!");
         }
       } else {
         throw new Error(result.error || "Không thể phân tích dữ liệu");
       }
     } catch (err: unknown) {
       console.error("[handleGenerateDraftWithAi] Error:", err);
-      toast.error("Không thể kết nối AI, đang sử dụng bộ trích xuất dự phòng cho bác.");
+      notifyError("Không thể kết nối AI, đang sử dụng bộ trích xuất dự phòng cho bác.");
       buildDraftFromTranscriptLocally(textToAnalyze);
     } finally {
       setIsGeneratingDraft(false);
@@ -706,19 +711,19 @@ type BrowserSpeechConstructor = new () => BrowserSpeechRecognitionInstance;
     const numericStock = Number(draftStock);
 
     if (!draftName.trim()) {
-      toast.error("Bác vui lòng điền tên sản phẩm hiển thị trên Chợ.");
+      notifyError("Bác vui lòng điền tên sản phẩm hiển thị trên Chợ.");
       return;
     }
     if (!numericPrice || numericPrice <= 0) {
-      toast.error("Bác vui lòng điền giá bán hợp lệ (lớn hơn 0 VNĐ).");
+      notifyError("Bác vui lòng điền giá bán hợp lệ (lớn hơn 0 VNĐ).");
       return;
     }
     if (!numericStock || numericStock <= 0) {
-      toast.error("Bác vui lòng điền số lượng mở bán (lớn hơn 0).");
+      notifyError("Bác vui lòng điền số lượng mở bán (lớn hơn 0).");
       return;
     }
     if (!draftUnit.trim()) {
-      toast.error("Bác vui lòng điền đơn vị tính (ví dụ: kg, túi, hộp, nải...).");
+      notifyError("Bác vui lòng điền đơn vị tính (ví dụ: kg, túi, hộp, nải...).");
       return;
     }
 
@@ -736,7 +741,7 @@ type BrowserSpeechConstructor = new () => BrowserSpeechRecognitionInstance;
 
     setPublishedProduct(created);
     setHideAiChatOnSubflow(false);
-    toast.success(`Đã đăng bán "${created.name}" lên Chợ OCOP NaiFarm!`);
+    notifySuccess(`Đã đăng bán "${created.name}" lên Chợ OCOP NaiFarm!`);
   };
 
   return (
@@ -1147,7 +1152,7 @@ type BrowserSpeechConstructor = new () => BrowserSpeechRecognitionInstance;
                     type="button"
                     onClick={() => {
                       setTranscript(p.text);
-                      toast.success(`Đã chọn: "${p.label}"`);
+                      notifySuccess(`Đã chọn: "${p.label}"`);
                     }}
                     className="min-h-[46px] rounded-full border border-[#245B3D]/30 bg-white px-4 text-sm font-semibold text-[#245B3D] hover:bg-[#245B3D] hover:text-white transition shadow-sm cursor-pointer"
                   >
@@ -1297,13 +1302,20 @@ type BrowserSpeechConstructor = new () => BrowserSpeechRecognitionInstance;
                           id="draft-category"
                           value={draftCategory}
                           onChange={(e) =>
-                            setDraftCategory(e.target.value as Product["category"])
+                            setDraftCategory(e.target.value as ProductCategory)
                           }
                           className="min-h-[52px] w-full rounded-[14px] border-2 border-[#D6DED2] bg-white px-4 text-base font-semibold text-[#25352B] focus:border-[#245B3D] focus:ring-2 focus:ring-[#245B3D]/20 outline-none cursor-pointer"
                         >
                           <option value="Trái cây tươi">Trái cây tươi</option>
-                          <option value="Hạt & Cà phê">Hạt & Cà phê</option>
-                          <option value="Mật ong & Đặc sản">Mật ong & Đặc sản</option>
+                          <option value="Bưởi & Cây có múi">Bưởi &amp; Cây có múi</option>
+                          <option value="Chôm chôm & Sầu riêng">Chôm chôm &amp; Sầu riêng</option>
+                          <option value="Hạt điều & Rang củi">Hạt điều &amp; Rang củi</option>
+                          <option value="Cà phê & Ca cao">Cà phê &amp; Ca cao</option>
+                          <option value="Mật ong & Rượu trái cây">Mật ong &amp; Rượu trái cây</option>
+                          <option value="Nông sản chế biến & Mứt">Nông sản chế biến &amp; Mứt</option>
+                          <option value="Rau củ & Nấm sạch">Rau củ &amp; Nấm sạch</option>
+                          <option value="Tiêu & Gia vị vùng đồi">Tiêu &amp; Gia vị vùng đồi</option>
+                          <option value="Quà tặng OCOP & Combo">Quà tặng OCOP &amp; Combo</option>
                         </select>
                       </div>
                     </div>

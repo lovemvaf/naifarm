@@ -46,7 +46,7 @@ export function NaiAIFloatingChat() {
     },
   ];
 
-  // Auto-hide on checkout or during farmer voice recording / fullscreen 3D viewer per DESIGN.md
+  // Auto-hide on checkout or during farmer voice recording / active subflows per DESIGN.md
   const suppressedByRoute = pathname.startsWith("/checkout") || hideAiChatOnSubflow;
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export function NaiAIFloatingChat() {
       aiReply = {
         id: `ai-${effectiveWs}-${seq}`,
         sender: "ai",
-        text: `${matchedProduct.name} (${matchedProduct.farmName}) hiện có giá tham khảo ${new Intl.NumberFormat("vi-VN").format(matchedProduct.priceVnd)} đ/${matchedProduct.unitLabel}, lô ${matchedProduct.batchCode} (dữ liệu demo).`,
+        text: `${matchedProduct.name} (${matchedProduct.farmName}) hiện có giá tham khảo ${new Intl.NumberFormat("vi-VN").format(matchedProduct.priceVnd)} đ/${matchedProduct.unitLabel}, lô ${matchedProduct.batchCode}.`,
         linkLabel: `Mở ${matchedProduct.name}`,
         linkHref: `/products/${matchedProduct.slug}`,
         productSlug: matchedProduct.slug,
@@ -106,13 +106,13 @@ export function NaiAIFloatingChat() {
       aiReply = {
         id: `ai-${effectiveWs}-${seq}`,
         sender: "ai",
-        text: "NaiAI ở chế độ trợ giúp kịch bản chỉ đọc dữ liệu catalog demo, không tự tư vấn thuốc bảo vệ thực vật hay cấp xác nhận OCOP. Vui lòng trao đổi với cán bộ chuyên môn hoặc điều phối viên.",
+        text: "NaiAI ở chế độ trợ giúp kịch bản chỉ tra cứu danh mục sản phẩm hiện có, không tự tư vấn thuốc bảo vệ thực vật hay cấp xác nhận OCOP. Vui lòng trao đổi với cán bộ chuyên môn hoặc điều phối viên.",
       };
     } else {
       aiReply = {
         id: `ai-${effectiveWs}-${seq}`,
         sender: "ai",
-        text: "Đang ở chế độ Trợ giúp theo kịch bản (Demo Offline). Bạn có thể chọn nhanh một câu gợi ý phía trên hoặc mở trực tiếp Chợ OCOP / Hộ chiếu QR để xem dữ liệu chi tiết.",
+        text: "Đang ở chế độ Trợ giúp theo kịch bản. Bạn có thể chọn nhanh một câu gợi ý phía trên hoặc mở trực tiếp Chợ OCOP / Hộ chiếu QR để xem thông tin chi tiết.",
         linkLabel: "Về Chợ OCOP",
         linkHref: "/marketplace",
       };
@@ -178,7 +178,7 @@ export function NaiAIFloatingChat() {
           </header>
 
           <div className="border-b border-[#D6DED2] bg-[#EAF0E5]/60 px-3 py-2 text-[11px] text-[#52645A]">
-            AI gợi ý minh họa theo dữ liệu demo — vui lòng kiểm tra lại thông tin trước khi quyết định.
+            AI gợi ý theo kịch bản không gian trải nghiệm — vui lòng kiểm tra lại thông tin trước khi quyết định.
           </div>
 
           <div className="flex-1 space-y-3 overflow-y-auto p-3.5">

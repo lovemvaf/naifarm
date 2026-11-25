@@ -22,7 +22,7 @@ import {
   Sparkles,
   Video,
 } from "lucide-react";
-import { toast } from "sonner";
+import { notifyError, notifySuccess } from "@/lib/toast";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { cn, formatVnd } from "@/lib/format";
 import { Badge, Button, Card, DemoBanner } from "@/components/ui/Primitives";
@@ -46,7 +46,7 @@ export default function LiveStoryRoomPage() {
 
   const [newTitle, setNewTitle] = useState("");
   const [newFarmId, setNewFarmId] = useState(farms[1]?.id ?? "farm-ba-tu-demo");
-  const [newSchedule, setNewSchedule] = useState("29/11/2026 · 09:30 (Demo)");
+  const [newSchedule, setNewSchedule] = useState("29/11/2026 · 09:30");
   const [newYouth, setNewYouth] = useState("Minh Anh & Tuấn");
   const [newProductId, setNewProductId] = useState("P01");
 
@@ -101,13 +101,13 @@ export default function LiveStoryRoomPage() {
         badge: "W06 · Giám sát minh bạch nội dung Live (Chỉ đọc)",
         title: "Giám sát Trạng thái Phát sóng & Nhãn minh bạch",
         subtitle:
-          "Kiểm tra các phiên Replay Demo, lịch dự kiến và liên kết lô truy xuất QR (không tạo/mua hàng ở quyền quản trị).",
+          "Kiểm tra các phiên phát lại minh họa, lịch dự kiến và liên kết lô truy xuất QR (không tạo/mua hàng ở quyền quản trị).",
         ctaLabel: "",
         formHeading: "",
       }
     : {
-        badge: "R6 · S15 & S16 · Khách hàng xem Livestream & Mua ngay",
-        title: "Phòng Livestream Nông sản Tại vườn & Lịch Phát sóng (Demo)",
+        badge: "Khách hàng xem Livestream & Mua ngay",
+        title: "Phòng Livestream Nông sản Tại vườn & Lịch Phát sóng",
         subtitle:
           "Xem 3 góc quay tại vườn, kiểm tra mã lô QR minh bạch và thêm nhanh nông sản ghim vào giỏ hàng.",
         ctaLabel: "",
@@ -138,7 +138,7 @@ export default function LiveStoryRoomPage() {
 
       <DemoBanner
         title="Trạng thái phát sóng trung thực"
-        detail="Phiên hiện tại được gắn nhãn Phát lại minh họa (Replay Demo); lịch sắp tới hiển thị rõ 'Lịch dự kiến Demo' và không giả lập lượng người xem hay bình luận ảo."
+        detail="Phiên hiện tại được gắn nhãn Phát lại minh họa; lịch sắp tới hiển thị rõ Lịch dự kiến và không giả lập lượng người xem hay bình luận ảo."
       />
 
       {canScheduleLive && showCreateForm ? (
@@ -149,7 +149,7 @@ export default function LiveStoryRoomPage() {
             onSubmit={(e) => {
               e.preventDefault();
               if (!newTitle.trim()) {
-                toast.error("Vui lòng nhập tiêu đề phiên livestream.");
+                notifyError("Vui lòng nhập tiêu đề phiên livestream.");
                 return;
               }
               const created = createLivestreamSession({
@@ -161,14 +161,14 @@ export default function LiveStoryRoomPage() {
                   : newYouth.trim() || "Minh Anh & Tuấn",
                 pinnedProductId: newProductId,
                 summary: isFarmerRole
-                  ? "Phiên phát trực tiếp từ vườn do chủ vườn đăng ký, gắn sẵn tem QR lô hàng (Demo)."
-                  : "Phiên live do thanh niên & điều phối viên đồng hành cùng nhà vườn giới thiệu đặc sản Đồng Nai (Demo).",
+                  ? "Phiên phát trực tiếp từ vườn do chủ vườn đăng ký, gắn sẵn tem QR lô hàng."
+                  : "Phiên live do thanh niên & điều phối viên đồng hành cùng nhà vườn giới thiệu đặc sản Đồng Nai.",
               });
               setActiveSessionId(created.id);
               setAngleIndex(0);
               setShowCreateForm(false);
               setNewTitle("");
-              toast.success(`Đã tạo lịch ${created.id} liên kết sản phẩm ${newProductId}.`);
+              notifySuccess(`Đã tạo lịch ${created.id} liên kết sản phẩm ${newProductId}.`);
             }}
           >
             <div className="sm:col-span-2">
@@ -253,7 +253,7 @@ export default function LiveStoryRoomPage() {
                 variant={isFarmerRole ? "farmer" : "primary"}
                 className="w-full sm:w-auto"
               >
-                Lưu lịch Livestream (Demo)
+                Lưu lịch Livestream
               </Button>
             </div>
           </form>
@@ -275,7 +275,7 @@ export default function LiveStoryRoomPage() {
                   <PlayCircle className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>
                     {activeSession.status === "replay_demo"
-                      ? "Phát lại minh họa (Replay Demo)"
+                      ? "Phát lại minh họa"
                       : "Lịch phát dự kiến (Chưa live)"}
                   </span>
                 </Badge>
@@ -351,8 +351,8 @@ export default function LiveStoryRoomPage() {
                             variant="primary"
                             onClick={() => {
                               const r = addToCart(p.id, 1);
-                              if (r.ok) toast.success(r.message);
-                              else toast.error(r.message);
+                              if (r.ok) notifySuccess(r.message);
+                              else notifyError(r.message);
                             }}
                           >
                             <ShoppingBasket className="h-3.5 w-3.5" aria-hidden="true" />
@@ -414,7 +414,7 @@ export default function LiveStoryRoomPage() {
                   <div className="flex items-center justify-between gap-2">
                     <Badge tone={s.status === "replay_demo" ? "info" : "gold"}>
                       <Radio className="h-3 w-3" aria-hidden="true" />
-                      <span>{s.status === "replay_demo" ? "Replay Demo" : "Lịch dự kiến"}</span>
+                      <span>{s.status === "replay_demo" ? "Phát lại minh họa" : "Lịch dự kiến"}</span>
                     </Badge>
                     <span className="text-xs font-semibold text-[#52645A]">{s.id}</span>
                   </div>
@@ -446,10 +446,10 @@ export default function LiveStoryRoomPage() {
                         setRemindedIds((prev) =>
                           prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id]
                         );
-                        toast.success(
+                        notifySuccess(
                           reminded
                             ? `Đã tắt nhắc lịch phiên ${s.id}.`
-                            : `Đã bật nhắc xem phiên ${s.id} (Demo).`
+                            : `Đã bật nhắc xem phiên ${s.id}.`
                         );
                       }}
                     >
@@ -524,7 +524,7 @@ export default function LiveStoryRoomPage() {
             icon: <Award className="h-4 w-4" aria-hidden="true" />,
           },
           {
-            label: "Góc học mở & 3D",
+            label: "Góc học mở & 2D",
             href: "/learn",
             icon: <BookOpen className="h-4 w-4" aria-hidden="true" />,
           },
