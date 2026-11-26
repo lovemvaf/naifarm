@@ -54,8 +54,18 @@ import type {
   WarehouseStock,
 } from "@/types/naifarm";
 import { getAdministrativeUnitByCode } from "@/lib/geography/administrative-lookup";
+import { assetUrl } from "@/lib/storage/assets";
 
 type Row = Record<string, unknown>;
+
+function assetStr(value: unknown, fallback = ""): string {
+  const raw = str(value, fallback);
+  return raw ? assetUrl(raw) : "";
+}
+
+function assetArray(value: unknown): string[] {
+  return strArray(value).map((item) => assetUrl(item)).filter(Boolean);
+}
 
 function str(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
@@ -119,7 +129,7 @@ export function mapExperience(row: Row): ExperiencePackage {
     maxGuests: num(row.max_guests),
     scheduleSummary: str(row.schedule_summary),
     safetyNote: str(row.safety_note),
-    image: str(row.image),
+    image: assetStr(row.image),
   };
 }
 
@@ -146,9 +156,9 @@ export function mapFarm(row: Row, experiences: ExperiencePackage[]): Farm {
     ocopNote: str(row.ocop_note),
     storyHeadline: str(row.story_headline),
     storySummary: str(row.story_summary),
-    bannerImage: str(row.banner_image),
-    ownerPortrait: str(row.owner_portrait),
-    galleryImages: strArray(row.gallery_images),
+    bannerImage: assetStr(row.banner_image),
+    ownerPortrait: assetStr(row.owner_portrait),
+    galleryImages: assetArray(row.gallery_images),
     youthSupporters: strArray(row.youth_supporters),
     coordinates: toGeoPoint(num(row.lat), num(row.lng)),
     experiences,
@@ -177,8 +187,8 @@ export function mapProduct(row: Row): Product {
     brixNote: row.brix_note ? String(row.brix_note) : undefined,
     shortDescription: str(row.short_description),
     storyNote: str(row.story_note),
-    image: str(row.image),
-    gallery: strArray(row.gallery),
+    image: assetStr(row.image),
+    gallery: assetArray(row.gallery),
     weightOptions: Array.isArray(row.weight_options)
       ? (row.weight_options as Product["weightOptions"])
       : undefined,
@@ -194,7 +204,7 @@ export function mapBatchEvent(row: Row): BatchEvent {
     detail: str(row.detail),
     actorCategory: str(row.actor_category),
     sourceDeclaration: str(row.source_declaration, "Nhà vườn tự khai") as BatchEvent["sourceDeclaration"],
-    photo: row.photo ? String(row.photo) : undefined,
+    photo: row.photo ? assetUrl(String(row.photo)) : undefined,
   };
 }
 
@@ -227,7 +237,7 @@ export function mapOrderItem(row: Row): DemoOrderItem {
     unitLabel: str(row.unit_label),
     quantity: num(row.quantity),
     unitPriceVnd: num(row.unit_price_vnd),
-    image: str(row.image),
+    image: assetStr(row.image),
   };
 }
 
@@ -271,7 +281,7 @@ export function mapMission(row: Row): VolunteerMission {
     dueDate: str(row.due_date),
     deliverableSummary: str(row.deliverable_summary),
     evidenceNote: row.evidence_note ? String(row.evidence_note) : undefined,
-    evidenceImage: row.evidence_image ? String(row.evidence_image) : undefined,
+    evidenceImage: row.evidence_image ? assetUrl(String(row.evidence_image)) : undefined,
     revisionReason: row.revision_reason ? String(row.revision_reason) : undefined,
     status: str(row.status, "open") as VolunteerMission["status"],
     isDemo: true,
@@ -438,7 +448,7 @@ export function mapCampaign(row: Row): CampaignRecord {
     timezone: str(row.timezone, "Asia/Ho_Chi_Minh") as CampaignRecord["timezone"],
     priority: num(row.priority),
     showNationalFlagAccent: bool(row.show_national_flag_accent),
-    bannerImage: str(row.banner_image),
+    bannerImage: assetStr(row.banner_image),
     bannerAltVi: str(row.banner_alt_vi),
     bannerAltEn: str(row.banner_alt_en),
     primaryCtaLabelVi: str(row.primary_cta_label_vi),
@@ -554,7 +564,7 @@ export function mapDiaryEntry(row: Row): DiaryEntry {
     detail: str(row.detail),
     actorName: str(row.actor_name),
     sourceDeclaration: str(row.source_declaration, "Nhà vườn tự khai") as DiaryEntry["sourceDeclaration"],
-    photo: row.photo ? String(row.photo) : undefined,
+    photo: row.photo ? assetUrl(String(row.photo)) : undefined,
     visibility: row.visibility ? String(row.visibility) as DiaryEntry["visibility"] : undefined,
     materialsUsed: row.materials_used ? String(row.materials_used) : undefined,
     version: row.version != null ? num(row.version) : undefined,
@@ -959,7 +969,7 @@ export function mapLesson(row: Row): LearningLesson {
     summary: str(row.summary),
     summaryEn: row.summary_en ? String(row.summary_en) : undefined,
     learningObjectiveEn: row.learning_objective_en ? String(row.learning_objective_en) : undefined,
-    image: str(row.image),
+    image: assetStr(row.image),
     anatomyTarget: str(row.anatomy_target) as LearningLesson["anatomyTarget"],
     sections: Array.isArray(row.sections) ? (row.sections as LearningLesson["sections"]) : [],
     quizQuestion: row.quiz_question
@@ -1075,8 +1085,8 @@ export function mapTourPackage(row: Row): TourPackage {
     slots: (row.slots as unknown as TourPackage["slots"]) ?? [],
     linkedProductIds: strArray(row.linked_product_ids),
     linkedLiveIds: strArray(row.linked_live_ids),
-    image: str(row.image),
-    gallery: strArray(row.gallery),
+    image: assetStr(row.image),
+    gallery: assetArray(row.gallery),
     ratingFixture: num(row.rating_fixture),
     reviewCountFixture: num(row.review_count_fixture),
   };

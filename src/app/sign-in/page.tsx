@@ -219,6 +219,7 @@ export default function SignInPage() {
                   </div>
                   <button
                     type="button"
+                    data-quick-workspace={acc.workspaceId}
                     disabled={quickPendingId !== null}
                     onClick={() => void handleQuickSignIn(acc.id)}
                     className="mt-3 inline-flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-[10px] bg-[#245B3D] px-3 text-xs font-semibold text-white hover:bg-[#19472E] cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
