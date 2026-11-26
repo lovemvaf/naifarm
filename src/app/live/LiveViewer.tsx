@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { LiveKitStage } from "./LiveKitStage";
 import { LiveChat } from "./LiveChat";
 import { useDemoStore } from "@/context/DemoStoreContext";
-import { INITIAL_FARMS } from "@/data/demo/farms";
 import { Button, Card } from "@/components/ui/Primitives";
 import { formatVnd } from "@/lib/format";
 import { useLiveAuth, useLiveData, type LiveSession } from "@/lib/live/client";
@@ -23,12 +22,12 @@ export function LiveViewer({ sessionId }: { sessionId?: string }) {
   const sessions = directory.data?.sessions ?? [];
   const session = sessionId ? selected.data?.session : sessions.find(canWatch);
   const error = selected.error || directory.error || selected.realtimeError || directory.realtimeError;
-  const { products, addToCart } = useDemoStore();
+  const { products, addToCart, farms } = useDemoStore();
   const product = products.find((item) => item.id === session?.pinned_product_id);
   const selectedLiveProducts = products.filter((item) => session?.product_ids.includes(item.id));
   const mockLiveProducts = selectedLiveProducts.length >= 3 ? selectedLiveProducts : products.slice(0, 8);
   const available = !!product && product.seasonStatus === "in_season" && product.stockKg > 0;
-  const farm = INITIAL_FARMS.find((item) => item.id === session?.farm_id);
+  const farm = farms.find((item) => item.id === session?.farm_id);
 
   function orderProduct(productId: string, checkout: boolean) {
     const result = addToCart(productId, 1);
@@ -82,7 +81,7 @@ export function LiveViewer({ sessionId }: { sessionId?: string }) {
     {!sessionId && directory.data && <section className="space-y-3">
       <h2 className="text-xl font-bold">Lịch phát sóng</h2>
       {sessions.filter((item) => !canWatch(item)).map((item) => {
-        const scheduledFarm = INITIAL_FARMS.find((entry) => entry.id === item.farm_id);
+        const scheduledFarm = farms.find((entry) => entry.id === item.farm_id);
         return <Card key={item.id} className="flex flex-wrap items-center gap-4 p-4">
           {scheduledFarm && <figure className="w-28 shrink-0">
             <div className="relative aspect-video overflow-hidden rounded-lg">

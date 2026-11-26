@@ -7,8 +7,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { createAudioAnalyser, createLocalAudioTrack } from "livekit-client";
 import { LiveKitStage } from "../LiveKitStage";
 import { LiveChat } from "../LiveChat";
-import { INITIAL_FARMS } from "@/data/demo/farms";
-import { INITIAL_PRODUCTS } from "@/data/demo/products";
+import { useDemoStore } from "@/context/DemoStoreContext";
 import { Button, Card } from "@/components/ui/Primitives";
 import { active, liveFetch, useLiveAuth, useLiveData, type LiveSession } from "@/lib/live/client";
 
@@ -34,6 +33,7 @@ function ElapsedTime({ startedAt }: { startedAt: string }) {
 function ScheduleForm({ farms, session, onSave, busy }: {
   farms: string[]; session?: LiveSession; onSave: (data: object) => void; busy: boolean;
 }) {
+  const { farms: farmDirectory, products: productCatalog } = useDemoStore();
   const [farm, setFarm] = useState(session?.farm_id ?? farms[0] ?? "");
   return <form className="grid gap-3" onSubmit={(event) => {
     event.preventDefault();
@@ -46,13 +46,13 @@ function ScheduleForm({ farms, session, onSave, busy }: {
   }}>
     <label>Nhà vườn<select className={field} disabled={!!session} value={farm} onChange={(event) => setFarm(event.target.value)} required>
       <option value="">Chọn nhà vườn</option>
-      {INITIAL_FARMS.filter((item) => farms.includes(item.id)).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+      {farmDirectory.filter((item) => farms.includes(item.id)).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
     </select></label>
     <label>Tiêu đề<input name="title" className={field} required minLength={3} maxLength={140} defaultValue={session?.title} /></label>
     <label>Mô tả<textarea name="description" className={field} maxLength={2000} defaultValue={session?.description} /></label>
     <label>Thời gian phát (giờ Việt Nam)<input name="time" className={field} type="datetime-local" defaultValue={timeslot(session?.scheduled_at ?? null)} /></label>
     <fieldset key={farm} className="space-y-1"><legend>Sản phẩm giới thiệu</legend>
-      {INITIAL_PRODUCTS.filter((item) => item.farmId === farm).map((item) => <label key={item.id} className="block text-sm">
+      {productCatalog.filter((item) => item.farmId === farm).map((item) => <label key={item.id} className="block text-sm">
         <input type="checkbox" name="products" value={item.id} defaultChecked={session?.product_ids.includes(item.id)} /> {item.name}
       </label>)}
     </fieldset>
@@ -62,11 +62,12 @@ function ScheduleForm({ farms, session, onSave, busy }: {
 
 export function LiveStudio({ sessionId }: { sessionId?: string }) {
   const router = useRouter();
+  const { products } = useDemoStore();
   const { token, authError } = useLiveAuth();
   const { data, error, realtimeError, refresh } = useLiveData<{ sessions: LiveSession[]; farms: string[] }>(token ? "?studio=1" : null, undefined, token);
   const session = data?.sessions.find((item) => item.id === sessionId);
-  const selectedLiveProducts = INITIAL_PRODUCTS.filter((item) => session?.product_ids.includes(item.id));
-  const mockLiveProducts = selectedLiveProducts.length >= 3 ? selectedLiveProducts : INITIAL_PRODUCTS.slice(0, 8);
+  const selectedLiveProducts = products.filter((item) => session?.product_ids.includes(item.id));
+  const mockLiveProducts = selectedLiveProducts.length >= 3 ? selectedLiveProducts : products.slice(0, 8);
   const [actionError, setActionError] = useState("");
   const [busy, setBusy] = useState(false);
   const [pairing, setPairing] = useState<{ id: string; url: string; expiresAt: string }>();
@@ -287,7 +288,7 @@ export function LiveStudio({ sessionId }: { sessionId?: string }) {
             <select className={field} disabled={busy} value={session.pinned_product_id ?? ""} onChange={(event) => {
               const productId = event.target.value || null;
               void run(async () => { await action("pin", { method: "POST", body: JSON.stringify({ productId, revision: session.revision }) }); refresh(); });
-            }}><option value="">Bỏ ghim</option>{INITIAL_PRODUCTS.filter((item) => session.product_ids.includes(item.id)).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+            }}><option value="">Bỏ ghim</option>{products.filter((item) => session.product_ids.includes(item.id)).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
           </label>}
           <Link href={`/live/${session.id}`} className="underline">Mở trang xem</Link>
         </Card>

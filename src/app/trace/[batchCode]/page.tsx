@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { useDemoStore } from "@/context/DemoStoreContext";
 import { traceLotGenealogy } from "@/lib/quality/recall-engine";
-import { INITIAL_CREDENTIAL_RECORDS } from "@/data/fixtures/quality-credentials";
 import {
   CREDENTIAL_TYPE_MAP,
   LIFECYCLE_STATUS_LABELS,
@@ -36,7 +35,7 @@ export default function TraceBatchDetailPage({
 }) {
   const { batchCode } = use(params);
   const router = useRouter();
-  const { batches, products, farms, certifications, diaryEntries } = useDemoStore();
+  const { batches, products, farms, certifications, diaryEntries, credentialRecords } = useDemoStore();
   const [manualCode, setManualCode] = useState("");
   const [selectedCred, setSelectedCred] = useState<CredentialRecord | null>(null);
 
@@ -114,7 +113,7 @@ export default function TraceBatchDetailPage({
       d.visibility !== "internal",
   );
   const genealogy = traceLotGenealogy(rawBatch.batchCode, batches);
-  const scopedCreds = INITIAL_CREDENTIAL_RECORDS.filter(
+  const scopedCreds = credentialRecords.filter(
     (cr) =>
       cr.origin === "synthetic" &&
       (cr.holderId === rawBatch.farmId ||
@@ -323,7 +322,7 @@ export default function TraceBatchDetailPage({
 
       <CredentialDetailDrawer
         record={selectedCred}
-        allRecords={INITIAL_CREDENTIAL_RECORDS}
+        allRecords={credentialRecords}
         onClose={() => setSelectedCred(null)}
       />
     </div>

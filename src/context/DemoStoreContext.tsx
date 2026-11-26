@@ -915,6 +915,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           internationalInquiries: core.internationalInquiries.length ? core.internationalInquiries : prev.internationalInquiries,
           tourPackages: core.tourPackages.length ? core.tourPackages : prev.tourPackages,
           certifications: core.certifications.length ? core.certifications : prev.certifications,
+          mentorCases: core.mentorCases.length ? core.mentorCases : prev.mentorCases,
           learningProgress: {
             ...prev.learningProgress,
             ...core.learningProgress,

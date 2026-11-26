@@ -27,6 +27,7 @@ import type {
   LearningProgressRecord,
   LogisticsTrip,
   MemberDelivery,
+  MentorCase,
   ObservanceRecord,
   PartnerOrganization,
   DiaryEntry,
@@ -1123,5 +1124,19 @@ export function mapLessonProgress(row: Row): LearningProgressRecord {
     roleplayChoices: (row.roleplay_choices as Record<string, string>) ?? {},
     practicePoints: num(row.practice_points),
     submittedArtifactNotes: {},
+  };
+}
+
+export function mapMentorCase(row: Row): MentorCase {
+  const status = str(row.status);
+  return {
+    id: str(row.id),
+    title: str(row.title) || str(row.topic),
+    farmName: str(row.farm_name) || str(row.student_name),
+    mentorName: str(row.mentor_name),
+    topic: str(row.topic),
+    scheduledAt: str(row.scheduled_at) || str(row.created_at_label),
+    status: status === "completed" || status === "reviewed" ? "reviewed" : "open",
+    feedback: row.feedback ? String(row.feedback) : undefined,
   };
 }

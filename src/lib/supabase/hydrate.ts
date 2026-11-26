@@ -23,6 +23,7 @@ import {
   mapLessonProgress,
   mapLogisticsTrip,
   mapMemberDelivery,
+  mapMentorCase,
   mapMission,
   mapNotification,
   mapObservance,
@@ -72,6 +73,7 @@ import type {
   LearningProgressRecord,
   LogisticsTrip,
   MemberDelivery,
+  MentorCase,
   ObservanceRecord,
   PartnerOrganization,
   Product,
@@ -143,6 +145,7 @@ export interface CoreData {
   internationalInquiries: InternationalInquiry[];
   tourPackages: TourPackage[];
   certifications: FarmCertification[];
+  mentorCases: MentorCase[];
   learningProgress: LearningProgressRecord;
 }
 
@@ -232,6 +235,7 @@ export async function fetchCoreData(): Promise<CoreData> {
     inquiryRows,
     tourPackageRows,
     certificationRows,
+    mentorCaseRows,
     lessonProgressRow,
   ] = await Promise.all([
     selectAll(supabase, "farms"),
@@ -295,6 +299,7 @@ export async function fetchCoreData(): Promise<CoreData> {
     selectAll(supabase, "international_inquiries"),
     selectAll(supabase, "tour_packages"),
     selectAll(supabase, "farm_certifications"),
+    selectAll(supabase, "mentor_cases"),
     userId
       ? supabase.from("lesson_progress").select("*").eq("user_id", userId).maybeSingle().then((r) => r.data ?? null)
       : Promise.resolve(null),
@@ -400,6 +405,7 @@ export async function fetchCoreData(): Promise<CoreData> {
     ),
     tourPackages: tourPackageRows.map(mapTourPackage),
     certifications: certificationRows.map(mapFarmCertification),
+    mentorCases: mentorCaseRows.map(mapMentorCase),
     learningProgress: lessonProgressRow
       ? mapLessonProgress(lessonProgressRow)
       : {
