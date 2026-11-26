@@ -338,20 +338,30 @@ export function AppHeader() {
       data-testid="app-header"
       className="sticky top-0 z-40 border-b border-[#D6DED2] bg-white/95 backdrop-blur-sm"
     >
-      {/* Compact seasonal announcement micro-bar (desktop/tablet public pages only, fixed 28px height, zero VI/EN shift) */}
+      {/* Compact seasonal announcement bar — TRUE mathematical horizontal center via symmetric 3-column CSS Grid */}
       {!isOperationalRoute ? (
         <div
-          className="hidden h-7 items-center border-b border-[#DCE3D6] md:flex"
+          data-announcement-bar="true"
+          className="flex h-7 items-center border-b border-[#DCE3D6]"
           style={{
             backgroundColor: activeTheme.accentTokens.toplineBg,
             color: activeTheme.accentTokens.toplineText,
           }}
         >
-          <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between gap-4 px-4 text-[11.5px] font-medium lg:px-6">
-            <p className="min-w-0 truncate">
+          <div className="mx-auto grid w-full max-w-[1280px] grid-cols-1 items-center px-3 text-[11px] font-medium sm:px-4 md:grid-cols-[152px_minmax(0,1fr)_152px] md:text-[11.5px] lg:grid-cols-[176px_minmax(0,1fr)_176px] lg:px-6">
+            {/* Col 1: Balanced left symmetry column matching Col 3 utility width on md+ (<= 1px center delta) */}
+            <div className="hidden md:block" aria-hidden="true" />
+
+            {/* Col 2: True centered announcement text */}
+            <p
+              data-announcement-text="true"
+              className="max-w-full min-w-0 justify-self-center truncate text-center leading-none font-semibold"
+            >
               {isEn ? activeTheme.toplineNoticeEn : activeTheme.toplineNoticeVi}
             </p>
-            <div className="flex shrink-0 items-center gap-3 whitespace-nowrap">
+
+            {/* Col 3: Right secondary quick links (on mobile these live inside the navigation drawer & bottom bar) */}
+            <div className="hidden shrink-0 items-center justify-end gap-3 justify-self-end whitespace-nowrap md:flex">
               <Link href={linkHref("/events?tab=calendar")} className="font-semibold hover:underline">
                 {isEn ? "Calendar" : "Lịch sự kiện"}
               </Link>
@@ -365,11 +375,11 @@ export function AppHeader() {
 
       {/* Main 3-Zone Header Row (Strict Priority Navigation — ZERO overlap, ZERO VI/EN shift, Fits 320px+) */}
       <div className="mx-auto flex h-16 w-full max-w-[1280px] items-center justify-between gap-1 px-2 min-[380px]:gap-2 min-[380px]:px-3 sm:px-4 lg:gap-3 lg:px-6">
-        {/* ZONE A — BRAND (Fixed width across VI/EN) */}
+        {/* ZONE A — BRAND (Fixed width across VI/EN — fits full brand subtitle cleanly with zero clipping) */}
         <Link
           href={linkHref("/")}
           data-header-zone="brand"
-          className="flex shrink-0 items-center gap-1.5 rounded-[10px] py-1 pr-0.5 text-[#25352B] min-[380px]:gap-2 min-[380px]:pr-1 sm:w-[172px] lg:w-[176px] xl:w-[186px]"
+          className="flex shrink-0 items-center gap-1.5 rounded-[10px] py-1 pr-0.5 text-[#25352B] min-[380px]:gap-2 min-[380px]:pr-1 sm:w-[198px] lg:w-[202px] xl:w-[210px]"
         >
           <img
             src="/images/stitch/stitch-01.jpg"
@@ -382,7 +392,7 @@ export function AppHeader() {
             <span className="block text-[15px] font-extrabold tracking-tight text-[#245B3D] min-[380px]:text-[17px]">
               {t.brand.name}
             </span>
-            <span className="hidden truncate text-[10px] font-medium text-[#52645A] sm:block">
+            <span className="hidden text-[10px] font-medium text-[#52645A] sm:block">
               {t.brand.subtitle}
             </span>
           </div>

@@ -34,8 +34,12 @@ async function main() {
   // Negative security checks for malicious or third-party QR payloads
   const maliciousPayloads = [
     "javascript:alert(1)",
+    "vbscript:msgbox(1)",
     "data:text/html,<script>alert(1)</script>",
     "https://evil-phishing.example/trace/NF-DEMO-001",
+    "https://naifarm.vercel.app.evil.com/trace/NF-DEMO-001",
+    "https://naifarm.vercel.app@evil.com/trace/NF-DEMO-001",
+    "//evil.com/trace/NF-DEMO-001",
     "<script>window.x=1</script>",
     "",
   ];

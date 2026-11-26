@@ -17,18 +17,21 @@
 
 | Package | Version | License | Actual Usage in NaiFarm |
 |---|---|---|---|
-| `next` / `react` / `react-dom` | `16.4.6` / `19.3.0` | MIT | App Router, SSR/CSR hybrid pages, local API routes (`/api/ai/*`, `/api/live/*`, `/api/nai-ai/chat`, `/api/video/*`) |
+| `next` / `react` / `react-dom` | `16.4.6` / `19.3.0` | MIT | App Router, SSR/CSR hybrid pages, local API routes (`/api/ai/*`, `/api/live/*`, `/api/nai-ai/chat`, `/api/video/*`, `/api/payment/*`, `/api/webhooks/sepay`, `/api/orders/sync`) |
 | `tailwindcss` | `4.3.3` | MIT | Design tokens, responsive grids, utility-first layout without horizontal overflow hacks |
-| `leaflet` / `react-leaflet` / `@turf/distance` | `1.9.4` / `5.0.0` / `7.3.4` | BSD-2 / Hippocratic / MIT | Interactive Dong Nai 95-unit GIS vector map, inverse world mask, orchard markers, straight-line distance |
+| `maplibre-gl` (extracted from CropNet GIS reference) | `^6.x` | BSD-3-Clause | Primary Dong Nai vector GIS engine (`src/components/map/NaiFarmMap.tsx`) using free keyless OpenFreeMap Vector styles (`liberty`, `bright`, `positron`) + OSM raster fallback + version-matched `/maplibre-gl-worker.mjs` + CropNet teardrop DOM markers & XSS-safe popups |
+| `leaflet` / `react-leaflet` / `@turf/distance` | `1.9.4` / `5.0.0` / `7.4.0` | BSD-2 / Hippocratic / MIT | Automatic WebGL-off fallback (`NaiFarmLeafletFallback.tsx`) & Haversine straight-line distance |
 | `sharp` | `0.34.5` | Apache-2.0 | Build-time responsive hero WebP generation (`scripts/build-v9-hero-assets.ts` -> 12 WebP assets in `public/images/hero/`) |
-| `lucide-react` | `1.1.0` | ISC | Consistent crisp 2D vector UI icons across header, 6 quick tiles, filters, and workspaces |
-| `fuse.js` | `7.1.0` | Apache-2.0 | Client-side fuzzy bilingual search across 168 products, 40 farms, 28 tours, 20 lessons, 180 batches |
-| `recharts` | `3.8.1` | MIT | Analytics charts inside Farmer, Cooperative/Organization, and Admin workspaces |
-| `qrcode` / `jsqr` | `1.5.4` / `1.4.0` | MIT / Apache-2.0 | Real QR code rendering and camera/image QR scanning for harvest batch passports |
+| `lucide-react` | `^1.78.0` | ISC | Consistent crisp 2D vector UI icons across header, 6 quick tiles, filters, and workspaces |
+| `fuse.js` | `7.5.0` | Apache-2.0 | Client-side fuzzy bilingual search across 168 products, 40 farms, 28 tours, 20 lessons, 180 batches |
+| `recharts` | `3.11.1` | MIT | Analytics charts inside Farmer, Cooperative/Organization, and Admin workspaces |
+| `qrcode` / `qrcode.react` / `jsqr` | `1.5.4` / `4.2.0` / `1.4.0` | MIT / ISC / Apache-2.0 | Real QR rendering (traceability passports, SePay payment QR, Video Studio end-frame QR) and local browser QR decoding (`BarcodeDetector` + `jsQR` fallback) |
 | `react-markdown` / `remark-gfm` | `10.1.0` / `4.0.1` | MIT | Grounded markdown responses with source links inside non-modal `NaiFarmHomeChat` |
-| `sonner` | `2.0.7` | MIT | Accessible toast notifications for cart, compare, CMS, and review feedback |
-| `zod` | `4.3.6` | MIT | Runtime validation for API payloads and forms |
-| `@supabase/supabase-js` | `2.100.1` | MIT | Optional Supabase integration when configured; local-first experience mode works 100% offline/without keys |
+| `livekit-client` / `livekit-server-sdk` / `@livekit/components-react` | `2.23.0` / `2.19.1` / `2.9.24` | Apache-2.0 | Real multi-camera orchard livestream studio & viewer playback (`/live`, `/live/studio`, `/live/[id]`) |
+| `sonner` | `2.0.8` | MIT | Accessible bottom-left toast notifications for cart, compare, CMS, QR, and video export |
+| `zod` | `4.6.7` | MIT | Runtime validation for API payloads and forms |
+| `@supabase/supabase-js` / `@supabase/ssr` | `2.119.2` / `0.12.7` | MIT | 45-table Supabase real data hydration (`src/lib/supabase/hydrate.ts`, `mappers.ts`) & migrations (`supabase/migrations/*`), with clean local-first fallback |
+| HTML5 Canvas + `MediaRecorder` (`client-video-renderer.ts`) + Local FFmpeg Worker | Built-in Web API + FFmpeg | W3C / LGPL | Real end-to-end client-side video creation & download on Vercel production (`.webm`/`.mp4` + `.vtt` + SHA-256) + local 720p H.264/AAC FFmpeg worker when online |
 
 ## 3. Geographic & Reference Datasets
 

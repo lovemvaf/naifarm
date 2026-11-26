@@ -146,14 +146,39 @@ export interface CoreData {
   learningProgress: LearningProgressRecord;
 }
 
-const supabase = createClient();
+let cachedSupabase: ReturnType<typeof createClient> | null = null;
 
-async function selectAll(table: string) {
-  const { data } = await supabase.from(table).select("*");
-  return (data ?? []) as Record<string, unknown>[];
+function getSupabaseClient() {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    return null;
+  }
+  if (!cachedSupabase) {
+    cachedSupabase = createClient();
+  }
+  return cachedSupabase;
+}
+
+async function selectAll(
+  supabase: ReturnType<typeof createClient>,
+  table: string,
+) {
+  try {
+    const { data, error } = await supabase.from(table).select("*");
+    if (error) return [];
+    return (data ?? []) as Record<string, unknown>[];
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchCoreData(): Promise<CoreData> {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    throw new Error("Supabase environment variables are not configured.");
+  }
   const { data: authData } = await supabase.auth.getUser();
   const userId = authData.user?.id ?? null;
 
@@ -209,31 +234,31 @@ export async function fetchCoreData(): Promise<CoreData> {
     certificationRows,
     lessonProgressRow,
   ] = await Promise.all([
-    selectAll("farms"),
-    selectAll("experiences"),
-    selectAll("products"),
-    selectAll("batches"),
-    selectAll("batch_events"),
-    selectAll("orders"),
-    selectAll("order_items"),
-    selectAll("missions"),
-    selectAll("support_requests"),
-    selectAll("rfq_requests"),
-    selectAll("experience_bookings"),
-    selectAll("document_review_cases"),
-    selectAll("admin_grants"),
-    selectAll("audit_logs"),
-    selectAll("admin_units"),
-    selectAll("calendar_events"),
-    selectAll("official_observances"),
-    selectAll("campaigns"),
-    selectAll("promotions"),
-    selectAll("seasons"),
-    selectAll("diary_entries"),
-    selectAll("credentials"),
-    selectAll("lessons"),
-    selectAll("student_submissions"),
-    selectAll("school_classes"),
+    selectAll(supabase, "farms"),
+    selectAll(supabase, "experiences"),
+    selectAll(supabase, "products"),
+    selectAll(supabase, "batches"),
+    selectAll(supabase, "batch_events"),
+    selectAll(supabase, "orders"),
+    selectAll(supabase, "order_items"),
+    selectAll(supabase, "missions"),
+    selectAll(supabase, "support_requests"),
+    selectAll(supabase, "rfq_requests"),
+    selectAll(supabase, "experience_bookings"),
+    selectAll(supabase, "document_review_cases"),
+    selectAll(supabase, "admin_grants"),
+    selectAll(supabase, "audit_logs"),
+    selectAll(supabase, "admin_units"),
+    selectAll(supabase, "calendar_events"),
+    selectAll(supabase, "official_observances"),
+    selectAll(supabase, "campaigns"),
+    selectAll(supabase, "promotions"),
+    selectAll(supabase, "seasons"),
+    selectAll(supabase, "diary_entries"),
+    selectAll(supabase, "credentials"),
+    selectAll(supabase, "lessons"),
+    selectAll(supabase, "student_submissions"),
+    selectAll(supabase, "school_classes"),
     userId
       ? supabase.from("cart_items").select("*").eq("user_id", userId).then((r) => (r.error ? [] : r.data ?? []))
       : Promise.resolve([]),
@@ -252,24 +277,24 @@ export async function fetchCoreData(): Promise<CoreData> {
     userId
       ? supabase.from("address_book").select("*").eq("user_id", userId).then((r) => (r.error ? [] : r.data ?? []))
       : Promise.resolve([]),
-    selectAll("partner_orgs"),
-    selectAll("sponsor_campaigns"),
-    selectAll("warehouses"),
-    selectAll("warehouse_stocks"),
-    selectAll("inventory_movements"),
-    selectAll("suppliers"),
-    selectAll("purchase_orders"),
-    selectAll("coop_pools"),
-    selectAll("member_deliveries"),
-    selectAll("expenses"),
-    selectAll("receivables_payables"),
-    selectAll("refund_requests"),
-    selectAll("volunteer_hours"),
-    selectAll("logistics_trips"),
-    selectAll("product_reviews"),
-    selectAll("international_inquiries"),
-    selectAll("tour_packages"),
-    selectAll("farm_certifications"),
+    selectAll(supabase, "partner_orgs"),
+    selectAll(supabase, "sponsor_campaigns"),
+    selectAll(supabase, "warehouses"),
+    selectAll(supabase, "warehouse_stocks"),
+    selectAll(supabase, "inventory_movements"),
+    selectAll(supabase, "suppliers"),
+    selectAll(supabase, "purchase_orders"),
+    selectAll(supabase, "coop_pools"),
+    selectAll(supabase, "member_deliveries"),
+    selectAll(supabase, "expenses"),
+    selectAll(supabase, "receivables_payables"),
+    selectAll(supabase, "refund_requests"),
+    selectAll(supabase, "volunteer_hours"),
+    selectAll(supabase, "logistics_trips"),
+    selectAll(supabase, "product_reviews"),
+    selectAll(supabase, "international_inquiries"),
+    selectAll(supabase, "tour_packages"),
+    selectAll(supabase, "farm_certifications"),
     userId
       ? supabase.from("lesson_progress").select("*").eq("user_id", userId).maybeSingle().then((r) => r.data ?? null)
       : Promise.resolve(null),

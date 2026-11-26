@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Calendar, ChevronLeft, ChevronRight, Pause, Play, Sprout } from "lucide-react";
+import { ArrowRight, Calendar, ChevronLeft, ChevronRight, Sprout } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import { useSeasonalTheme } from "@/context/SeasonalThemeContext";
 import { buildLocalizedHref } from "@/lib/navigation/safe-nav";
@@ -118,7 +118,6 @@ export function UnifiedHero() {
   const { activeTheme, slides, override } = useSeasonalTheme();
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isPausedByUser, setIsPausedByUser] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isFocusedWithin, setIsFocusedWithin] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -127,7 +126,9 @@ export function UnifiedHero() {
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
 
-  const totalSlides = slides.length;
+  // Strictly cap hero banner to max 3 active slides matching the approved 3-dot pagination contract
+  const activeSlides = slides.slice(0, 3);
+  const totalSlides = activeSlides.length;
   const safeIndex = totalSlides > 0 ? activeIndex % totalSlides : 0;
 
   useEffect(() => {
@@ -149,7 +150,6 @@ export function UnifiedHero() {
 
   const isAutoplayRunning =
     totalSlides > 1 &&
-    !isPausedByUser &&
     !isHovered &&
     !isFocusedWithin &&
     !prefersReducedMotion &&
@@ -210,7 +210,7 @@ export function UnifiedHero() {
     [goNext, goPrev],
   );
 
-  const currentSlide = slides[safeIndex];
+  const currentSlide = activeSlides[safeIndex];
   if (!currentSlide) return null;
 
   const decorAllowed = override.decorationsEnabled;
@@ -221,6 +221,7 @@ export function UnifiedHero() {
       aria-label={isEn ? "NaiFarm seasonal highlights" : "Sự kiện và mùa vụ nổi bật NaiFarm"}
       data-v9-hero="true"
       data-active-slide={safeIndex}
+      data-autoplay-running={isAutoplayRunning ? "true" : "false"}
       data-seasonal-theme={activeTheme.id}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -236,7 +237,7 @@ export function UnifiedHero() {
       className="group/hero relative h-[364px] w-full overflow-hidden rounded-[20px] border border-[#D4DDD0] bg-[#EAF0E5] shadow-[0_8px_28px_rgba(24,61,42,0.09)] sm:h-[376px] sm:rounded-[22px] lg:h-[404px]"
     >
       {/* Stacked Crossfade Full-Bleed Slides — Strict Constant Frame Height */}
-      {slides.map((slide, idx) => {
+      {activeSlides.map((slide, idx) => {
         const isActive = idx === safeIndex;
         const slideTitle = isEn ? slide.titleEn : slide.titleVi;
         const slideBadge = isEn ? slide.badgeEn : slide.badgeVi;
@@ -273,13 +274,13 @@ export function UnifiedHero() {
               />
             </picture>
 
-            {/* Sunlit Radial Legibility Scrim — Keeps Center Typography >= 7:1 Contrast While Framing Produce Edges */}
+            {/* Localized Sunlit Center Readability Scrim — Keeps Produce & Foliage Vibrant While Holding >= 7:1 Contrast */}
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-0"
               style={{
                 background:
-                  "radial-gradient(ellipse 74% 84% at 50% 48%, rgba(253, 251, 244, 0.93) 0%, rgba(253, 251, 244, 0.84) 48%, rgba(250, 247, 236, 0.42) 78%, rgba(24, 61, 42, 0.24) 100%)",
+                  "radial-gradient(ellipse 56% 72% at 50% 47%, rgba(254, 252, 245, 0.89) 0%, rgba(254, 252, 245, 0.68) 46%, rgba(254, 252, 245, 0.14) 76%, rgba(24, 61, 42, 0.12) 100%)",
               }}
             />
 
@@ -362,7 +363,7 @@ export function UnifiedHero() {
         );
       })}
 
-      {/* Hover-Reveal & Focus-Visible Edge Prev/Next Arrows (Desktop mid-edge hidden at rest; Mobile anchored at bottom corners away from text) */}
+      {/* Mid-Height Hover-Reveal & Focus-Visible Edge Prev/Next Arrows (No corner placement, never blocks CTAs) */}
       {totalSlides > 1 ? (
         <>
           <button
@@ -370,7 +371,7 @@ export function UnifiedHero() {
             data-hero-nav="prev"
             onClick={goPrev}
             aria-label={isEn ? "Previous hero slide" : "Slide trước"}
-            className="absolute bottom-2.5 left-2.5 z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/65 bg-[#183D2A]/78 text-white shadow-md backdrop-blur-xs transition-opacity duration-200 hover:bg-[#183D2A] focus-visible:opacity-100 md:top-1/2 md:bottom-auto md:left-3.5 md:h-10 md:w-10 md:-translate-y-1/2 md:opacity-0 md:group-hover/hero:opacity-100 md:group-focus-within/hero:opacity-100 cursor-pointer"
+            className="hidden sm:inline-flex absolute top-1/2 left-2.5 z-30 h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/65 bg-[#183D2A]/55 text-white shadow-md backdrop-blur-xs transition-opacity duration-200 hover:bg-[#183D2A]/85 focus-visible:opacity-100 md:left-3.5 md:h-10 md:w-10 md:opacity-0 md:group-hover/hero:opacity-100 md:group-focus-within/hero:opacity-100 cursor-pointer"
           >
             <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
           </button>
@@ -379,67 +380,46 @@ export function UnifiedHero() {
             data-hero-nav="next"
             onClick={goNext}
             aria-label={isEn ? "Next hero slide" : "Slide tiếp theo"}
-            className="absolute right-2.5 bottom-2.5 z-30 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/65 bg-[#183D2A]/78 text-white shadow-md backdrop-blur-xs transition-opacity duration-200 hover:bg-[#183D2A] focus-visible:opacity-100 md:top-1/2 md:right-3.5 md:bottom-auto md:h-10 md:w-10 md:-translate-y-1/2 md:opacity-0 md:group-hover/hero:opacity-100 md:group-focus-within/hero:opacity-100 cursor-pointer"
+            className="hidden sm:inline-flex absolute top-1/2 right-2.5 z-30 h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/65 bg-[#183D2A]/55 text-white shadow-md backdrop-blur-xs transition-opacity duration-200 hover:bg-[#183D2A]/85 focus-visible:opacity-100 md:right-3.5 md:h-10 md:w-10 md:opacity-0 md:group-hover/hero:opacity-100 md:group-focus-within/hero:opacity-100 cursor-pointer"
           >
             <ChevronRight className="h-4 w-4 md:h-5 md:w-5" aria-hidden="true" />
           </button>
         </>
       ) : null}
 
-      {/* Bottom Indicator Bar: WAI-ARIA compliant tablist (tabs only) + sibling Pause/Play Control */}
+      {/* EXACT 3 Centered Equal-Size Pagination Dots — NO separator, NO Play/Pause icon, NO heavy capsule */}
       {totalSlides > 1 ? (
-        <div className="absolute inset-x-0 bottom-2.5 z-30 flex items-center justify-center gap-2 px-4 sm:bottom-3">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-white/55 bg-[#183D2A]/72 px-2.5 py-1.5 backdrop-blur-xs">
-            <div
-              role="tablist"
-              aria-label={isEn ? "Choose highlight slide" : "Chọn slide nổi bật"}
-              className="inline-flex items-center gap-1.5"
-            >
-              {slides.map((slide, idx) => {
-                const selected = idx === safeIndex;
-                return (
-                  <button
-                    key={slide.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={selected}
-                    aria-label={
-                      isEn
-                        ? `Slide ${idx + 1}: ${slide.titleEn}`
-                        : `Slide ${idx + 1}: ${slide.titleVi}`
-                    }
-                    onClick={() => setActiveIndex(idx)}
-                    className={cn(
-                      "h-2 rounded-full transition-all duration-200 cursor-pointer",
-                      selected ? "w-6 bg-[#F4C465]" : "w-2 bg-white/75 hover:bg-white",
-                    )}
-                  />
-                );
-              })}
-            </div>
-            <span className="mx-1 h-3 w-px bg-white/30" aria-hidden="true" />
-            <button
-              type="button"
-              data-hero-pause="true"
-              aria-pressed={isPausedByUser}
-              onClick={() => setIsPausedByUser((p) => !p)}
-              aria-label={
-                isPausedByUser
-                  ? isEn
-                    ? "Resume hero slideshow"
-                    : "Tiếp tục chuyển slide"
-                  : isEn
-                  ? "Pause hero slideshow"
-                  : "Tạm dừng chuyển slide"
-              }
-              className="inline-flex h-5 w-5 items-center justify-center rounded-full text-white/95 hover:bg-white/20 cursor-pointer"
-            >
-              {isPausedByUser || prefersReducedMotion ? (
-                <Play className="h-3 w-3 fill-current" aria-hidden="true" />
-              ) : (
-                <Pause className="h-3 w-3 fill-current" aria-hidden="true" />
-              )}
-            </button>
+        <div className="pointer-events-none absolute inset-x-0 bottom-3 z-30 flex items-center justify-center sm:bottom-3.5">
+          <div
+            role="tablist"
+            data-hero-dots="true"
+            aria-label={isEn ? "Choose highlight slide" : "Chọn slide nổi bật"}
+            className="pointer-events-auto inline-flex items-center justify-center gap-2.5"
+          >
+            {activeSlides.map((slide, idx) => {
+              const selected = idx === safeIndex;
+              return (
+                <button
+                  key={slide.id}
+                  type="button"
+                  role="tab"
+                  data-hero-dot={idx}
+                  aria-selected={selected}
+                  aria-label={
+                    isEn
+                      ? `Slide ${idx + 1}: ${slide.titleEn}`
+                      : `Slide ${idx + 1}: ${slide.titleVi}`
+                  }
+                  onClick={() => setActiveIndex(idx)}
+                  className={cn(
+                    "h-2.5 w-2.5 cursor-pointer rounded-full transition-all duration-200",
+                    selected
+                      ? "bg-[#F4C465] ring-2 ring-[#183D2A]/75 shadow-[0_1px_4px_rgba(0,0,0,0.35)]"
+                      : "bg-white/75 ring-1 ring-[#183D2A]/35 hover:bg-white",
+                  )}
+                />
+              );
+            })}
           </div>
         </div>
       ) : null}

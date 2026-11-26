@@ -143,13 +143,13 @@ export default function HomePage() {
             <Link
               key={tile.id}
               href={buildLocalizedHref(tile.href, locale)}
-              className="group flex min-h-[72px] items-center gap-2.5 rounded-[14px] border border-[#D6DED2] bg-white px-3 py-2.5 shadow-[0_2px_6px_rgba(24,61,42,0.04)] transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:border-[#245B3D]/55 hover:shadow-[0_6px_16px_rgba(24,61,42,0.09)]"
+              className="group flex min-h-[68px] items-center gap-2 rounded-[14px] border border-[#D6DED2] bg-white px-2.5 py-2 shadow-[0_2px_6px_rgba(24,61,42,0.04)] transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:border-[#245B3D]/55 hover:shadow-[0_6px_16px_rgba(24,61,42,0.09)] sm:min-h-[72px] sm:gap-2.5 sm:px-3 sm:py-2.5"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] bg-[#EAF0E5] text-[#245B3D] transition-colors group-hover:bg-[#245B3D] group-hover:text-white">
-                <Icon className="h-5 w-5" aria-hidden="true" />
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#EAF0E5] text-[#245B3D] transition-colors group-hover:bg-[#245B3D] group-hover:text-white sm:h-10 sm:w-10 sm:rounded-[11px]">
+                <Icon className="h-4.5 w-4.5 sm:h-5 sm:w-5" aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] leading-snug font-bold text-[#25352B] group-hover:text-[#245B3D]">
+                <span className="block truncate text-[12.5px] leading-snug font-bold text-[#25352B] group-hover:text-[#245B3D] sm:text-[13px]">
                   {tile.title}
                 </span>
                 <span className="block truncate text-[11px] leading-snug text-[#52645A]">

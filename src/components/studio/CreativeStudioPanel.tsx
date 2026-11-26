@@ -14,8 +14,13 @@ import {
   XCircle,
 } from "lucide-react";
 import { INITIAL_PRODUCTS } from "@/data/demo/products";
+import { useDemoStore } from "@/context/DemoStoreContext";
 import { useLocale } from "@/context/LocaleContext";
 import { formatVnd } from "@/lib/format";
+import {
+  isClientVideoRenderSupported,
+  renderClientProductVideo,
+} from "@/lib/video-studio/client-video-renderer";
 import type {
   StudioSampleManifestEntry,
   VideoAspectRatio,
@@ -124,12 +129,70 @@ export function CreativeStudioPanel({
 }) {
   const { locale } = useLocale();
   const isEn = locale === "en";
+  const { products } = useDemoStore();
+
+  const allPresets = useMemo<TargetPreset[]>(() => {
+    const sourceProducts = products.length > 0 ? products : INITIAL_PRODUCTS;
+    const mapped = sourceProducts.map((p) => {
+      const imgs = [p.image, ...(p.gallery ?? [])]
+        .filter((src, i, arr) => Boolean(src) && arr.indexOf(src) === i)
+        .slice(0, 3);
+      return {
+        targetType: "product" as const,
+        targetId: p.id,
+        labelVi: `${p.id} · ${p.name}`,
+        labelEn: `${p.id} · ${p.enName ?? p.name}`,
+        titleVi: p.name,
+        titleEn: p.enName ?? p.name,
+        subtitleVi: `${p.farmName} · ${p.administrativeUnitName}`,
+        subtitleEn: `${p.farmName} · ${p.administrativeUnitName}`,
+        scriptVi: [
+          p.shortDescription.slice(0, 110),
+          p.storyNote?.slice(0, 110) ?? `Ghi nhật ký mùa vụ minh bạch tại ${p.administrativeUnitName}.`,
+          `Hộ chiếu QR ${p.batchCode} theo dõi hành trình từ vườn đến bàn ăn.`,
+        ] as [string, string, string],
+        scriptEn: [
+          (p.enShortDescription ?? p.shortDescription).slice(0, 110),
+          `Traceable seasonal harvest recorded at ${p.administrativeUnitName}, Dong Nai.`,
+          `Scan QR lot ${p.batchCode} on NaiFarm for orchard diary provenance.`,
+        ] as [string, string, string],
+        priceLabel: `${formatVnd(p.priceVnd)}/${p.unitLabel}`,
+        areaLabel: p.administrativeUnitName,
+        batchCode: p.batchCode,
+        imagePaths: imgs.length ? imgs : ["/images/stitch/stitch-03.jpg"],
+        ctaVi: `Đặt mua & quét mã lô ${p.batchCode} tại NaiFarm`,
+        ctaEn: `Order & verify QR lot ${p.batchCode} on NaiFarm`,
+      };
+    });
+    return [...mapped, TOUR_PRESET];
+  }, [products]);
 
   const [health, setHealth] = useState<VideoHealthResponse | null>(null);
   const [jobs, setJobs] = useState<VideoJobRecord[]>([]);
   const [samples, setSamples] = useState<StudioSampleManifestEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [browserRendering, setBrowserRendering] = useState(false);
+  const [browserProgress, setBrowserProgress] = useState(0);
+  const [browserHistory, setBrowserHistory] = useState<
+    Array<{
+      id: string;
+      title: string;
+      url: string;
+      vttUrl: string;
+      posterUrl: string;
+      fileName: string;
+      fileExt: "mp4" | "webm";
+      width: number;
+      height: number;
+      durationSec: number;
+      sizeBytes: number;
+      videoCodec: string;
+      sha256: string;
+      createdAt: string;
+    }>
+  >([]);
+  const renderAbortRef = useRef<AbortController | null>(null);
 
   const [selectedPresetId, setSelectedPresetId] = useState<string>("P06");
   const [templateId, setTemplateId] = useState<VideoTemplateId>("commercial_30s");
@@ -139,8 +202,8 @@ export function CreativeStudioPanel({
   const [renderMode, setRenderMode] = useState<VideoRenderMode>("FAST");
 
   const activePreset = useMemo(
-    () => PRODUCT_PRESETS.find((p) => p.targetId === selectedPresetId) ?? PRODUCT_PRESETS[0],
-    [selectedPresetId],
+    () => allPresets.find((p) => p.targetId === selectedPresetId) ?? allPresets[0] ?? PRODUCT_PRESETS[0],
+    [allPresets, selectedPresetId],
   );
 
   const [customTitle, setCustomTitle] = useState<string>(activePreset.titleVi);
@@ -153,6 +216,8 @@ export function CreativeStudioPanel({
     mp4Url: string;
     vttUrl?: string;
     posterUrl?: string;
+    fileName?: string;
+    fileExt?: "mp4" | "webm";
     provenance: string;
     width: number;
     height: number;
@@ -167,19 +232,22 @@ export function CreativeStudioPanel({
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const applyPreset = useCallback((presetId: string, nextLocale: "vi" | "en") => {
-    const preset = PRODUCT_PRESETS.find((p) => p.targetId === presetId) ?? PRODUCT_PRESETS[0];
-    setSelectedPresetId(preset.targetId);
-    setVideoLocale(nextLocale);
-    setCustomTitle(nextLocale === "en" ? preset.titleEn : preset.titleVi);
-    const lines = nextLocale === "en" ? preset.scriptEn : preset.scriptVi;
-    setLine1(lines[0]);
-    setLine2(lines[1]);
-    setLine3(lines[2]);
-    if (preset.targetType === "tour") {
-      setTemplateId("agritourism_promo");
-    }
-  }, []);
+  const applyPreset = useCallback(
+    (presetId: string, nextLocale: "vi" | "en") => {
+      const preset = allPresets.find((p) => p.targetId === presetId) ?? allPresets[0] ?? PRODUCT_PRESETS[0];
+      setSelectedPresetId(preset.targetId);
+      setVideoLocale(nextLocale);
+      setCustomTitle(nextLocale === "en" ? preset.titleEn : preset.titleVi);
+      const lines = nextLocale === "en" ? preset.scriptEn : preset.scriptVi;
+      setLine1(lines[0]);
+      setLine2(lines[1]);
+      setLine3(lines[2]);
+      if (preset.targetType === "tour") {
+        setTemplateId("agritourism_promo");
+      }
+    },
+    [allPresets],
+  );
 
   const activateSample = useCallback(
     (s: StudioSampleManifestEntry) => {
@@ -342,8 +410,117 @@ export function CreativeStudioPanel({
     return () => clearInterval(timer);
   }, [activeJobId, isEn]);
 
+  const handleBrowserRender = async () => {
+    if (browserRendering) return;
+    if (!isClientVideoRenderSupported()) {
+      notifyError(
+        isEn
+          ? "This browser does not support Canvas MediaRecorder video export. You can play verified FFmpeg samples below."
+          : "Trình duyệt này chưa hỗ trợ xuất video MediaRecorder. Bạn có thể phát kho video FFmpeg kiểm chứng bên dưới.",
+      );
+      return;
+    }
+    const controller = new AbortController();
+    renderAbortRef.current = controller;
+    setBrowserRendering(true);
+    setBrowserProgress(4);
+
+    try {
+      const rendered = await renderClientProductVideo(
+        {
+          title:
+            customTitle.trim() ||
+            (videoLocale === "en" ? activePreset.titleEn : activePreset.titleVi),
+          subtitle: videoLocale === "en" ? activePreset.subtitleEn : activePreset.subtitleVi,
+          scriptLines: [
+            line1.trim() || activePreset.scriptVi[0],
+            line2.trim() || activePreset.scriptVi[1],
+            line3.trim() || activePreset.scriptVi[2],
+          ],
+          priceLabel: activePreset.priceLabel,
+          areaLabel: activePreset.areaLabel,
+          ctaLabel: videoLocale === "en" ? activePreset.ctaEn : activePreset.ctaVi,
+          batchCode: activePreset.batchCode,
+          qrTargetUrl: `https://naifarm.vercel.app/trace/${activePreset.batchCode}`,
+          imagePaths: activePreset.imagePaths,
+          aspectRatio,
+          templateId,
+          locale: videoLocale,
+          durationSec: 6,
+        },
+        (pct) => setBrowserProgress(pct),
+        controller.signal,
+      );
+
+      const entry = {
+        id: `WEB-${Date.now().toString(36).toUpperCase()}`,
+        title: customTitle.trim() || activePreset.titleVi,
+        url: rendered.objectUrl,
+        vttUrl: rendered.vttUrl,
+        posterUrl: rendered.posterUrl,
+        fileName: rendered.fileName,
+        fileExt: rendered.fileExt,
+        width: rendered.width,
+        height: rendered.height,
+        durationSec: rendered.durationSec,
+        sizeBytes: rendered.sizeBytes,
+        videoCodec: rendered.videoCodec,
+        sha256: rendered.sha256,
+        createdAt: new Date().toLocaleTimeString(isEn ? "en-US" : "vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+
+      setBrowserHistory((prev) => [entry, ...prev].slice(0, 8));
+      setActivePlayer({
+        title: entry.title,
+        mp4Url: rendered.objectUrl,
+        vttUrl: rendered.vttUrl,
+        posterUrl: rendered.posterUrl,
+        fileName: rendered.fileName,
+        fileExt: rendered.fileExt,
+        provenance: isEn
+          ? `Real browser export (${rendered.fileExt.toUpperCase()} · ${rendered.videoCodec}) rendered locally via HTML5 Canvas + MediaRecorder`
+          : `Video kết xuất thực tế trên trình duyệt (${rendered.fileExt.toUpperCase()} · ${rendered.videoCodec}) qua HTML5 Canvas + MediaRecorder`,
+        width: rendered.width,
+        height: rendered.height,
+        durationSec: rendered.durationSec,
+        sizeBytes: rendered.sizeBytes,
+        videoCodec: rendered.videoCodec,
+        pixelFormat: "rgba/canvas",
+        audioCodec: "silent-visual",
+        sha256: rendered.sha256,
+      });
+
+      notifySuccess(
+        isEn
+          ? `Rendered real ${rendered.fileExt.toUpperCase()} video (${Math.round(rendered.sizeBytes / 1024)} KB) — ready to play & download.`
+          : `Đã kết xuất xong video ${rendered.fileExt.toUpperCase()} thực tế (${Math.round(rendered.sizeBytes / 1024)} KB) — sẵn sàng phát & tải xuống.`,
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg !== "RENDER_CANCELED") {
+        notifyError(
+          isEn
+            ? "Browser video export encountered an error. Try another product or retry."
+            : "Kết xuất video trên trình duyệt gặp lỗi. Hãy thử lại hoặc chọn sản phẩm khác.",
+        );
+      } else {
+        notifyInfo(isEn ? "Browser video render canceled." : "Đã hủy kết xuất video trên trình duyệt.");
+      }
+    } finally {
+      if (renderAbortRef.current === controller) renderAbortRef.current = null;
+      setBrowserRendering(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!health?.workerOnline) {
+      await handleBrowserRender();
+      return;
+    }
     setSubmitting(true);
     try {
       const payload = {
@@ -526,7 +703,7 @@ export function CreativeStudioPanel({
                   onChange={(e) => applyPreset(e.target.value, videoLocale)}
                   className="min-h-[40px] w-full rounded-xl border border-[#D6DED2] bg-white px-3 text-sm font-medium text-[#25352B]"
                 >
-                  {PRODUCT_PRESETS.map((p) => (
+                  {allPresets.map((p) => (
                     <option key={p.targetId} value={p.targetId}>
                       {isEn ? p.labelEn : p.labelVi}
                     </option>
@@ -647,9 +824,46 @@ export function CreativeStudioPanel({
               </div>
             ) : null}
 
-            <div className="flex flex-wrap items-center gap-3 pt-1">
-              <Button type="submit" variant="primary" disabled={submitting}>
-                {submitting ? (
+            {browserRendering ? (
+              <div
+                role="status"
+                data-video-render-progress={browserProgress}
+                className="space-y-1.5 rounded-xl border border-[#245B3D]/35 bg-[#EAF0E5]/75 px-3.5 py-2.5 text-xs text-[#183D2A]"
+              >
+                <div className="flex items-center justify-between gap-2 font-semibold">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                    <span>
+                      {isEn
+                        ? `Rendering real product video in browser... ${browserProgress}%`
+                        : `Đang kết xuất video thực tế ngay trên trình duyệt... ${browserProgress}%`}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => renderAbortRef.current?.abort()}
+                    className="cursor-pointer font-bold text-[#A52C22] hover:underline"
+                  >
+                    {isEn ? "Cancel" : "Hủy"}
+                  </button>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-white">
+                  <div
+                    className="h-full rounded-full bg-[#245B3D] transition-all duration-150"
+                    style={{ width: `${browserProgress}%` }}
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            <div className="flex flex-wrap items-center gap-2.5 pt-1">
+              <Button
+                type="submit"
+                variant="primary"
+                data-video-render-btn="true"
+                disabled={submitting || browserRendering}
+              >
+                {submitting || browserRendering ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : (
                   <Play className="h-4 w-4" aria-hidden="true" />
@@ -660,10 +874,21 @@ export function CreativeStudioPanel({
                       ? "Render Real MP4 via FFmpeg"
                       : "Kết xuất Video MP4 (FFmpeg)"
                     : isEn
-                      ? "Load Verified Sample Preview"
-                      : "Xem Video FFmpeg Mẫu Tương Ứng"}
+                    ? "Render Real Video Now (Free)"
+                    : "Kết xuất Video Thực tế (Miễn phí)"}
                 </span>
               </Button>
+              {health?.workerOnline ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={browserRendering}
+                  onClick={() => void handleBrowserRender()}
+                >
+                  <Film className="h-4 w-4" aria-hidden="true" />
+                  <span>{isEn ? "Quick Browser Export" : "Xuất nhanh trình duyệt"}</span>
+                </Button>
+              ) : null}
               <span className="text-[11px] text-[#52645A]">
                 QR: <code className="rounded bg-[#F0ECE2] px-1.5 py-0.5">{activePreset.batchCode}</code>
               </span>
@@ -678,14 +903,30 @@ export function CreativeStudioPanel({
               {isEn ? "2. Verified MP4 Player & FFprobe QC" : "2. Trình phát MP4 & Kiểm định FFprobe"}
             </h3>
             {activePlayer ? (
-              <a
-                href={activePlayer.mp4Url}
-                download
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[#D6DED2] bg-white px-3 py-1.5 text-xs font-semibold text-[#245B3D] hover:bg-[#EAF0E5]"
-              >
-                <Download className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>{isEn ? "Download MP4" : "Tải MP4"}</span>
-              </a>
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href={activePlayer.mp4Url}
+                  data-video-download="true"
+                  download={activePlayer.fileName || `naifarm-video.${activePlayer.fileExt ?? "mp4"}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#245B3D] bg-[#245B3D] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#183D2A]"
+                >
+                  <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>
+                    {isEn
+                      ? `Download ${(activePlayer.fileExt ?? "mp4").toUpperCase()}`
+                      : `Tải ${(activePlayer.fileExt ?? "mp4").toUpperCase()}`}
+                  </span>
+                </a>
+                {activePlayer.vttUrl ? (
+                  <a
+                    href={activePlayer.vttUrl}
+                    download="naifarm-captions.vtt"
+                    className="inline-flex items-center gap-1 rounded-lg border border-[#D6DED2] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#25352B] hover:bg-[#EAF0E5]"
+                  >
+                    <span>VTT</span>
+                  </a>
+                ) : null}
+              </div>
             ) : null}
           </div>
 
@@ -785,6 +1026,72 @@ export function CreativeStudioPanel({
           })}
         </div>
       </Card>
+
+      {/* Browser Export Render History */}
+      {browserHistory.length > 0 ? (
+        <Card className="space-y-3 p-4 sm:p-5" data-browser-render-history="true">
+          <h3 className="text-sm font-bold text-[#25352B]">
+            {isEn ? "Your Rendered Videos (This Session)" : "Lịch sử Video Bạn Vừa Kết Xuất"}
+          </h3>
+          <div className="space-y-2">
+            {browserHistory.map((item) => (
+              <div
+                key={item.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#E2DFD7] bg-[#FBF9F5] p-3 text-xs"
+              >
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono font-bold text-[#25352B]">{item.id}</span>
+                    <Badge tone="success">{item.fileExt.toUpperCase()} · {Math.round(item.sizeBytes / 1024)} KB</Badge>
+                    <span className="text-[#52645A]">
+                      {item.width}×{item.height} · {item.durationSec}s · {item.createdAt}
+                    </span>
+                  </div>
+                  <p className="truncate font-semibold text-[#25352B]">{item.title}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() =>
+                      setActivePlayer({
+                        title: item.title,
+                        mp4Url: item.url,
+                        vttUrl: item.vttUrl,
+                        posterUrl: item.posterUrl,
+                        fileName: item.fileName,
+                        fileExt: item.fileExt,
+                        provenance: isEn
+                          ? `Browser export (${item.fileExt.toUpperCase()} · ${item.videoCodec})`
+                          : `Kết xuất trình duyệt (${item.fileExt.toUpperCase()} · ${item.videoCodec})`,
+                        width: item.width,
+                        height: item.height,
+                        durationSec: item.durationSec,
+                        sizeBytes: item.sizeBytes,
+                        videoCodec: item.videoCodec,
+                        pixelFormat: "rgba/canvas",
+                        audioCodec: "silent-visual",
+                        sha256: item.sha256,
+                      })
+                    }
+                  >
+                    <Play className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>{isEn ? "Play" : "Phát"}</span>
+                  </Button>
+                  <a
+                    href={item.url}
+                    download={item.fileName}
+                    className="inline-flex min-h-[34px] items-center gap-1 rounded-[10px] border border-[#245B3D] bg-white px-2.5 text-xs font-semibold text-[#245B3D] hover:bg-[#EAF0E5]"
+                  >
+                    <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>{isEn ? "Save" : "Tải"}</span>
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
 
       {/* Local Worker Queue Table (shown when local jobs exist) */}
       {jobs.length > 0 ? (
